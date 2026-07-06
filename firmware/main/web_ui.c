@@ -191,6 +191,15 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     cJSON *v = cJSON_GetObjectItem(o, k); \
     if (cJSON_IsString(v)) strncpy(dst, v->valuestring, sizeof(dst) - 1); \
 } while(0)
+/* Password fields: browsers do not autofill password inputs on POST
+ * so a form submitted from any other tab (=Stove, MQTT, Advanced)
+ * sends an empty string, which used to overwrite the stored Wi-Fi
+ * / MQTT credentials. Skip empty strings for password fields. */
+#define GET_STR_KEEP_EMPTY(k, dst) do { \
+    cJSON *v = cJSON_GetObjectItem(o, k); \
+    if (cJSON_IsString(v) && v->valuestring[0] != '\0') \
+        strncpy(dst, v->valuestring, sizeof(dst) - 1); \
+} while(0)
 #define GET_NUM(k, dst, cast) do { \
     cJSON *v = cJSON_GetObjectItem(o, k); \
     if (cJSON_IsNumber(v)) dst = (cast)v->valuedouble; \
@@ -200,12 +209,12 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     if (cJSON_IsBool(v)) dst = cJSON_IsTrue(v); \
 } while(0)
 
-    GET_STR("wifi_ssid",   g_cfg->wifi_ssid);
-    GET_STR("wifi_pwd",    g_cfg->wifi_password);
-    GET_STR("mqtt_host",   g_cfg->mqtt_host);
-    GET_NUM("mqtt_port",   g_cfg->mqtt_port, uint16_t);
-    GET_STR("mqtt_user",   g_cfg->mqtt_username);
-    GET_STR("mqtt_pwd",    g_cfg->mqtt_password);
+    GET_STR("wifi_ssid",           g_cfg->wifi_ssid);
+    GET_STR_KEEP_EMPTY("wifi_pwd", g_cfg->wifi_password);
+    GET_STR("mqtt_host",           g_cfg->mqtt_host);
+    GET_NUM("mqtt_port",           g_cfg->mqtt_port, uint16_t);
+    GET_STR("mqtt_user",           g_cfg->mqtt_username);
+    GET_STR_KEEP_EMPTY("mqtt_pwd", g_cfg->mqtt_password);
     GET_STR("mqtt_prefix", g_cfg->mqtt_topic_prefix);
     GET_BOOL("mqtt_tls",   g_cfg->mqtt_use_tls);
     GET_NUM("stove_type",  g_cfg->stove_type, stove_type_t);
