@@ -209,16 +209,21 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     if (cJSON_IsBool(v)) dst = cJSON_IsTrue(v); \
 } while(0)
 
-    GET_STR("wifi_ssid",           g_cfg->wifi_ssid);
-    GET_STR_KEEP_EMPTY("wifi_pwd", g_cfg->wifi_password);
-    GET_STR("mqtt_host",           g_cfg->mqtt_host);
-    GET_NUM("mqtt_port",           g_cfg->mqtt_port, uint16_t);
-    GET_STR("mqtt_user",           g_cfg->mqtt_username);
-    GET_STR_KEEP_EMPTY("mqtt_pwd", g_cfg->mqtt_password);
-    GET_STR("mqtt_prefix", g_cfg->mqtt_topic_prefix);
-    GET_BOOL("mqtt_tls",   g_cfg->mqtt_use_tls);
-    GET_NUM("stove_type",  g_cfg->stove_type, stove_type_t);
-    GET_STR("stove_name",  g_cfg->stove_name);
+    /* Identity fields (=SSID, broker, topic prefix, friendly name) use
+     * KEEP_EMPTY too: a save from any tab must never wipe them by
+     * accident. Users who genuinely want to clear a field can use the
+     * Factory Reset button. mqtt_user stays with GET_STR because empty
+     * is a legitimate value (=broker without auth). */
+    GET_STR_KEEP_EMPTY("wifi_ssid",    g_cfg->wifi_ssid);
+    GET_STR_KEEP_EMPTY("wifi_pwd",     g_cfg->wifi_password);
+    GET_STR_KEEP_EMPTY("mqtt_host",    g_cfg->mqtt_host);
+    GET_NUM("mqtt_port",               g_cfg->mqtt_port, uint16_t);
+    GET_STR("mqtt_user",               g_cfg->mqtt_username);
+    GET_STR_KEEP_EMPTY("mqtt_pwd",     g_cfg->mqtt_password);
+    GET_STR_KEEP_EMPTY("mqtt_prefix",  g_cfg->mqtt_topic_prefix);
+    GET_BOOL("mqtt_tls",               g_cfg->mqtt_use_tls);
+    GET_NUM("stove_type",              g_cfg->stove_type, stove_type_t);
+    GET_STR_KEEP_EMPTY("stove_name",   g_cfg->stove_name);
     GET_BOOL("ha_discovery", g_cfg->ha_discovery_enabled);
     GET_NUM("publish_interval_ms", g_cfg->publish_interval_ms, uint16_t);
 
