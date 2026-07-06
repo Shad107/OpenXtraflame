@@ -1,0 +1,112 @@
+# Example boot log - Extraflame Black Label running openextraflame (real hardware)
+# Personal values (MAC, secure_code, serial) are redacted.
+
+ets Jun  8 2016 00:22:57
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7172
+load:0x40078000,len:15540
+load:0x40080400,len:4
+ho 8 tail 4 room 4
+load:0x40080404,len:3904
+entry 0x40080640
+I (30) boot: ESP-IDF v5.2.2 2nd stage bootloader
+I (30) boot: compile time Jul  6 2026 14:04:50
+I (30) boot: Multicore bootloader
+I (35) boot: chip revision: v1.0
+I (38) boot.esp32: SPI Speed      : 40MHz
+I (43) boot.esp32: SPI Mode       : DIO
+I (48) boot.esp32: SPI Flash Size : 4MB
+I (52) boot: Enabling RNG early entropy source...
+I (58) boot: Partition Table:
+I (61) boot: ## Label            Usage          Type ST Offset   Length
+I (68) boot:  0 nvs              WiFi data        01 02 00009000 00004000
+I (76) boot:  1 otadata          OTA data         01 00 0000d000 00002000
+I (83) boot:  2 phy_init         RF data          01 01 0000f000 00001000
+I (91) boot:  3 ota_0            OTA app          00 10 00010000 00180000
+I (98) boot:  4 ota_1            OTA app          00 11 00190000 00180000
+I (106) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000
+I (113) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000
+I (121) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000
+I (128) boot:  8 secret1          WiFi data        01 02 003f2000 00004000
+I (136) boot:  9 secret2          Unknown data     01 40 003f6000 00004000
+I (144) boot: End of partition table
+I (148) boot: No factory image, trying OTA 0
+I (153) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=2e08ch (188556) map
+I (226) esp_image: segment 1: paddr=0003e0b4 vaddr=3ffb0000 size=01f64h (  8036) load
+I (229) esp_image: segment 2: paddr=00040020 vaddr=400d0020 size=9bc8ch (638092) map
+I (450) esp_image: segment 3: paddr=000dbcb4 vaddr=3ffb1f64 size=01b00h (  6912) load
+I (453) esp_image: segment 4: paddr=000dd7bc vaddr=40080000 size=15b08h ( 88840) load
+I (502) boot: Loaded app from partition at offset 0x10000
+I (536) boot: Set actual ota_seq=1 in otadata[0]
+I (536) boot: Disabling RNG early entropy source...
+I (547) cpu_start: Multicore app
+I (556) cpu_start: Pro cpu start user code
+I (556) cpu_start: cpu freq: 160000000 Hz
+I (556) cpu_start: Application information:
+I (559) cpu_start: Project name:     openextraflame
+I (564) cpu_start: App version:      4703ac3-dirty
+I (570) cpu_start: Compile time:     Jul  6 2026 14:03:07
+I (576) cpu_start: ELF file SHA256:  66e755b78...
+I (581) cpu_start: ESP-IDF:          v5.2.2
+I (586) cpu_start: Min chip rev:     v0.0
+I (591) cpu_start: Max chip rev:     v3.99 
+I (596) cpu_start: Chip rev:         v1.0
+I (601) heap_init: Initializing. RAM available for dynamic allocation:
+I (608) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM
+I (614) heap_init: At 3FFB86A0 len 00027960 (158 KiB): DRAM
+I (620) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM
+I (626) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (633) heap_init: At 40095B08 len 0000A4F8 (41 KiB): IRAM
+I (640) spi_flash: detected chip: generic
+I (643) spi_flash: flash io: dio
+I (648) main_task: Started on CPU0
+I (652) main_task: Calling app_main()
+I (673) MAIN: ===============================================
+I (674) MAIN:   openextraflame - build Jul  6 2026 14:04:47
+I (676) MAIN:   Board       : blacklabel-t009_3
+I (681) MAIN:   Target      : BLACKLABEL (reflash original)
+I (687) MAIN:   Chip        : ESP32
+I (691) MAIN:   IDF version : v5.2.2
+I (695) MAIN: ===============================================
+I (702) gpio: GPIO[25]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (711) gpio: GPIO[26]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (721) gpio: GPIO[32]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (730) gpio: GPIO[33]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 
+I (739) CFG: No config in NVS, using defaults
+I (744) MAIN: Config loaded: provisioned=no, wifi_ssid='', mqtt_host=''
+I (782) MAIN: Stove identity (from secret1): secure_code=XXXXXXXX model='' matricola=AXXXXXXXXX
+I (782) MICRONOVA: Init UART1 TX=23 RX=5 @ 38400 baud 8N1
+I (787) MICRONOVA: Slave listener started on UART1 (=waiting for stove)
+I (796) wifi:wifi driver task: 3ffc25dc, prio:23, stack:6656, core=0
+I (803) wifi:wifi firmware version: 3e0076f
+I (804) wifi:wifi certification version: v7.0
+I (807) wifi:config NVS flash: enabled
+I (811) wifi:config nano formating: disabled
+I (815) wifi:Init data frame dynamic rx buffer num: 32
+I (820) wifi:Init static rx mgmt buffer num: 5
+I (824) wifi:Init management short buffer num: 32
+I (828) wifi:Init dynamic tx buffer num: 16
+I (833) wifi:Init static rx buffer size: 1600
+I (836) wifi:Init static rx buffer num: 6
+I (840) wifi:Init dynamic rx buffer num: 32
+I (845) wifi_init: rx ba win: 6
+I (848) wifi_init: tcpip mbox: 32
+I (852) wifi_init: udp mbox: 6
+I (856) wifi_init: tcp mbox: 6
+I (859) wifi_init: tcp tx win: 5760
+I (863) wifi_init: tcp rx win: 5760
+I (868) wifi_init: tcp mss: 1440
+I (872) wifi_init: WiFi IRAM OP enabled
+I (876) wifi_init: WiFi RX IRAM OP enabled
+I (899) phy_init: phy_version 4791,2c4672b,Dec 20 2023,16:06:06
+W (900) phy_init: failed to load RF calibration data (0xffffffff), falling back to full calibration
+I (992) wifi:mode : softAP (DE:AD:BE:EF:00:0X)
+I (994) wifi:Total power save buffer number: 8
+I (994) wifi:Init max length of beacon: 752/752
+I (995) wifi:Init max length of beacon: 752/752
+I (1000) WIFI: SoftAP up : SSID='MyStove_XXXXXXXXXXXX' (open) IP=192.168.4.1
+I (1002) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+I (1019) WEB: Web UI listening on :80

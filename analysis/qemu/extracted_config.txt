@@ -1,0 +1,492 @@
+I (10544) MyUtils: | cpu cores      |   2        |
+I (10566) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (10568) MyUtils: | executing on core | 0             |
+I (10570) MyUtils: | firmware version  | 1.8           |
+I (10574) TaskDef: leds = CPU_PRO
+I (10576) ThreadTimers: timer at core = CPU_APP
+I (10742) misc: logged message 11: ResetButton > Resetting deleting
+I (10748) ResetButton: Resetting user info
+I (10794) ResetButton: partition nvs erased
+I (10821) ProductManager: Saving matricola 
+I (10877) ProductManager: NVS init OK!
+I (11101) ProductManager: ProductManager task started
+I (11131) MyUtils: | cpu cores      |   2        |
+I (11151) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (11153) MyUtils: | executing on core | 0             |
+I (11154) MyUtils: | firmware version  | 1.8           |
+I (11159) TaskDef: leds = CPU_PRO
+I (11161) ThreadTimers: timer at core = CPU_APP
+I (11205) TaskDef: SerialOta2_task = CPU_PRO
+I (11237) [SERIAL]: Serial status for port 1:
+I (11258) [SERIAL]: Baud: 38400
+I (11270) ProductManager: Matricola Read: 
+I (11270) [SERIAL]: flow_ctrl: 0
+I (11273) [SERIAL]: uart_get_word_length: 3
+I (11274) [SERIAL]: uart_get_parity: 0
+I (11274) [SERIAL]: uart_get_stop_bits: 1
+I (11275) SerialOta2: SerialOta task started for the first time
+I (13621) misc: logged message 9: ResetButton > Resetting deleting
+I (13624) ResetButton: Resetting user info
+I (13696) ResetButton: partition nvs erased
+I (13738) ProductManager: Saving matricola 
+I (13782) cpu_start: App version:      1
+I (14072) ProductManager: NVS init OK!
+I (14114) ProductManager: NVS init OK!
+I (14280) cpu_start: App version:      1
+I (14369) ProductManager: ProductManager task started
+I (14376) ProductManager: ProductManager task started
+I (14476) TaskDef: SerialOta2_task = CPU_PRO
+I (14481) TaskDef: SerialOta2_task = CPU_PRO
+I (14526) [SERIAL]: Serial status for port 1:
+I (14528) [SERIAL]: Serial status for port 1:
+I (14530) ProductManager: Matricola Read: 
+I (14533) [SERIAL]: Baud: 38400
+I (14536) [SERIAL]: flow_ctrl: 0
+I (14536) [SERIAL]: uart_get_word_length: 3
+I (14537) [SERIAL]: uart_get_stop_bits: 1
+I (14538) [SERIAL]: uart_get_parity: 0
+I (14539) SerialOta2: SerialOta task started for the first time
+I (14543) [SERIAL]: Baud: 38400
+I (14557) [SERIAL]: flow_ctrl: 0
+I (14558) [SERIAL]: uart_get_word_length: 3
+I (14559) [SERIAL]: uart_get_parity: 0
+I (14559) [SERIAL]: uart_get_stop_bits: 1
+I (14560) SerialOta2: SerialOta task started for the first time
+I (14573) ProductManager: Matricola Read: 
+I (14787) MyUtils: | cpu cores      |   2        |
+I (14810) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (14811) MyUtils: | executing on core | 0             |
+I (14812) MyUtils: | firmware version  | 1.8           |
+I (14816) TaskDef: leds = CPU_PRO
+I (14817) ThreadTimers: timer at core = CPU_APP
+I (15100) cpu_start: App version:      1
+I (15329) MyUtils: | cpu cores      |   2        |
+I (15362) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (15364) MyUtils: | executing on core | 0             |
+I (15365) MyUtils: | firmware version  | 1.8           |
+I (15369) TaskDef: leds = CPU_PRO
+I (15370) ThreadTimers: timer at core = CPU_APP
+I (15582) misc: logged message 1: ResetButton > Resetting deleting
+I (15584) ResetButton: Resetting user info
+I (15676) ResetButton: partition nvs erased
+I (15722) ProductManager: Saving matricola 
+I (15965) MyUtils: | cpu cores      |   2        |
+I (15984) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (15984) misc: logged message 15: ResetButton > Resetting deleting
+I (15986) MyUtils: | executing on core | 0             |
+I (15986) ResetButton: Resetting user info
+I (15987) MyUtils: | firmware version  | 1.8           |
+I (15990) TaskDef: leds = CPU_PRO
+I (15991) ThreadTimers: timer at core = CPU_APP
+I (16025) ResetButton: partition nvs erased
+I (16047) cpu_start: App version:      1
+I (16058) ProductManager: Saving matricola 
+I (1671) cpu_start: App version:      1
+I (16898) MyUtils: | cpu cores      |   2        |
+I (16909) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (16910) MyUtils: | executing on core | 0             |
+I (16911) MyUtils: | firmware version  | 1.8           |
+I (16918) TaskDef: leds = CPU_PRO
+I (16919) ThreadTimers: timer at core = CPU_APP
+I (17725) ProductManager: NVS init OK!
+I (17937) ProductManager: ProductManager task started
+I (18039) TaskDef: SerialOta2_task = CPU_PRO
+I (18059) [SERIAL]: Serial status for port 1:
+I (18076) [SERIAL]: Baud: 38400
+I (18087) ProductManager: NVS init OK!
+I (18094) [SERIAL]: flow_ctrl: 0
+I (18105) [SERIAL]: uart_get_word_length: 3
+I (18107) ProductManager: Matricola Read: 
+I (18108) [SERIAL]: uart_get_stop_bits: 1
+I (18110) [SERIAL]: uart_get_parity: 0
+I (18112) SerialOta2: SerialOta task started for the first time
+I (18328) ProductManager: ProductManager task started
+I (18435) TaskDef: SerialOta2_task = CPU_PRO
+I (18452) [SERIAL]: Serial status for port 1:
+I (18454) [SERIAL]: Baud: 38400
+I (18475) [SERIAL]: flow_ctrl: 0
+I (18487) [SERIAL]: uart_get_word_length: 3
+I (18495) ProductManager: Matricola Read: 
+I (18499) [SERIAL]: uart_get_stop_bits: 1
+I (18501) [SERIAL]: uart_get_parity: 0
+I (18502) SerialOta2: SerialOta task started for the first time
+I (18698) ProductManager: NVS init OK!
+I (18782) cpu_start: App version:      1
+I (18879) cpu_start: App version:      1
+I (1893) cpu_start: App version:      1
+I (18948) ProductManager: ProductManager task started
+I (19053) TaskDef: SerialOta2_task = CPU_PRO
+I (19067) [SERIAL]: Serial status for port 1:
+I (19071) [SERIAL]: Baud: 38400
+I (19074) [SERIAL]: flow_ctrl: 0
+I (19076) [SERIAL]: uart_get_stop_bits: 1
+I (19076) [SERIAL]: uart_get_word_length: 3
+I (19088) [SERIAL]: uart_get_parity: 0
+I (19114) SerialOta2: SerialOta task started for the first time
+I (19123) ProductManager: Matricola Read: 
+I (19433) ProductManager: NVS init OK!
+I (1964) MyUtils: | cpu cores      |   2        |
+I (19671) ProductManager: ProductManager task started
+I (19745) misc: logged message 21: ResetButton > Resetting deleting
+I (19747) ResetButton: Resetting user info
+I (19774) TaskDef: SerialOta2_task = CPU_PRO
+I (19787) ResetButton: partition nvs erased
+I (19814) ProductManager: Saving matricola 
+I (19820) [SERIAL]: Serial status for port 1:
+I (19841) [SERIAL]: Baud: 38400
+I (19857) ProductManager: Matricola Read: 
+I (19858) [SERIAL]: flow_ctrl: 0
+I (19864) [SERIAL]: uart_get_word_length: 3
+I (19865) [SERIAL]: uart_get_stop_bits: 1
+I (19866) [SERIAL]: uart_get_parity: 0
+I (19868) SerialOta2: SerialOta task started for the first time
+I (19874) MyUtils: | cpu cores      |   2        |
+I (19887) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (19889) MyUtils: | executing on core | 0             |
+I (19889) MyUtils: | firmware version  | 1.8           |
+I (19895) TaskDef: leds = CPU_PRO
+I (19896) ThreadTimers: timer at core = CPU_APP
+I (1993) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (1997) MyUtils: | executing on core | 0             |
+I (1997) MyUtils: | firmware version  | 1.8           |
+I (2003) TaskDef: leds = CPU_PRO
+I (2003) ThreadTimers: timer at core = CPU_APP
+I (20105) MyUtils: | cpu cores      |   2        |
+I (20127) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (20131) MyUtils: | executing on core | 0             |
+I (20134) MyUtils: | firmware version  | 1.8           |
+I (20140) TaskDef: leds = CPU_PRO
+I (20141) ThreadTimers: timer at core = CPU_APP
+I (20200) misc: logged message 13: ResetButton > Resetting deleting
+I (20204) ResetButton: Resetting user info
+I (20253) cpu_start: App version:      1
+I (20266) ResetButton: partition nvs erased
+I (20316) ProductManager: Saving matricola 
+I (20466) cpu_start: App version:      1
+I (21071) misc: logged message 2: ResetButton > Resetting deleting
+I (21077) ResetButton: Resetting user info
+I (21121) ResetButton: partition nvs erased
+I (21169) ProductManager: Saving matricola 
+I (21389) MyUtils: | cpu cores      |   2        |
+I (21406) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (21408) MyUtils: | executing on core | 0             |
+I (21409) MyUtils: | firmware version  | 1.8           |
+I (21413) TaskDef: leds = CPU_PRO
+I (21414) ThreadTimers: timer at core = CPU_APP
+I (21492) MyUtils: | cpu cores      |   2        |
+I (21507) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (21513) MyUtils: | executing on core | 0             |
+I (21515) MyUtils: | firmware version  | 1.8           |
+I (21521) TaskDef: leds = CPU_PRO
+I (21522) ThreadTimers: timer at core = CPU_APP
+I (21965) cpu_start: App version:      1
+I (22024) cpu_start: App version:      1
+I (22124) misc: logged message 22: ResetButton > Resetting deleting
+I (22127) ResetButton: Resetting user info
+I (22191) ResetButton: partition nvs erased
+I (22235) ProductManager: Saving matricola 
+I (22291) ProductManager: NVS init OK!
+I (22504) ProductManager: ProductManager task started
+I (22607) TaskDef: SerialOta2_task = CPU_PRO
+I (22638) [SERIAL]: Serial status for port 1:
+I (22643) ProductManager: NVS init OK!
+I (22663) ProductManager: Matricola Read: 
+I (22663) [SERIAL]: Baud: 38400
+I (22666) [SERIAL]: flow_ctrl: 0
+I (22668) [SERIAL]: uart_get_stop_bits: 1
+I (22668) [SERIAL]: uart_get_word_length: 3
+I (22669) [SERIAL]: uart_get_parity: 0
+I (22670) SerialOta2: SerialOta task started for the first time
+I (22869) ProductManager: ProductManager task started
+I (22971) TaskDef: SerialOta2_task = CPU_PRO
+I (22996) [SERIAL]: Serial status for port 1:
+I (23016) [SERIAL]: Baud: 38400
+I (23018) [SERIAL]: flow_ctrl: 0
+I (23025) ProductManager: Matricola Read: 
+I (23031) [SERIAL]: uart_get_word_length: 3
+I (23039) [SERIAL]: uart_get_parity: 0
+I (23039) [SERIAL]: uart_get_stop_bits: 1
+I (23042) SerialOta2: SerialOta task started for the first time
+I (23054) MyUtils: | cpu cores      |   2        |
+I (23085) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (23087) MyUtils: | executing on core | 0             |
+I (23089) MyUtils: | firmware version  | 1.8           |
+I (23094) TaskDef: leds = CPU_PRO
+I (23095) ThreadTimers: timer at core = CPU_APP
+I (23413) MyUtils: | cpu cores      |   2        |
+I (23440) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (23442) MyUtils: | executing on core | 0             |
+I (23443) MyUtils: | firmware version  | 1.8           |
+I (23448) TaskDef: leds = CPU_PRO
+I (23448) ThreadTimers: timer at core = CPU_APP
+I (24183) ProductManager: NVS init OK!
+I (24432) ProductManager: ProductManager task started
+I (24538) TaskDef: SerialOta2_task = CPU_PRO
+I (24586) [SERIAL]: Serial status for port 1:
+I (24600) ProductManager: Matricola Read: 
+I (24603) [SERIAL]: Baud: 38400
+I (24606) [SERIAL]: flow_ctrl: 0
+I (24607) [SERIAL]: uart_get_word_length: 3
+I (24608) [SERIAL]: uart_get_stop_bits: 1
+I (24609) [SERIAL]: uart_get_parity: 0
+I (24611) SerialOta2: SerialOta task started for the first time
+I (24695) cpu_start: App version:      1
+I (24767) misc: logged message 19: ResetButton > Resetting deleting
+I (24774) ResetButton: Resetting user info
+I (24828) ResetButton: partition nvs erased
+I (24864) ProductManager: Saving matricola 
+I (2491) MyUtils: | cpu cores      |   2        |
+I (24992) ProductManager: NVS init OK!
+I (25018) misc: logged message 23: ResetButton > Resetting deleting
+I (25024) ResetButton: Resetting user info
+I (2508) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (25086) ResetButton: partition nvs erased
+I (2510) MyUtils: | executing on core | 0             |
+I (2512) MyUtils: | firmware version  | 1.8           |
+I (25140) ProductManager: Saving matricola 
+I (2518) MyUtils: | cpu cores      |   2        |
+I (2518) TaskDef: leds = CPU_PRO
+I (2518) ThreadTimers: timer at core = CPU_APP
+I (25245) ProductManager: ProductManager task started
+I (25348) TaskDef: SerialOta2_task = CPU_PRO
+I (2536) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (25364) [SERIAL]: Serial status for port 1:
+I (25377) [SERIAL]: Baud: 38400
+I (2538) MyUtils: | executing on core | 0             |
+I (25390) [SERIAL]: flow_ctrl: 0
+I (2540) MyUtils: | firmware version  | 1.8           |
+I (25415) [SERIAL]: uart_get_word_length: 3
+I (25416) ProductManager: Matricola Read: 
+I (25417) [SERIAL]: uart_get_stop_bits: 1
+I (25420) [SERIAL]: uart_get_parity: 0
+I (25423) SerialOta2: SerialOta task started for the first time
+I (2543) TaskDef: leds = CPU_PRO
+I (2544) ThreadTimers: timer at core = CPU_APP
+I (25560) cpu_start: App version:      1
+I (25805) ProductManager: NVS init OK!
+I (25993) MyUtils: | cpu cores      |   2        |
+I (26013) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (26020) MyUtils: | executing on core | 0             |
+I (26021) MyUtils: | firmware version  | 1.8           |
+I (26026) TaskDef: leds = CPU_PRO
+I (26026) ThreadTimers: timer at core = CPU_APP
+I (26052) ProductManager: ProductManager task started
+I (26161) TaskDef: SerialOta2_task = CPU_PRO
+I (26169) [SERIAL]: Baud: 38400
+I (26169) [SERIAL]: Serial status for port 1:
+I (26169) [SERIAL]: flow_ctrl: 0
+I (26170) [SERIAL]: uart_get_stop_bits: 1
+I (26170) [SERIAL]: uart_get_word_length: 3
+I (26171) SerialOta2: SerialOta task started for the first time
+I (26171) [SERIAL]: uart_get_parity: 0
+I (26248) ProductManager: Matricola Read: 
+I (26358) misc: logged message 8: ResetButton > Resetting deleting
+I (26362) ResetButton: Resetting user info
+I (26437) ResetButton: partition nvs erased
+I (26472) cpu_start: App version:      1
+I (26476) ProductManager: Saving matricola 
+I (26501) misc: logged message 16: ResetButton > Resetting deleting
+I (26505) ResetButton: Resetting user info
+I (26518) MyUtils: | cpu cores      |   2        |
+I (26534) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (26537) MyUtils: | executing on core | 0             |
+I (26538) MyUtils: | firmware version  | 1.8           |
+I (26541) TaskDef: leds = CPU_PRO
+I (26542) ThreadTimers: timer at core = CPU_APP
+I (26566) ResetButton: partition nvs erased
+I (26616) ProductManager: Saving matricola 
+I (27258) ProductManager: NVS init OK!
+I (27532) ProductManager: ProductManager task started
+I (27657) TaskDef: SerialOta2_task = CPU_PRO
+I (27719) ProductManager: Matricola Read: 
+I (27730) [SERIAL]: Serial status for port 1:
+I (27735) [SERIAL]: Baud: 38400
+I (27736) [SERIAL]: flow_ctrl: 0
+I (27737) [SERIAL]: uart_get_stop_bits: 1
+I (27737) [SERIAL]: uart_get_word_length: 3
+I (27738) [SERIAL]: uart_get_parity: 0
+I (27739) SerialOta2: SerialOta task started for the first time
+I (28093) misc: logged message 18: ResetButton > Resetting deleting
+I (28097) ResetButton: Resetting user info
+I (28167) ResetButton: partition nvs erased
+I (28221) misc: logged message 24: ResetButton > Resetting deleting
+I (28222) ProductManager: Saving matricola 
+I (28231) ResetButton: Resetting user info
+I (28306) ResetButton: partition nvs erased
+I (28359) ProductManager: Saving matricola 
+I (2887) cpu_start: App version:      1
+I (2923) cpu_start: App version:      1
+I (29247) ProductManager: NVS init OK!
+I (29510) ProductManager: NVS init OK!
+I (29514) ProductManager: ProductManager task started
+I (29620) TaskDef: SerialOta2_task = CPU_PRO
+I (29645) [SERIAL]: Serial status for port 1:
+I (29671) [SERIAL]: Baud: 38400
+I (29672) ProductManager: Matricola Read: 
+I (29673) [SERIAL]: flow_ctrl: 0
+I (29676) [SERIAL]: uart_get_parity: 0
+I (29676) [SERIAL]: uart_get_stop_bits: 1
+I (29676) [SERIAL]: uart_get_word_length: 3
+I (29679) SerialOta2: SerialOta task started for the first time
+I (29743) ProductManager: ProductManager task started
+I (29869) TaskDef: SerialOta2_task = CPU_PRO
+I (29918) [SERIAL]: Serial status for port 1:
+I (29925) ProductManager: Matricola Read: 
+I (29945) [SERIAL]: Baud: 38400
+I (29946) [SERIAL]: flow_ctrl: 0
+I (29947) [SERIAL]: uart_get_word_length: 3
+I (29949) [SERIAL]: uart_get_stop_bits: 1
+I (29950) [SERIAL]: uart_get_parity: 0
+I (29952) SerialOta2: SerialOta task started for the first time
+I (30755) misc: logged message 20: ResetButton > Resetting deleting
+I (30757) ResetButton: Resetting user info
+I (30805) ResetButton: partition nvs erased
+I (30839) ProductManager: Saving matricola 
+I (31531) misc: logged message 14: ResetButton > Resetting deleting
+I (31533) ResetButton: Resetting user info
+I (31577) ResetButton: partition nvs erased
+I (31620) ProductManager: Saving matricola 
+I (3370) cpu_start: App version:      1
+I (4029) MyUtils: | cpu cores      |   2        |
+I (4049) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (4055) MyUtils: | executing on core | 0             |
+I (4058) MyUtils: | firmware version  | 1.8           |
+I (4066) TaskDef: leds = CPU_PRO
+I (4067) ThreadTimers: timer at core = CPU_APP
+I (4092) MyUtils: | cpu cores      |   2        |
+I (4116) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (4117) MyUtils: | executing on core | 0             |
+I (4119) MyUtils: | firmware version  | 1.8           |
+I (4124) TaskDef: leds = CPU_PRO
+I (4125) ThreadTimers: timer at core = CPU_APP
+I (4253) ProductManager: NVS init OK!
+I (4355) MyUtils: | cpu cores      |   2        |
+I (4372) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (4373) MyUtils: | executing on core | 0             |
+I (4375) MyUtils: | firmware version  | 1.8           |
+I (4380) TaskDef: leds = CPU_PRO
+I (4381) ThreadTimers: timer at core = CPU_APP
+I (4463) ProductManager: NVS init OK!
+I (4508) ProductManager: ProductManager task started
+I (4611) TaskDef: SerialOta2_task = CPU_PRO
+I (4643) [SERIAL]: Serial status for port 1:
+I (4658) ProductManager: ProductManager task started
+I (4672) [SERIAL]: Baud: 38400
+I (4685) ProductManager: Matricola Read: 
+I (4686) [SERIAL]: flow_ctrl: 0
+I (4687) [SERIAL]: uart_get_word_length: 3
+I (4690) [SERIAL]: uart_get_stop_bits: 1
+I (4691) [SERIAL]: uart_get_parity: 0
+I (4692) SerialOta2: SerialOta task started for the first time
+I (4737) ProductManager: NVS init OK!
+I (4760) TaskDef: SerialOta2_task = CPU_PRO
+I (4792) [SERIAL]: Serial status for port 1:
+I (4800) [SERIAL]: Baud: 38400
+I (4801) [SERIAL]: flow_ctrl: 0
+I (4801) [SERIAL]: uart_get_word_length: 3
+I (4802) [SERIAL]: uart_get_parity: 0
+I (4802) [SERIAL]: uart_get_stop_bits: 1
+I (4805) SerialOta2: SerialOta task started for the first time
+I (4856) ProductManager: Matricola Read: 
+I (4877) cpu_start: App version:      1
+I (4908) ProductManager: NVS init OK!
+I (4913) ProductManager: ProductManager task started
+I (5017) TaskDef: SerialOta2_task = CPU_PRO
+I (5085) ProductManager: Matricola Read: 
+I (5085) [SERIAL]: Serial status for port 1:
+I (5087) [SERIAL]: Baud: 38400
+I (5092) [SERIAL]: flow_ctrl: 0
+I (5092) [SERIAL]: uart_get_stop_bits: 1
+I (5092) [SERIAL]: uart_get_word_length: 3
+I (5093) [SERIAL]: uart_get_parity: 0
+I (5094) SerialOta2: SerialOta task started for the first time
+I (5147) ProductManager: ProductManager task started
+I (5252) TaskDef: SerialOta2_task = CPU_PRO
+I (5271) [SERIAL]: Serial status for port 1:
+I (5278) [SERIAL]: Baud: 38400
+I (5279) [SERIAL]: flow_ctrl: 0
+I (5280) [SERIAL]: uart_get_word_length: 3
+I (5290) [SERIAL]: uart_get_stop_bits: 1
+I (5293) [SERIAL]: uart_get_parity: 0
+I (5306) SerialOta2: SerialOta task started for the first time
+I (5324) ProductManager: Matricola Read: 
+I (5691) misc: logged message 0: ResetButton > Resetting deleting
+I (5698) ResetButton: Resetting user info
+I (5753) ResetButton: partition nvs erased
+I (5787) MyUtils: | cpu cores      |   2        |
+I (5788) ProductManager: Saving matricola 
+I (5810) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (5812) MyUtils: | executing on core | 0             |
+I (5814) MyUtils: | firmware version  | 1.8           |
+I (5819) TaskDef: leds = CPU_PRO
+I (5820) ThreadTimers: timer at core = CPU_APP
+I (6867) misc: logged message 17: ResetButton > Resetting deleting
+I (6871) ResetButton: Resetting user info
+I (6922) ProductManager: NVS init OK!
+I (6938) ResetButton: partition nvs erased
+I (6995) ProductManager: Saving matricola 
+I (7114) ProductManager: NVS init OK!
+I (7173) ProductManager: ProductManager task started
+I (7282) TaskDef: SerialOta2_task = CPU_PRO
+I (7330) ProductManager: ProductManager task started
+I (7356) [SERIAL]: Serial status for port 1:
+I (7374) ProductManager: Matricola Read: 
+I (7374) [SERIAL]: Baud: 38400
+I (7377) [SERIAL]: flow_ctrl: 0
+I (7377) [SERIAL]: uart_get_stop_bits: 1
+I (7377) [SERIAL]: uart_get_word_length: 3
+I (7378) SerialOta2: SerialOta task started for the first time
+I (7378) [SERIAL]: uart_get_parity: 0
+I (7435) TaskDef: SerialOta2_task = CPU_PRO
+I (7454) [SERIAL]: Serial status for port 1:
+I (7480) [SERIAL]: Baud: 38400
+I (7492) ProductManager: Matricola Read: 
+I (7492) [SERIAL]: flow_ctrl: 0
+I (7493) misc: logged message 7: ResetButton > Resetting deleting
+I (7494) [SERIAL]: uart_get_word_length: 3
+I (7496) [SERIAL]: uart_get_stop_bits: 1
+I (7497) [SERIAL]: uart_get_parity: 0
+I (7498) SerialOta2: SerialOta task started for the first time
+I (7499) ResetButton: Resetting user info
+I (7546) ResetButton: partition nvs erased
+I (7573) misc: logged message 6: ResetButton > Resetting deleting
+I (7578) ResetButton: Resetting user info
+I (7613) ProductManager: Saving matricola 
+I (7619) ResetButton: partition nvs erased
+I (7652) ProductManager: Saving matricola 
+I (7704) cpu_start: App version:      1
+I (781) MyUtils: | cpu cores      |   2        |
+I (798) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (804) MyUtils: | executing on core | 0             |
+I (805) MyUtils: | firmware version  | 1.8           |
+I (811) TaskDef: leds = CPU_PRO
+I (812) ThreadTimers: timer at core = CPU_APP
+I (820) cpu_start: App version:      1
+I (8299) ProductManager: NVS init OK!
+I (8481) MyUtils: | cpu cores      |   2        |
+I (8503) MyUtils: | ESP-IDF version   | v4.3-dirty    |
+I (8504) MyUtils: | executing on core | 0             |
+I (8505) MyUtils: | firmware version  | 1.8           |
+I (8510) TaskDef: leds = CPU_PRO
+I (8511) ThreadTimers: timer at core = CPU_APP
+I (8535) ProductManager: ProductManager task started
+I (8641) TaskDef: SerialOta2_task = CPU_PRO
+I (8675) [SERIAL]: Serial status for port 1:
+I (8684) [SERIAL]: Baud: 38400
+I (8693) [SERIAL]: flow_ctrl: 0
+I (8699) ProductManager: Matricola Read: 
+I (8704) [SERIAL]: uart_get_word_length: 3
+I (8707) [SERIAL]: uart_get_parity: 0
+I (8707) [SERIAL]: uart_get_stop_bits: 1
+I (8708) SerialOta2: SerialOta task started for the first time
+I (8961) misc: logged message 12: ResetButton > Resetting deleting
+I (8963) ResetButton: Resetting user info
+I (9013) ResetButton: partition nvs erased
+I (9043) ProductManager: Saving matricola 
+I (9362) misc: logged message 10: ResetButton > Resetting deleting
+I (9368) ResetButton: Resetting user info
+I (9419) ResetButton: partition nvs erased
+I (9454) ProductManager: Saving matricola 
+I (9600) cpu_start: App version:      1
+I (9985) cpu_start: App version:      1
+ota at core = CPU_PRO

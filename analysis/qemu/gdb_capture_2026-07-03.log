@@ -1,0 +1,40 @@
+Adding SPI flash device
+=== HITS !!! ===
+qemu-system-xtensa: terminating on signal 15 from pid 1 (bash)
+!!! GPIO_SET_LEVEL gpio=22 level=1
+!!! GPIO_SET_LEVEL gpio=23 level=1
+!!! GPIO_SET_LEVEL gpio=25 level=0
+!!! GPIO_SET_LEVEL gpio=25 level=1
+!!! GPIO_SET_LEVEL gpio=26 level=0
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=32 level=0
+!!! GPIO_SET_LEVEL gpio=32 level=1
+!!! GPIO_SET_LEVEL gpio=33 level=0
+!!! GPIO_SET_LEVEL gpio=33 level=1
+!!! UART_PARAM uart=1
+!!! UART_SET_PIN uart=1 tx=23 rx=5 rts=255 cts=255
+
+=== Total lines ===
+2900 /tmp/gdb_out.txt
+
+=== GDB out head ===
+warning: No executable has been specified and target does not support
+determining executable automatically.  Try using the "file" command.
+0x40000400 in ?? ()
+Breakpoint 1 at 0x400d8743
+Breakpoint 2 at 0x400d98f7
+Breakpoint 3 at 0x400d88f7
+[Switching to Thread 1.2]
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=25 level=1
+!!! GPIO_SET_LEVEL gpio=33 level=1
+!!! GPIO_SET_LEVEL gpio=32 level=1
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=32 level=1
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=32 level=1
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=32 level=1
+!!! GPIO_SET_LEVEL gpio=26 level=1
+!!! GPIO_SET_LEVEL gpio=25 level=1
+!!! GPIO_SET_LEVEL gpio=33 level=1

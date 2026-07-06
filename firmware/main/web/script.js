@@ -1,0 +1,309 @@
+/* openextraflame - Web UI script */
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const j = (u, o = {}) => fetch(u, o).then(r => r.json());
+
+/* Theme toggle */
+function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    $('theme-btn').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : cur === 'light' ? 'auto' : 'dark';
+        if (next === 'auto') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+}
+
+/* Tabs */
+function initTabs() {
+    $$('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+            $$('.tab').forEach(x => x.classList.remove('active'));
+            $$('.tab-content').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            $('tab-' + t.dataset.tab).classList.add('active');
+        });
+    });
+}
+
+/* Load status periodically */
+async function loadStatus() {
+    try {
+        const s = await j('/status.json');
+        const wifiOk = !!s.wifi?.connected;
+        const stoveOk = !!s.stove?.online;
+
+        $('s-wifi').textContent = wifiOk ? s.wifi.ssid : 'Déconnecté';
+        $('s-ip').textContent = s.wifi?.ip || '-';
+        $('s-mqtt').textContent = s.mqtt?.connected ? 'Connecté' : 'Déconnecté';
+        $('s-stove').textContent = stoveOk ? 'En ligne' : 'Hors ligne';
+
+        $('m-tamb').textContent = s.stove?.t_ambient?.toFixed?.(1) ?? '-';
+        $('m-power').textContent = s.stove?.power ?? '-';
+        $('m-fumi').textContent = s.stove?.t_smoke?.toFixed?.(0) ?? '-';
+
+        const dot = $('status-dot');
+        dot.className = 'status-dot';
+        if (wifiOk && stoveOk) dot.classList.add('ok');
+        else if (!wifiOk) dot.classList.add('err');
+
+    } catch (e) {
+        console.warn('status error', e);
+    }
+}
+
+/* Load config into forms */
+async function loadConfig() {
+    try {
+        const c = await j('/config.json');
+        $('wifi-ssid').value = c.wifi_ssid || '';
+        $('mqtt-host').value = c.mqtt_host || '';
+        $('mqtt-port').value = c.mqtt_port || 1883;
+        $('mqtt-user').value = c.mqtt_user || '';
+        $('mqtt-prefix').value = c.mqtt_prefix || 'extraflame';
+        $('mqtt-tls').checked = !!c.mqtt_tls;
+        $('stove-name').value = c.stove_name || 'poele';
+        $('stove-type').value = c.stove_type || 0;
+        $('ha-discovery').checked = !!c.ha_discovery;
+        $('publish-interval').value = c.publish_interval_ms || 5000;
+
+        /* Guardian mode - only visible on Target Blacklabel */
+        if (c.guardian_supported === false) {
+            $('guardian-card').style.display = 'none';
+        } else {
+            $('guardian-enabled').checked = !!c.guardian_enabled;
+            $('guardian-url').value = c.guardian_url || '';
+            $('guardian-action').value = c.guardian_action || 0;
+            toggleGuardianSettings();
+        }
+
+        const v = c.version || 'v?';
+        $('ota-current-version').textContent = v;
+        $('version').textContent = v;   /* header tagline */
+    } catch (e) {
+        console.warn('config error', e);
+    }
+}
+
+function toggleGuardianSettings() {
+    const on = $('guardian-enabled').checked;
+    $('guardian-settings').style.display = on ? 'block' : 'none';
+}
+
+/* Wi-Fi scan */
+async function scan() {
+    const sel = $('ssid-select');
+    sel.innerHTML = '<option>Scan en cours...</option>';
+    try {
+        const aps = await j('/ap.json');
+        sel.innerHTML = '<option value="">-- Choisir --</option>';
+        aps.sort((a, b) => b.rssi - a.rssi);
+        aps.forEach(ap => {
+            const o = document.createElement('option');
+            o.value = ap.ssid;
+            const lock = ap.auth > 0 ? '🔒' : '';
+            o.textContent = `${lock} ${ap.ssid} (${ap.rssi} dBm)`;
+            sel.appendChild(o);
+        });
+        sel.addEventListener('change', () => {
+            if (sel.value) $('wifi-ssid').value = sel.value;
+        });
+    } catch (e) {
+        sel.innerHTML = '<option>Erreur scan</option>';
+    }
+}
+
+/* Save config */
+async function save() {
+    const cfg = {
+        wifi_ssid: $('wifi-ssid').value,
+        wifi_pwd: $('wifi-pwd').value,
+        mqtt_host: $('mqtt-host').value,
+        mqtt_port: parseInt($('mqtt-port').value, 10),
+        mqtt_user: $('mqtt-user').value,
+        mqtt_pwd: $('mqtt-pwd').value,
+        mqtt_prefix: $('mqtt-prefix').value,
+        mqtt_tls: $('mqtt-tls').checked,
+        stove_name: $('stove-name').value,
+        stove_type: parseInt($('stove-type').value, 10),
+        ha_discovery: $('ha-discovery').checked,
+        publish_interval_ms: parseInt($('publish-interval').value, 10),
+    };
+    if ($('guardian-card').style.display !== 'none') {
+        cfg.guardian_enabled = $('guardian-enabled').checked;
+        cfg.guardian_url = $('guardian-url').value;
+        cfg.guardian_token = $('guardian-token').value;
+        cfg.guardian_action = parseInt($('guardian-action').value, 10);
+    }
+    await fetch('/config.json', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(cfg),
+    });
+    alert('✅ Configuration sauvegardée. Le module redémarre.');
+    await fetch('/reboot', {method: 'POST'});
+}
+
+/* Factory reset */
+async function factory() {
+    if (!confirm('⚠️ Effacer toute la configuration et redémarrer ?')) return;
+    const btn = $('factory');
+    btn.textContent = '⏳ Reset usine...';
+    btn.disabled = true;
+    try { await fetch('/factory', {method: 'POST'}); } catch (e) {}
+    setTimeout(() => location.reload(), 10000);
+}
+
+/* Reboot */
+async function reboot() {
+    const btn = $('reboot');
+    btn.textContent = '⏳ Redémarrage en cours...';
+    btn.disabled = true;
+    try { await fetch('/reboot', {method: 'POST'}); } catch (e) { /* socket dies mid-response, expected */ }
+    setTimeout(() => location.reload(), 10000);
+}
+
+/* Stove commands */
+async function stoveCmd(cmd) {
+    const r = await fetch('/api/stove/' + cmd, {method: 'POST'});
+    if (!r.ok) alert('Erreur commande');
+}
+
+/* OTA upload */
+async function otaUpload(file) {
+    const progress = $('ota-progress');
+    const bar = $('ota-bar');
+    const text = $('ota-text');
+    progress.style.display = 'block';
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/ota/upload');
+    xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+            const pct = (e.loaded / e.total * 100).toFixed(0);
+            bar.style.width = pct + '%';
+            text.textContent = `Envoi ${pct}%`;
+        }
+    });
+    xhr.onload = () => {
+        if (xhr.status === 200) {
+            text.textContent = 'Applying... Reboot dans 5s';
+            setTimeout(() => location.reload(), 8000);
+        } else {
+            text.textContent = 'Erreur ' + xhr.status;
+        }
+    };
+    xhr.send(file);
+}
+
+async function otaRollback() {
+    if (!confirm('Retour à la version précédente ?')) return;
+    await fetch('/ota/rollback', {method: 'POST'});
+    setTimeout(() => location.reload(), 5000);
+}
+
+async function otaCheck() {
+    const span = $('ota-latest');
+    span.textContent = '⏳ Interrogation GitHub...';
+    try {
+        const r = await fetch('https://api.github.com/repos/Shad107/OpenXtraflame/releases/latest');
+        if (!r.ok) {
+            span.textContent = r.status === 404
+                ? '❌ Repo privé ou pas de release publique'
+                : `❌ HTTP ${r.status}`;
+            return;
+        }
+        const j = await r.json();
+        const latest = j.tag_name || j.name || '?';
+        const current = $('version').textContent;
+        const url = (j.assets || []).map(a => a.browser_download_url).find(u => /openextraflame\.bin$/.test(u));
+        if (url) $('ota-url').value = url;
+        span.textContent = current === latest
+            ? `✅ ${current} = latest`
+            : `⚠️ Installé ${current}, dispo ${latest}`;
+    } catch (e) {
+        span.textContent = '❌ Erreur réseau';
+    }
+}
+
+async function otaPull() {
+    const url = $('ota-url').value.trim();
+    if (!url) { alert('Renseigne une URL'); return; }
+    const btn = $('ota-pull');
+    btn.textContent = '⏳ Téléchargement en cours...';
+    btn.disabled = true;
+    try {
+        const r = await fetch('/ota/pull', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({url}),
+        });
+        if (!r.ok) { btn.textContent = '❌ Erreur'; return; }
+    } catch (e) { btn.textContent = '❌ Erreur'; return; }
+    setTimeout(() => location.reload(), 30000);
+}
+
+/* --- Debug Micronova bus --- */
+
+const DIR_LABEL = ['RX-READ ', 'RX-WRITE', 'TX-REPLY'];
+const DIR_CLASS = ['dir-rx-read', 'dir-rx-write', 'dir-tx-reply'];
+let debug_paused_scroll = false;
+
+async function loadDebug() {
+    try {
+        const r = await fetch('/debug/uart');
+        const j = await r.json();
+        $('debug-counter').textContent = `${j.seq || 0} frames au total`;
+        const pre = $('debug-log');
+        if (!j.frames || j.frames.length === 0) {
+            pre.textContent = '(en attente de trames...)';
+            return;
+        }
+        pre.innerHTML = j.frames.map(f => {
+            const t = String(f.t_ms).padStart(9, ' ');
+            const d = DIR_LABEL[f.dir] || '???';
+            const a = f.addr.toString(16).padStart(2, '0');
+            const v = f.data.toString(16).padStart(2, '0');
+            const cls = DIR_CLASS[f.dir] || '';
+            return `<span class="${cls}">[${t} ms] ${d}  addr=0x${a}  data=0x${v}</span>`;
+        }).join('\n');
+        if ($('debug-autoscroll').checked && !debug_paused_scroll) {
+            pre.scrollTop = pre.scrollHeight;
+        }
+    } catch (e) { /* Wi-Fi flap during reboot */ }
+}
+
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initTabs();
+
+    $('scan').addEventListener('click', scan);
+    $('save').addEventListener('click', save);
+    $('factory').addEventListener('click', factory);
+    $('reboot').addEventListener('click', reboot);
+
+    $('stove-on').addEventListener('click', () => stoveCmd('on'));
+    $('stove-off').addEventListener('click', () => stoveCmd('off'));
+    $('stove-reset').addEventListener('click', () => stoveCmd('reset_alarm'));
+
+    $('ota-file').addEventListener('change', e => {
+        if (e.target.files[0]) otaUpload(e.target.files[0]);
+    });
+    $('ota-rollback').addEventListener('click', otaRollback);
+    $('ota-pull').addEventListener('click', otaPull);
+    $('ota-check').addEventListener('click', otaCheck);
+
+    $('debug-clear').addEventListener('click', () => {
+        $('debug-log').textContent = '(vidé, prochain sondage dans <1 s)';
+    });
+    setInterval(loadDebug, 1000);
+
+    const guardianEl = $('guardian-enabled');
+    if (guardianEl) guardianEl.addEventListener('change', toggleGuardianSettings);
+
+    loadConfig();
+    loadStatus();
+    setInterval(loadStatus, 5000);
+});

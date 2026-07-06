@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="fr" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ea580c">
+<title>OpenXtraflame</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Cpath%20d%3D'M16%203%20C13%207%2010%2011%2010%2017%20C10%2023%2013%2028%2016%2028%20C19%2028%2022%2023%2022%2017%20C22%2011%2019%207%2016%203%20Z'%20fill%3D'%23ea580c'%2F%3E%3Cpath%20d%3D'M16%2012%20C14%2015%2013%2017%2013%2020%20C13%2023%2014%2025%2016%2025%20C18%2025%2019%2023%2019%2020%20C19%2017%2018%2015%2016%2012%20Z'%20fill%3D'%23fbbf24'%2F%3E%3C%2Fsvg%3E">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="brand">
+        <div class="logo">OX</div>
+        <div>
+            <h1>OpenXtraflame</h1>
+            <p class="tagline">Contrôle local Extraflame &middot; <span id="version">v1.0</span></p>
+        </div>
+    </div>
+    <div class="theme-toggle">
+        <button id="theme-btn" title="Changer thème">🌓</button>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab" data-tab="wifi">📶 Wi-Fi</button>
+    <button class="tab" data-tab="mqtt">📡 MQTT</button>
+    <button class="tab" data-tab="stove">🔥 Poêle</button>
+    <button class="tab" data-tab="ota">⬆️ OTA</button>
+    <button class="tab" data-tab="debug">🔍 Debug</button>
+    <button class="tab" data-tab="advanced">⚙️ Avancé</button>
+</nav>
+
+<main>
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="tab-content active">
+        <div class="grid">
+            <div class="card status-card">
+                <div class="card-header">
+                    <span class="status-dot" id="status-dot"></span>
+                    <h3>Statut</h3>
+                </div>
+                <div class="status-list">
+                    <div class="status-item">
+                        <span class="status-label">Wi-Fi</span>
+                        <span class="status-value" id="s-wifi">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Adresse IP</span>
+                        <span class="status-value" id="s-ip">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">MQTT</span>
+                        <span class="status-value" id="s-mqtt">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Poêle</span>
+                        <span class="status-value" id="s-stove">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Température ambiante</div>
+                <div class="metric-value" id="m-tamb">-</div>
+                <div class="metric-unit">°C</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Puissance</div>
+                <div class="metric-value" id="m-power">-</div>
+                <div class="metric-unit">/ 5</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Température fumées</div>
+                <div class="metric-value" id="m-fumi">-</div>
+                <div class="metric-unit">°C</div>
+            </div>
+
+            <div class="card actions-card">
+                <h3>Actions rapides</h3>
+                <div class="button-row">
+                    <button class="btn btn-primary" id="stove-on">▶️ Allumer</button>
+                    <button class="btn btn-secondary" id="stove-off">⏹️ Éteindre</button>
+                    <button class="btn btn-warning" id="stove-reset">🔄 Reset alarme</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Wi-Fi -->
+    <section id="tab-wifi" class="tab-content">
+        <div class="card">
+            <h3>Configuration Wi-Fi</h3>
+            <div class="form-group">
+                <label>Réseau détecté</label>
+                <div class="input-with-button">
+                    <select id="ssid-select"></select>
+                    <button class="btn btn-secondary" id="scan">🔍 Scan</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>SSID</label>
+                <input id="wifi-ssid" type="text" placeholder="Nom du réseau">
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input id="wifi-pwd" type="password" autocomplete="new-password" placeholder="••••••••">
+            </div>
+        </div>
+    </section>
+
+    <!-- MQTT -->
+    <section id="tab-mqtt" class="tab-content">
+        <div class="card">
+            <h3>Broker MQTT local</h3>
+            <div class="form-row">
+                <div class="form-group flex-2">
+                    <label>Host</label>
+                    <input id="mqtt-host" type="text" placeholder="192.168.1.10">
+                </div>
+                <div class="form-group flex-1">
+                    <label>Port</label>
+                    <input id="mqtt-port" type="number" value="1883">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>Utilisateur</label>
+                    <input id="mqtt-user" type="text">
+                </div>
+                <div class="form-group flex-1">
+                    <label>Mot de passe</label>
+                    <input id="mqtt-pwd" type="password">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Topic prefix</label>
+                <input id="mqtt-prefix" type="text" value="extraflame">
+            </div>
+            <div class="form-group toggle-group">
+                <label class="toggle">
+                    <input id="mqtt-tls" type="checkbox">
+                    <span class="toggle-slider"></span>
+                    <span>Utiliser TLS</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <!-- Poêle -->
+    <section id="tab-stove" class="tab-content">
+        <div class="card">
+            <h3>Configuration poêle</h3>
+            <div class="form-group">
+                <label>Nom (=friendly name pour HA)</label>
+                <input id="stove-name" type="text" value="poele">
+            </div>
+            <div class="form-group">
+                <label>Type d'appareil Micronova</label>
+                <select id="stove-type">
+                    <option value="0">Inconnu / autodétection</option>
+                    <option value="1">I_CALD - Chaudière</option>
+                    <option value="2">I_CANAL - Canalisé (=air chaud sur plusieurs pièces)</option>
+                    <option value="6">I_IDRO - Poêle hydro (=chauffe l'eau du chauffage central)</option>
+                    <option value="8">I_VENT - Poêle à air (=ventilateur, ex. Teodora Evo)</option>
+                </select>
+                <p class="hint">Le protocole Micronova est partagé par Extraflame, EdilKamin, LAMINOX, Freepoint, Karmek One et d'autres OEM italiens. Choisis la famille qui correspond à ton appareil.</p>
+            </div>
+            <div class="form-group toggle-group">
+                <label class="toggle">
+                    <input id="ha-discovery" type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                    <span>Home Assistant MQTT Discovery</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <!-- OTA -->
+    <section id="tab-ota" class="tab-content">
+        <div class="card">
+            <h3>Mise à jour firmware</h3>
+            <div class="ota-current">
+                <span class="ota-label">Version actuelle</span>
+                <span class="ota-value" id="ota-current-version">v1.0.0</span>
+            </div>
+            <div class="ota-actions">
+                <label class="btn btn-primary btn-block">
+                    📤 Uploader firmware .bin
+                    <input type="file" id="ota-file" accept=".bin" style="display:none">
+                </label>
+                <div id="ota-progress" class="progress" style="display:none">
+                    <div class="progress-bar" id="ota-bar"></div>
+                    <span class="progress-text" id="ota-text">Envoi 0%</span>
+                </div>
+                <button class="btn btn-secondary btn-block" id="ota-rollback">↩️ Rollback version précédente</button>
+            </div>
+            <div class="form-group">
+                <label>Ou directement depuis GitHub (=one-click)</label>
+                <div class="input-with-button">
+                    <input id="ota-url" type="text" value="https://github.com/Shad107/OpenXtraflame/releases/latest/download/openextraflame.bin">
+                    <button class="btn btn-primary" id="ota-pull">⬇️ Pull</button>
+                </div>
+                <div class="button-row" style="margin-top:0.5rem">
+                    <button class="btn btn-secondary" id="ota-check">🔎 Vérifier version disponible</button>
+                    <span id="ota-latest" class="hint" style="align-self:center"></span>
+                </div>
+                <p class="hint">Le module télécharge et flashe l'image tout seul. Wi-Fi STA nécessaire (=pas depuis SoftAP). Le repo doit être en accès public pour que cette URL fonctionne sans token.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Avancé -->
+    <!-- Debug -->
+    <section id="tab-debug" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <h3>Bus Micronova</h3>
+                <span class="hint" id="debug-counter">0 frames</span>
+            </div>
+            <p class="hint">Trames RX (=reçues du poêle) et TX (=notre réponse) en direct. Mise à jour toutes les secondes. Si rien ne défile après 30 s de branchement, vérifie le câblage UART.</p>
+            <pre id="debug-log" class="debug-log">(en attente de trames...)</pre>
+            <div class="button-row">
+                <button class="btn btn-secondary" id="debug-clear">🗑️ Vider l'affichage</button>
+                <label class="toggle" style="margin-left:auto">
+                    <input id="debug-autoscroll" type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                    <span>Auto-scroll</span>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section id="tab-advanced" class="tab-content">
+        <div class="card">
+            <h3>Options avancées</h3>
+            <div class="form-group">
+                <label>Intervalle publish MQTT (ms)</label>
+                <input id="publish-interval" type="number" value="5000">
+            </div>
+        </div>
+
+        <!-- Guardian Mode (=only visible on Target Blacklabel) -->
+        <div class="card danger-zone" id="guardian-card">
+            <div class="card-header">
+                <span class="badge badge-warning">EXPERIMENTAL</span>
+                <h3>Guardian Mode</h3>
+            </div>
+            <p class="warning-text">
+                ⚠️ Fonctionnalité avancée. Guardian Mode connecte votre module au cloud Extraflame
+                en écoute uniquement pour capturer les mises à jour officielles vers votre serveur
+                archive personnel. Aucune donnée utilisateur transmise.
+                <a href="#" id="guardian-docs">En savoir plus</a>
+            </p>
+            <div class="form-group toggle-group">
+                <label class="toggle">
+                    <input id="guardian-enabled" type="checkbox">
+                    <span class="toggle-slider"></span>
+                    <span>Activer Guardian Mode</span>
+                </label>
+            </div>
+            <div id="guardian-settings" style="display:none">
+                <div class="form-group">
+                    <label>URL serveur archive</label>
+                    <input id="guardian-url" type="text" placeholder="https://archive.exemple.com/upload">
+                </div>
+                <div class="form-group">
+                    <label>Token API (optionnel)</label>
+                    <input id="guardian-token" type="password">
+                </div>
+                <div class="form-group">
+                    <label>Comportement</label>
+                    <select id="guardian-action">
+                        <option value="0">Archive seulement (=jamais appliquer)</option>
+                        <option value="1">Archive + notifier (=manuel apply)</option>
+                        <option value="2">Archive + auto-appliquer</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card danger-zone">
+            <h3>Zone dangereuse</h3>
+            <div class="button-row">
+                <button class="btn btn-warning" id="reboot">🔄 Redémarrer</button>
+                <button class="btn btn-danger" id="factory">💥 Reset usine</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sticky save bar -->
+    <div class="save-bar" id="save-bar">
+        <button class="btn btn-primary btn-lg" id="save">💾 Sauver &amp; redémarrer</button>
+    </div>
+</main>
+
+<footer class="app-footer">
+    <p>OpenXtraflame · <a href="https://www.isno.fr">isno.fr</a></p>
+</footer>
+
+<script src="/script.js"></script>
+</body>
+</html>

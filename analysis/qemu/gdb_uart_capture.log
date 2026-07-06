@@ -1,0 +1,60 @@
+Go to the project directory and run:
+
+  idf.py build
+
+Adding SPI flash device
+=== Micronova UART traffic ===
+qemu-system-xtensa: terminating on signal 15 from pid 1 (bash)
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+!!! UART_READ uart=1 buf_ptr=0x3ffb7761 len=1 timeout=100
+
+=== Total ===
+706

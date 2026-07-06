@@ -1,0 +1,20 @@
+# Adresses ESP-IDF fonctions DANS le binaire Extraflame Black Label v1.8
+# Nov 2022 build, ESP-IDF v4.3-dirty
+# Découvert 2026-07-03 via ancrage sur strings de log
+
+0x400d98f4 T gpio_set_level
+0x400d9a4c T gpio_set_direction
+0x400d8740 T uart_set_pin
+0x400d88f4 T uart_param_config
+0x400d90fc T uart_driver_install
+0x400dff29 T ResetButton_1
+0x400e001b T ResetButton_2
+0x400e0124 T ResetButton_3
+0x400e01b4 T ResetButton_4
+
+# Log call sites (=for reference)
+0x400d9915 gpio_set_level_log_call
+0x400d9a6d gpio_set_direction_log_call
+0x400d8758 uart_set_pin_log_call
+0x400d8909 uart_param_config_log_call
+0x400d9117 uart_driver_install_log_call

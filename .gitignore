@@ -1,0 +1,23 @@
+# ESP-IDF build artefacts
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/dependencies.lock
+managed_components/
+
+# Dumps firmware (=personal data, ne jamais commit)
+*.bin
+!/**/partitions.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Raw reverse-engineering string dumps (=contiennent des données perso, jamais public)
+analysis/strings/

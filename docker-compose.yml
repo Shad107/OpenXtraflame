@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  esp-idf:
+    build:
+      context: .
+      dockerfile: Dockerfile.esp-idf
+    image: openextraflame/esp-idf:v5.2.2
+    container_name: openextraflame-build
+    volumes:
+      - ./firmware:/project
+      - ./web:/web
+    working_dir: /project
+    environment:
+      - IDF_TARGET=esp32
+    devices:
+      # Adjust to your USB-UART device path
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+# Usage :
+#   docker compose build
+#   docker compose run --rm esp-idf idf.py set-target esp32
+#   docker compose run --rm esp-idf idf.py -DOPENXFLAME_TARGET=external build
+#   docker compose run --rm esp-idf idf.py -DOPENXFLAME_TARGET=blacklabel build
+#   docker compose run --rm esp-idf idf.py -p /dev/ttyUSB0 flash monitor

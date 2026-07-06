@@ -1,0 +1,12 @@
+FROM espressif/idf:v5.2.2
+
+WORKDIR /project
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    less \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV IDF_TARGET=esp32
+
+CMD ["/bin/bash"]

@@ -1,0 +1,101 @@
+# Exemple configuration Home Assistant pour openextraflame
+#
+# Si tu utilises MQTT Discovery (=option HA discovery cochée dans l'UI web
+# openextraflame), tu n'as PAS besoin de cette config yaml. HA détecte
+# automatiquement les entités.
+#
+# Cette config est utile si :
+#   - MQTT Discovery est désactivé
+#   - Tu veux personnaliser les noms d'entités
+#   - Tu veux ajouter des templates avancés
+
+mqtt:
+  sensor:
+    - name: "Poele température ambiante"
+      unique_id: extraflame_poele_temp_ambient
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.t_ambient }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: "Poele température fumées"
+      unique_id: extraflame_poele_temp_smoke
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.t_smoke }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: "Poele puissance"
+      unique_id: extraflame_poele_power
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.power }}"
+
+    - name: "Poele état"
+      unique_id: extraflame_poele_state
+      state_topic: "extraflame/poele/state"
+      value_template: >
+        {% set states = {
+          0: "off",
+          1: "starting",
+          2: "loading_pellets",
+          3: "ignition",
+          4: "work",
+          5: "brazier_cleaning",
+          6: "final_cleaning",
+          7: "standby",
+          8: "alarm",
+          9: "memory_alarm"
+        } %}
+        {{ states[value_json.state | int] | default("unknown") }}
+
+    - name: "Poele alarme"
+      unique_id: extraflame_poele_alarm
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.alarm }}"
+
+  binary_sensor:
+    - name: "Poele en ligne"
+      unique_id: extraflame_poele_online
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.online }}"
+      payload_on: "True"
+      payload_off: "False"
+      device_class: connectivity
+
+  switch:
+    - name: "Poele on/off"
+      unique_id: extraflame_poele_switch
+      state_topic: "extraflame/poele/state"
+      value_template: "{{ value_json.state != 0 }}"
+      payload_on: ""
+      payload_off: ""
+      command_topic: "extraflame/poele/cmd/on"
+      # ⚠️ Cette version est simplifiée - pour off il faudrait un topic différent
+
+# Automations exemples
+automation:
+  - alias: "Poêle - notif alarme"
+    trigger:
+      - platform: state
+        entity_id: sensor.poele_alarme
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state | int > 0 }}"
+    action:
+      - service: notify.mobile_app_olivier
+        data:
+          title: "Alarme poêle"
+          message: "Code alarme {{ trigger.to_state.state }}"
+
+  - alias: "Poêle - allumage auto matinal"
+    trigger:
+      - platform: time
+        at: "06:30:00"
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.poele_temperature_ambiante
+        below: 19
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.poele_on_off

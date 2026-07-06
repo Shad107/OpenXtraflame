@@ -1,0 +1,31 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "config_nvs.c"
+        "wifi_bridge.c"
+        "mqtt_bridge.c"
+        "micronova.c"
+        "web_ui.c"
+        "leds.c"
+        "ota.c"
+    INCLUDE_DIRS
+        "."
+    EMBED_TXTFILES
+        "web/index.html"
+        "web/style.css"
+        "web/script.js"
+    REQUIRES
+        nvs_flash
+        esp_wifi
+        esp_netif
+        esp_event
+        mqtt
+        esp_http_server
+        esp_http_client
+        esp_https_ota
+        app_update
+        mbedtls
+        esp-tls
+        driver
+        json
+)

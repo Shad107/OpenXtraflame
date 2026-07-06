@@ -1,0 +1,2467 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (707) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (708) boot: compile time 14:11:04[0m
+[0;32mI (718) boot: chip revision: 0[0m
+[0;32mI (721) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (721) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (721) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (730) boot: Enabling RNG early entropy source...[0m
+[0;32mI (744) boot: Partition Table:[0m
+[0;32mI (744) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (745) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (746) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (746) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (747) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (747) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (748) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (748) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (749) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (749) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (750) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (757) boot: End of partition table[0m
+[0;32mI (777) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (846) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (872) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (898) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (1015) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (1039) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (1085) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (1085) boot: Disabling RNG early entropy source...[0m
+[0;32mI (1094) cpu_start: Pro cpu up.[0m
+[0;32mI (1094) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (748) cpu_start: App cpu up.[0m
+[0;32mI (1891) cpu_start: Pro cpu start user code[0m
+[0;32mI (1892) cpu_start: cpu freq: 160000000[0m
+[0;32mI (1892) cpu_start: Application information:[0m
+[0;32mI (1892) cpu_start: Project name:     navel[0m
+[0;32mI (1893) cpu_start: App version:      1[0m
+[0;32mI (1893) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (1893) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (1894) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (1895) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (1896) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (1896) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (1896) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (1897) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (1897) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (1930) spi_flash: detected chip: gd[0m
+[0;32mI (1939) spi_flash: flash io: dio[0m
+[0;32mI (1954) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (4) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (2514) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (2516) MyUtils: |-----------------------------|[0m
+[0;32mI (2518) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (2518) MyUtils: |=============================|[0m
+[0;32mI (2518) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (2519) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (2519) MyUtils: | BT             |   yes      |[0m
+[0;32mI (2520) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (2520) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (2521) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (2521) MyUtils: | external flash |   yes      |[0m
+[0;32mI (2522) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (2522) MyUtils: -------------------------------[0m
+[0;32mI (2531) MyUtils: [0m
+[0;32mI (2534) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (2535) MyUtils: |-----------------------------------|[0m
+[0;32mI (2535) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (2536) MyUtils: |===================================|[0m
+[0;32mI (2536) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (2537) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (2537) MyUtils: | partition type    | 0             |[0m
+[0;32mI (2538) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (2538) MyUtils: | executing on core | 0             |[0m
+[0;32mI (2538) MyUtils: | main priority     | 1             |[0m
+[0;32mI (2539) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (2539) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (2540) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (2540) MyUtils: ------------------------------------[0m
+[0;32mI (2543) TaskDef: leds = CPU_PRO[0m
+[0;32mI (2544) TaskDef: timer = CPU_PRO[0m
+[0;32mI (2544) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (4463) ProductManager: NVS init OK![0m
+[0;32mI (4658) TaskDef: product = CPU_PRO[0m
+[0;32mI (4658) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (4760) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (4792) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (4800) [SERIAL]: Baud: 38400[0m
+[0;32mI (4801) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (4801) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (4802) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (4802) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (4805) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (4856) ProductManager: Matricola Read: [0m
+[0;32mI (7573) misc: logged message 6: ResetButton > Resetting deleting[0m
+[0;32mI (7578) ResetButton: Resetting user info[0m
+[0;32mI (7619) ResetButton: partition nvs erased[0m
+[0;32mI (7652) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (19825) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (19825) boot: compile time 14:11:04[0m
+[0;32mI (19835) boot: chip revision: 0[0m
+[0;32mI (19841) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (19841) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (19841) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (19853) boot: Enabling RNG early entropy source...[0m
+[0;32mI (19867) boot: Partition Table:[0m
+[0;32mI (19868) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (19868) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (19868) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (19868) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (19869) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (19869) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (19869) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (19869) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (19870) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (19870) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (19870) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (19878) boot: End of partition table[0m
+[0;32mI (19903) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (19979) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (20006) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (20053) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (20189) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (20241) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (20291) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (20291) boot: Disabling RNG early entropy source...[0m
+[0;32mI (20303) cpu_start: Pro cpu up.[0m
+[0;32mI (20303) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (8161) cpu_start: App cpu up.[0m
+[0;32mI (1670) cpu_start: Pro cpu start user code[0m
+[0;32mI (1670) cpu_start: cpu freq: 160000000[0m
+[0;32mI (1670) cpu_start: Application information:[0m
+[0;32mI (1670) cpu_start: Project name:     navel[0m
+[0;32mI (1671) cpu_start: App version:      1[0m
+[0;32mI (1671) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (1671) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (1671) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (1673) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (1674) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (1674) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (1674) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (1675) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (1675) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (1709) spi_flash: detected chip: gd[0m
+[0;32mI (1723) spi_flash: flash io: dio[0m
+[0;32mI (1746) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (2487) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (2490) MyUtils: |-----------------------------|[0m
+[0;32mI (2490) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (2490) MyUtils: |=============================|[0m
+[0;32mI (2491) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (2491) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (2492) MyUtils: | BT             |   yes      |[0m
+[0;32mI (2492) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (2492) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (2493) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (2493) MyUtils: | external flash |   yes      |[0m
+[0;32mI (2493) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (2493) MyUtils: -------------------------------[0m
+[0;32mI (2501) MyUtils: [0m
+[0;32mI (2506) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (2507) MyUtils: |-----------------------------------|[0m
+[0;32mI (2507) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (2507) MyUtils: |===================================|[0m
+[0;32mI (2508) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (2508) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (2509) MyUtils: | partition type    | 0             |[0m
+[0;32mI (2509) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (2510) MyUtils: | executing on core | 0             |[0m
+[0;32mI (2511) MyUtils: | main priority     | 1             |[0m
+[0;32mI (2511) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (2512) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (2512) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (2513) MyUtils: ------------------------------------[0m
+[0;32mI (2518) TaskDef: leds = CPU_PRO[0m
+[0;32mI (2518) TaskDef: timer = CPU_PRO[0m
+[0;32mI (2518) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (4737) ProductManager: NVS init OK![0m
+[0;32mI (4913) ProductManager: ProductManager task started[0m
+[0;32mI (4913) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (5017) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (5085) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (5085) ProductManager: Matricola Read: [0m
+[0;32mI (5087) [SERIAL]: Baud: 38400[0m
+[0;32mI (5092) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (5092) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (5092) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (5093) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (5094) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (7493) misc: logged message 7: ResetButton > Resetting deleting[0m
+[0;32mI (7499) ResetButton: Resetting user info[0m
+[0;32mI (7546) ResetButton: partition nvs erased[0m
+[0;32mI (7613) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (4302) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (4303) boot: compile time 14:11:04[0m
+[0;32mI (4316) boot: chip revision: 0[0m
+[0;32mI (4322) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (4323) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (4323) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (4344) boot: Enabling RNG early entropy source...[0m
+[0;32mI (4367) boot: Partition Table:[0m
+[0;32mI (4367) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (4368) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (4368) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (4369) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (4369) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (4369) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (4369) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (4370) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (4370) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (4370) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (4370) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (4380) boot: End of partition table[0m
+[0;32mI (4403) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (4471) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (4494) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (4536) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (4652) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (4702) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (4757) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (4758) boot: Disabling RNG early entropy source...[0m
+[0;32mI (4770) cpu_start: Pro cpu up.[0m
+[0;32mI (4771) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (15654) cpu_start: App cpu up.[0m
+[0;32mI (20465) cpu_start: Pro cpu start user code[0m
+[0;32mI (20466) cpu_start: cpu freq: 160000000[0m
+[0;32mI (20466) cpu_start: Application information:[0m
+[0;32mI (20466) cpu_start: Project name:     navel[0m
+[0;32mI (20466) cpu_start: App version:      1[0m
+[0;32mI (20466) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (20467) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (20467) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (20468) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (20471) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (20471) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (20472) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (20472) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (20472) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (20507) spi_flash: detected chip: gd[0m
+[0;32mI (20521) spi_flash: flash io: dio[0m
+[0;32mI (20545) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (3) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (21383) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (21386) MyUtils: |-----------------------------|[0m
+[0;32mI (21386) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (21388) MyUtils: |=============================|[0m
+[0;32mI (21389) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (21390) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (21391) MyUtils: | BT             |   yes      |[0m
+[0;32mI (21391) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (21391) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (21392) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (21392) MyUtils: | external flash |   yes      |[0m
+[0;32mI (21392) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (21393) MyUtils: -------------------------------[0m
+[0;32mI (21402) MyUtils: [0m
+[0;32mI (21405) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (21405) MyUtils: |-----------------------------------|[0m
+[0;32mI (21405) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (21406) MyUtils: |===================================|[0m
+[0;32mI (21406) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (21406) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (21407) MyUtils: | partition type    | 0             |[0m
+[0;32mI (21407) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (21408) MyUtils: | executing on core | 0             |[0m
+[0;32mI (21408) MyUtils: | main priority     | 1             |[0m
+[0;32mI (21408) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (21409) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (21409) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (21409) MyUtils: ------------------------------------[0m
+[0;32mI (21413) TaskDef: leds = CPU_PRO[0m
+[0;32mI (21414) TaskDef: timer = CPU_PRO[0m
+[0;32mI (21414) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (24183) ProductManager: NVS init OK![0m
+[0;32mI (24432) ProductManager: ProductManager task started[0m
+[0;32mI (24432) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (24538) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (24586) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (24600) ProductManager: Matricola Read: [0m
+[0;32mI (24603) [SERIAL]: Baud: 38400[0m
+[0;32mI (24606) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (24607) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (24608) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (24609) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (24611) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (26358) misc: logged message 8: ResetButton > Resetting deleting[0m
+[0;32mI (26362) ResetButton: Resetting user info[0m
+[0;32mI (26437) ResetButton: partition nvs erased[0m
+[0;32mI (26476) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (10844) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (10845) boot: compile time 14:11:04[0m
+[0;32mI (10854) boot: chip revision: 0[0m
+[0;32mI (10859) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (10859) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (10859) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (10872) boot: Enabling RNG early entropy source...[0m
+[0;32mI (10886) boot: Partition Table:[0m
+[0;32mI (10886) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (10887) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (10887) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (10887) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (10888) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (10888) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (10888) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (10888) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (10889) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (10889) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (10889) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (10898) boot: End of partition table[0m
+[0;32mI (10918) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (10993) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (11021) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (11059) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (11184) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (11249) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (11311) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (11312) boot: Disabling RNG early entropy source...[0m
+[0;32mI (11329) cpu_start: Pro cpu up.[0m
+[0;32mI (11329) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (23174) cpu_start: App cpu up.[0m
+[0;32mI (7703) cpu_start: Pro cpu start user code[0m
+[0;32mI (7703) cpu_start: cpu freq: 160000000[0m
+[0;32mI (7703) cpu_start: Application information:[0m
+[0;32mI (7703) cpu_start: Project name:     navel[0m
+[0;32mI (7704) cpu_start: App version:      1[0m
+[0;32mI (7704) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (7704) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (7704) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (7706) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (7706) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (7707) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (7707) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (7707) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (7708) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (7741) spi_flash: detected chip: gd[0m
+[0;32mI (7749) spi_flash: flash io: dio[0m
+[0;32mI (7769) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (8478) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (8480) MyUtils: |-----------------------------|[0m
+[0;32mI (8481) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (8481) MyUtils: |=============================|[0m
+[0;32mI (8481) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (8482) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (8484) MyUtils: | BT             |   yes      |[0m
+[0;32mI (8484) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (8485) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (8485) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (8486) MyUtils: | external flash |   yes      |[0m
+[0;32mI (8487) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (8487) MyUtils: -------------------------------[0m
+[0;32mI (8499) MyUtils: [0m
+[0;32mI (8501) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (8502) MyUtils: |-----------------------------------|[0m
+[0;32mI (8502) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (8502) MyUtils: |===================================|[0m
+[0;32mI (8503) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (8503) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (8504) MyUtils: | partition type    | 0             |[0m
+[0;32mI (8504) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (8504) MyUtils: | executing on core | 0             |[0m
+[0;32mI (8505) MyUtils: | main priority     | 1             |[0m
+[0;32mI (8505) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (8505) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (8505) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (8506) MyUtils: ------------------------------------[0m
+[0;32mI (8510) TaskDef: leds = CPU_PRO[0m
+[0;32mI (8511) TaskDef: timer = CPU_PRO[0m
+[0;32mI (8511) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (10877) ProductManager: NVS init OK![0m
+[0;32mI (11101) TaskDef: product = CPU_PRO[0m
+[0;32mI (11101) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (11205) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (11237) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (11258) [SERIAL]: Baud: 38400[0m
+[0;32mI (11270) ProductManager: Matricola Read: [0m
+[0;32mI (11270) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (11273) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (11274) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (11274) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (11275) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (13621) misc: logged message 9: ResetButton > Resetting deleting[0m
+[0;32mI (13624) ResetButton: Resetting user info[0m
+[0;32mI (13696) ResetButton: partition nvs erased[0m
+[0;32mI (13738) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (52357) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (52358) boot: compile time 14:11:04[0m
+[0;32mI (52369) boot: chip revision: 0[0m
+[0;32mI (52373) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (52374) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (52374) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (52390) boot: Enabling RNG early entropy source...[0m
+[0;32mI (52407) boot: Partition Table:[0m
+[0;32mI (52407) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (52408) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (52408) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (52408) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (52409) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (52409) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (52409) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (52410) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (52410) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (52410) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (52411) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (52421) boot: End of partition table[0m
+[0;32mI (52456) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (52548) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (52589) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (52642) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (52804) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (52856) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (52918) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (52919) boot: Disabling RNG early entropy source...[0m
+[0;32mI (52935) cpu_start: Pro cpu up.[0m
+[0;32mI (52936) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (30905) cpu_start: App cpu up.[0m
+[0;32mI (3369) cpu_start: Pro cpu start user code[0m
+[0;32mI (3370) cpu_start: cpu freq: 160000000[0m
+[0;32mI (3370) cpu_start: Application information:[0m
+[0;32mI (3370) cpu_start: Project name:     navel[0m
+[0;32mI (3370) cpu_start: App version:      1[0m
+[0;32mI (3370) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (3371) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (3371) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (3373) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (3373) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (3374) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (3374) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (3374) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (3375) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (3407) spi_flash: detected chip: gd[0m
+[0;32mI (3422) spi_flash: flash io: dio[0m
+[0;32mI (3448) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (4349) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (4354) MyUtils: |-----------------------------|[0m
+[0;32mI (4354) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (4355) MyUtils: |=============================|[0m
+[0;32mI (4355) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (4356) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (4356) MyUtils: | BT             |   yes      |[0m
+[0;32mI (4356) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (4356) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (4357) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (4357) MyUtils: | external flash |   yes      |[0m
+[0;32mI (4357) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (4357) MyUtils: -------------------------------[0m
+[0;32mI (4368) MyUtils: [0m
+[0;32mI (4371) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (4371) MyUtils: |-----------------------------------|[0m
+[0;32mI (4371) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (4371) MyUtils: |===================================|[0m
+[0;32mI (4372) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (4372) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (4373) MyUtils: | partition type    | 0             |[0m
+[0;32mI (4373) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (4373) MyUtils: | executing on core | 0             |[0m
+[0;32mI (4374) MyUtils: | main priority     | 1             |[0m
+[0;32mI (4374) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (4375) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (4375) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (4375) MyUtils: ------------------------------------[0m
+[0;32mI (4380) TaskDef: leds = CPU_PRO[0m
+[0;32mI (4381) TaskDef: timer = CPU_PRO[0m
+[0;32mI (4381) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (6922) ProductManager: NVS init OK![0m
+[0;32mI (7173) ProductManager: ProductManager task started[0m
+[0;32mI (7173) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (7282) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (7356) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (7374) ProductManager: Matricola Read: [0m
+[0;32mI (7374) [SERIAL]: Baud: 38400[0m
+[0;32mI (7377) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (7377) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (7377) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (7378) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (7378) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (9362) misc: logged message 10: ResetButton > Resetting deleting[0m
+[0;32mI (9368) ResetButton: Resetting user info[0m
+[0;32mI (9419) ResetButton: partition nvs erased[0m
+[0;32mI (9454) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (19426) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (19426) boot: compile time 14:11:04[0m
+[0;32mI (19436) boot: chip revision: 0[0m
+[0;32mI (19441) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (19442) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (19442) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (19458) boot: Enabling RNG early entropy source...[0m
+[0;32mI (19481) boot: Partition Table:[0m
+[0;32mI (19481) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (19482) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (19483) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (19484) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (19485) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (19485) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (19486) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (19487) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (19487) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (19488) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (19489) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (19502) boot: End of partition table[0m
+[0;32mI (19543) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (19633) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (19666) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (19713) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (19842) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (19895) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (19958) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (19958) boot: Disabling RNG early entropy source...[0m
+[0;32mI (19969) cpu_start: Pro cpu up.[0m
+[0;32mI (19969) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (38545) cpu_start: App cpu up.[0m
+[0;32mI (4876) cpu_start: Pro cpu start user code[0m
+[0;32mI (4876) cpu_start: cpu freq: 160000000[0m
+[0;32mI (4876) cpu_start: Application information:[0m
+[0;32mI (4876) cpu_start: Project name:     navel[0m
+[0;32mI (4877) cpu_start: App version:      1[0m
+[0;32mI (4877) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (4877) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (4877) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (4879) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (4880) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (4880) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (4880) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (4881) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (4881) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (4925) spi_flash: detected chip: gd[0m
+[0;32mI (4935) spi_flash: flash io: dio[0m
+[0;32mI (4963) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (5782) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (5785) MyUtils: |-----------------------------|[0m
+[0;32mI (5786) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (5786) MyUtils: |=============================|[0m
+[0;32mI (5787) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (5788) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (5788) MyUtils: | BT             |   yes      |[0m
+[0;32mI (5788) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (5789) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (5789) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (5790) MyUtils: | external flash |   yes      |[0m
+[0;32mI (5790) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (5790) MyUtils: -------------------------------[0m
+[0;32mI (5801) MyUtils: [0m
+[0;32mI (5808) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (5809) MyUtils: |-----------------------------------|[0m
+[0;32mI (5809) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (5809) MyUtils: |===================================|[0m
+[0;32mI (5810) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (5811) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (5811) MyUtils: | partition type    | 0             |[0m
+[0;32mI (5812) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (5812) MyUtils: | executing on core | 0             |[0m
+[0;32mI (5813) MyUtils: | main priority     | 1             |[0m
+[0;32mI (5813) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (5813) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (5814) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (5814) MyUtils: ------------------------------------[0m
+[0;32mI (5819) TaskDef: leds = CPU_PRO[0m
+[0;32mI (5820) TaskDef: timer = CPU_PRO[0m
+[0;32mI (5820) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (8299) ProductManager: NVS init OK![0m
+[0;32mI (8535) TaskDef: product = CPU_PRO[0m
+[0;32mI (8535) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (8641) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (8675) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (8684) [SERIAL]: Baud: 38400[0m
+[0;32mI (8693) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (8699) ProductManager: Matricola Read: [0m
+[0;32mI (8704) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (8707) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (8707) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (8708) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (10742) misc: logged message 11: ResetButton > Resetting deleting[0m
+[0;32mI (10748) ResetButton: Resetting user info[0m
+[0;32mI (10794) ResetButton: partition nvs erased[0m
+[0;32mI (10821) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (9964) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (9965) boot: compile time 14:11:04[0m
+[0;32mI (9994) boot: chip revision: 0[0m
+[0;32mI (10003) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (10004) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (10004) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (10020) boot: Enabling RNG early entropy source...[0m
+[0;32mI (10039) boot: Partition Table:[0m
+[0;32mI (10039) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (10040) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (10040) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (10040) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (10040) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (10041) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (10041) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (10041) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (10042) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (10042) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (10042) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (10047) boot: End of partition table[0m
+[0;32mI (10071) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (10156) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (10187) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (10232) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (10371) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (10417) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (10465) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (10465) boot: Disabling RNG early entropy source...[0m
+[0;32mI (10483) cpu_start: Pro cpu up.[0m
+[0;32mI (10483) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (46055) cpu_start: App cpu up.[0m
+[0;32mI (2922) cpu_start: Pro cpu start user code[0m
+[0;32mI (2923) cpu_start: cpu freq: 160000000[0m
+[0;32mI (2923) cpu_start: Application information:[0m
+[0;32mI (2923) cpu_start: Project name:     navel[0m
+[0;32mI (2923) cpu_start: App version:      1[0m
+[0;32mI (2924) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (2924) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (2924) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (2926) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (2927) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (2928) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (2928) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (2928) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (2929) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (2979) spi_flash: detected chip: gd[0m
+[0;32mI (2993) spi_flash: flash io: dio[0m
+[0;32mI (3018) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (4087) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (4090) MyUtils: |-----------------------------|[0m
+[0;32mI (4091) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (4092) MyUtils: |=============================|[0m
+[0;32mI (4092) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (4093) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (4093) MyUtils: | BT             |   yes      |[0m
+[0;32mI (4093) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (4095) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (4096) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (4096) MyUtils: | external flash |   yes      |[0m
+[0;32mI (4097) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (4097) MyUtils: -------------------------------[0m
+[0;32mI (4111) MyUtils: [0m
+[0;32mI (4114) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (4115) MyUtils: |-----------------------------------|[0m
+[0;32mI (4115) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (4115) MyUtils: |===================================|[0m
+[0;32mI (4116) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (4116) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (4116) MyUtils: | partition type    | 0             |[0m
+[0;32mI (4117) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (4117) MyUtils: | executing on core | 0             |[0m
+[0;32mI (4118) MyUtils: | main priority     | 1             |[0m
+[0;32mI (4118) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (4118) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (4119) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (4119) MyUtils: ------------------------------------[0m
+[0;32mI (4124) TaskDef: leds = CPU_PRO[0m
+[0;32mI (4125) TaskDef: timer = CPU_PRO[0m
+[0;32mI (4125) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (7114) ProductManager: NVS init OK![0m
+[0;32mI (7330) TaskDef: product = CPU_PRO[0m
+[0;32mI (7330) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (7435) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (7454) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (7480) [SERIAL]: Baud: 38400[0m
+[0;32mI (7492) ProductManager: Matricola Read: [0m
+[0;32mI (7492) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (7494) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (7496) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (7497) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (7498) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (8961) misc: logged message 12: ResetButton > Resetting deleting[0m
+[0;32mI (8963) ResetButton: Resetting user info[0m
+[0;32mI (9013) ResetButton: partition nvs erased[0m
+[0;32mI (9043) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (40870) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (40870) boot: compile time 14:11:04[0m
+[0;32mI (40880) boot: chip revision: 0[0m
+[0;32mI (40885) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (40885) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (40885) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (40894) boot: Enabling RNG early entropy source...[0m
+[0;32mI (40905) boot: Partition Table:[0m
+[0;32mI (40906) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (40906) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (40906) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (40906) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (40907) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (40907) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (40907) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (40907) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (40908) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (40908) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (40908) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (40914) boot: End of partition table[0m
+[0;32mI (40934) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (41001) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (41027) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (41067) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (41179) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (41217) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (41262) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (41263) boot: Disabling RNG early entropy source...[0m
+[0;32mI (41273) cpu_start: Pro cpu up.[0m
+[0;32mI (41274) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (53490) cpu_start: App cpu up.[0m
+[0;32mI (14279) cpu_start: Pro cpu start user code[0m
+[0;32mI (14279) cpu_start: cpu freq: 160000000[0m
+[0;32mI (14280) cpu_start: Application information:[0m
+[0;32mI (14280) cpu_start: Project name:     navel[0m
+[0;32mI (14280) cpu_start: App version:      1[0m
+[0;32mI (14281) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (14282) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (14282) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (14284) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (14285) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (14286) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (14286) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (14287) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (14287) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (14321) spi_flash: detected chip: gd[0m
+[0;32mI (14336) spi_flash: flash io: dio[0m
+[0;32mI (14357) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (15326) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (15328) MyUtils: |-----------------------------|[0m
+[0;32mI (15328) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (15329) MyUtils: |=============================|[0m
+[0;32mI (15329) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (15330) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (15330) MyUtils: | BT             |   yes      |[0m
+[0;32mI (15330) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (15331) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (15331) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (15331) MyUtils: | external flash |   yes      |[0m
+[0;32mI (15331) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (15332) MyUtils: -------------------------------[0m
+[0;32mI (15358) MyUtils: [0m
+[0;32mI (15360) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (15361) MyUtils: |-----------------------------------|[0m
+[0;32mI (15361) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (15361) MyUtils: |===================================|[0m
+[0;32mI (15362) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (15362) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (15363) MyUtils: | partition type    | 0             |[0m
+[0;32mI (15363) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (15364) MyUtils: | executing on core | 0             |[0m
+[0;32mI (15364) MyUtils: | main priority     | 1             |[0m
+[0;32mI (15364) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (15365) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (15365) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (15365) MyUtils: ------------------------------------[0m
+[0;32mI (15369) TaskDef: leds = CPU_PRO[0m
+[0;32mI (15370) TaskDef: timer = CPU_PRO[0m
+[0;32mI (15370) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (18087) ProductManager: NVS init OK![0m
+[0;32mI (18328) TaskDef: product = CPU_PRO[0m
+[0;32mI (18328) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (18435) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (18452) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (18454) [SERIAL]: Baud: 38400[0m
+[0;32mI (18475) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (18487) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (18495) ProductManager: Matricola Read: [0m
+[0;32mI (18499) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (18501) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (18502) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (20200) misc: logged message 13: ResetButton > Resetting deleting[0m
+[0;32mI (20204) ResetButton: Resetting user info[0m
+[0;32mI (20266) ResetButton: partition nvs erased[0m
+[0;32mI (20316) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (17738) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (17739) boot: compile time 14:11:04[0m
+[0;32mI (17749) boot: chip revision: 0[0m
+[0;32mI (17754) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (17754) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (17754) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (17766) boot: Enabling RNG early entropy source...[0m
+[0;32mI (17780) boot: Partition Table:[0m
+[0;32mI (17781) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (17781) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (17781) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (17782) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (17782) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (17782) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (17783) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (17783) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (17783) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (17783) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (17784) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (17795) boot: End of partition table[0m
+[0;32mI (17816) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (17894) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (17929) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (17977) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (18112) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (18166) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (18207) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (18208) boot: Disabling RNG early entropy source...[0m
+[0;32mI (18218) cpu_start: Pro cpu up.[0m
+[0;32mI (18218) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (7290) cpu_start: App cpu up.[0m
+[0;32mI (25558) cpu_start: Pro cpu start user code[0m
+[0;32mI (25559) cpu_start: cpu freq: 160000000[0m
+[0;32mI (25559) cpu_start: Application information:[0m
+[0;32mI (25560) cpu_start: Project name:     navel[0m
+[0;32mI (25560) cpu_start: App version:      1[0m
+[0;32mI (25561) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (25562) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (25562) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (25566) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (25568) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (25568) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (25569) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (25570) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (25570) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (25626) spi_flash: detected chip: gd[0m
+[0;32mI (25644) spi_flash: flash io: dio[0m
+[0;32mI (25670) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (26514) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (26517) MyUtils: |-----------------------------|[0m
+[0;32mI (26517) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (26517) MyUtils: |=============================|[0m
+[0;32mI (26518) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (26518) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (26519) MyUtils: | BT             |   yes      |[0m
+[0;32mI (26519) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (26519) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (26520) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (26520) MyUtils: | external flash |   yes      |[0m
+[0;32mI (26520) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (26521) MyUtils: -------------------------------[0m
+[0;32mI (26528) MyUtils: [0m
+[0;32mI (26534) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (26534) MyUtils: |-----------------------------------|[0m
+[0;32mI (26534) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (26534) MyUtils: |===================================|[0m
+[0;32mI (26534) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (26535) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (26536) MyUtils: | partition type    | 0             |[0m
+[0;32mI (26536) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (26537) MyUtils: | executing on core | 0             |[0m
+[0;32mI (26537) MyUtils: | main priority     | 1             |[0m
+[0;32mI (26537) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (26537) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (26538) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (26538) MyUtils: ------------------------------------[0m
+[0;32mI (26541) TaskDef: leds = CPU_PRO[0m
+[0;32mI (26542) TaskDef: timer = CPU_PRO[0m
+[0;32mI (26542) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (29510) ProductManager: NVS init OK![0m
+[0;32mI (29743) ProductManager: ProductManager task started[0m
+[0;32mI (29743) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (29869) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (29925) ProductManager: Matricola Read: [0m
+[0;32mI (29918) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (29945) [SERIAL]: Baud: 38400[0m
+[0;32mI (29946) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (29947) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (29949) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (29950) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (29952) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (31531) misc: logged message 14: ResetButton > Resetting deleting[0m
+[0;32mI (31533) ResetButton: Resetting user info[0m
+[0;32mI (31577) ResetButton: partition nvs erased[0m
+[0;32mI (31620) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (48060) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (48060) boot: compile time 14:11:04[0m
+[0;32mI (48073) boot: chip revision: 0[0m
+[0;32mI (48079) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (48079) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (48080) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (48096) boot: Enabling RNG early entropy source...[0m
+[0;32mI (48113) boot: Partition Table:[0m
+[0;32mI (48113) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (48113) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (48114) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (48114) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (48115) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (48115) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (48115) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (48116) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (48116) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (48116) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (48117) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (48130) boot: End of partition table[0m
+[0;32mI (48160) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (48245) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (48281) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (48338) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (48498) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (48552) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (48623) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (48623) boot: Disabling RNG early entropy source...[0m
+[0;32mI (48639) cpu_start: Pro cpu up.[0m
+[0;32mI (48639) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (14979) cpu_start: App cpu up.[0m
+[0;32mI (9984) cpu_start: Pro cpu start user code[0m
+[0;32mI (9984) cpu_start: cpu freq: 160000000[0m
+[0;32mI (9985) cpu_start: Application information:[0m
+[0;32mI (9985) cpu_start: Project name:     navel[0m
+[0;32mI (9985) cpu_start: App version:      1[0m
+[0;32mI (9985) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (9986) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (9986) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (9987) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (9988) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (9989) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (9989) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (9989) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (9990) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (10029) spi_flash: detected chip: gd[0m
+[0;32mI (10048) spi_flash: flash io: dio[0m
+[0;32mI (10074) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (11126) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (11130) MyUtils: |-----------------------------|[0m
+[0;32mI (11130) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (11131) MyUtils: |=============================|[0m
+[0;32mI (11131) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (11132) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (11132) MyUtils: | BT             |   yes      |[0m
+[0;32mI (11132) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (11133) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (11133) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (11133) MyUtils: | external flash |   yes      |[0m
+[0;32mI (11134) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (11134) MyUtils: -------------------------------[0m
+[0;32mI (11147) MyUtils: [0m
+[0;32mI (11150) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (11150) MyUtils: |-----------------------------------|[0m
+[0;32mI (11150) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (11151) MyUtils: |===================================|[0m
+[0;32mI (11151) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (11151) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (11152) MyUtils: | partition type    | 0             |[0m
+[0;32mI (11152) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (11153) MyUtils: | executing on core | 0             |[0m
+[0;32mI (11153) MyUtils: | main priority     | 1             |[0m
+[0;32mI (11154) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (11154) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (11154) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (11155) MyUtils: ------------------------------------[0m
+[0;32mI (11159) TaskDef: leds = CPU_PRO[0m
+[0;32mI (11159) TaskDef: timer = CPU_PRO[0m
+[0;32mI (11161) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (14072) ProductManager: NVS init OK![0m
+[0;32mI (14369) ProductManager: ProductManager task started[0m
+[0;32mI (14369) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (14476) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (14528) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (14530) ProductManager: Matricola Read: [0m
+[0;32mI (14533) [SERIAL]: Baud: 38400[0m
+[0;32mI (14536) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (14536) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (14537) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (14538) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (14539) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (15984) misc: logged message 15: ResetButton > Resetting deleting[0m
+[0;32mI (15986) ResetButton: Resetting user info[0m
+[0;32mI (16025) ResetButton: partition nvs erased[0m
+[0;32mI (16058) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (23905) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (23906) boot: compile time 14:11:04[0m
+[0;32mI (23917) boot: chip revision: 0[0m
+[0;32mI (23924) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (23924) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (23925) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (23940) boot: Enabling RNG early entropy source...[0m
+[0;32mI (23959) boot: Partition Table:[0m
+[0;32mI (23959) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (23959) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (23960) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (23960) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (23960) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (23960) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (23961) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (23961) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (23961) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (23961) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (23962) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (23972) boot: End of partition table[0m
+[0;32mI (24003) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (24111) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (24144) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (24190) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (24325) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (24386) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (24457) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (24458) boot: Disabling RNG early entropy source...[0m
+[0;32mI (24473) cpu_start: Pro cpu up.[0m
+[0;32mI (24473) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (22569) cpu_start: App cpu up.[0m
+[0;32mI (20251) cpu_start: Pro cpu start user code[0m
+[0;32mI (20252) cpu_start: cpu freq: 160000000[0m
+[0;32mI (20252) cpu_start: Application information:[0m
+[0;32mI (20252) cpu_start: Project name:     navel[0m
+[0;32mI (20253) cpu_start: App version:      1[0m
+[0;32mI (20253) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (20254) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (20255) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (20256) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (20258) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (20259) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (20259) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (20260) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (20260) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (20308) spi_flash: detected chip: gd[0m
+[0;32mI (20324) spi_flash: flash io: dio[0m
+[0;32mI (20352) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (21486) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (21491) MyUtils: |-----------------------------|[0m
+[0;32mI (21492) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (21492) MyUtils: |=============================|[0m
+[0;32mI (21492) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (21493) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (21493) MyUtils: | BT             |   yes      |[0m
+[0;32mI (21494) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (21494) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (21494) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (21495) MyUtils: | external flash |   yes      |[0m
+[0;32mI (21495) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (21495) MyUtils: -------------------------------[0m
+[0;32mI (21504) MyUtils: [0m
+[0;32mI (21507) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (21507) MyUtils: |-----------------------------------|[0m
+[0;32mI (21507) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (21507) MyUtils: |===================================|[0m
+[0;32mI (21507) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (21507) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (21509) MyUtils: | partition type    | 0             |[0m
+[0;32mI (21509) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (21513) MyUtils: | executing on core | 0             |[0m
+[0;32mI (21514) MyUtils: | main priority     | 1             |[0m
+[0;32mI (21514) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (21514) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (21515) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (21515) MyUtils: ------------------------------------[0m
+[0;32mI (21521) TaskDef: leds = CPU_PRO[0m
+[0;32mI (21522) TaskDef: timer = CPU_PRO[0m
+[0;32mI (21522) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (24992) ProductManager: NVS init OK![0m
+[0;32mI (25245) TaskDef: product = CPU_PRO[0m
+[0;32mI (25245) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (25348) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (25364) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (25377) [SERIAL]: Baud: 38400[0m
+[0;32mI (25390) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (25415) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (25416) ProductManager: Matricola Read: [0m
+[0;32mI (25417) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (25420) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (25423) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (26501) misc: logged message 16: ResetButton > Resetting deleting[0m
+[0;32mI (26505) ResetButton: Resetting user info[0m
+[0;32mI (26566) ResetButton: partition nvs erased[0m
+[0;32mI (26616) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (50295) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (50296) boot: compile time 14:11:04[0m
+[0;32mI (50307) boot: chip revision: 0[0m
+[0;32mI (50310) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (50310) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (50311) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (50324) boot: Enabling RNG early entropy source...[0m
+[0;32mI (50339) boot: Partition Table:[0m
+[0;32mI (50339) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (50339) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (50340) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (50340) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (50341) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (50341) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (50341) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (50341) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (50342) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (50342) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (50342) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (50354) boot: End of partition table[0m
+[0;32mI (50381) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (50468) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (50505) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (50553) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (50708) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (50769) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (50857) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (50858) boot: Disabling RNG early entropy source...[0m
+[0;32mI (50875) cpu_start: Pro cpu up.[0m
+[0;32mI (50876) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (30423) cpu_start: App cpu up.[0m
+[0;32mI (819) cpu_start: Pro cpu start user code[0m
+[0;32mI (820) cpu_start: cpu freq: 160000000[0m
+[0;32mI (820) cpu_start: Application information:[0m
+[0;32mI (820) cpu_start: Project name:     navel[0m
+[0;32mI (820) cpu_start: App version:      1[0m
+[0;32mI (821) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (821) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (821) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (823) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (824) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (825) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (825) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (825) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (826) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (873) spi_flash: detected chip: gd[0m
+[0;32mI (888) spi_flash: flash io: dio[0m
+[0;32mI (914) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (1960) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (1963) MyUtils: |-----------------------------|[0m
+[0;32mI (1963) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (1964) MyUtils: |=============================|[0m
+[0;32mI (1964) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (1965) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (1965) MyUtils: | BT             |   yes      |[0m
+[0;32mI (1965) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (1966) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (1966) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (1966) MyUtils: | external flash |   yes      |[0m
+[0;32mI (1967) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (1967) MyUtils: -------------------------------[0m
+[0;32mI (1986) MyUtils: [0m
+[0;32mI (1990) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (1991) MyUtils: |-----------------------------------|[0m
+[0;32mI (1992) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (1992) MyUtils: |===================================|[0m
+[0;32mI (1993) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (1994) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (1995) MyUtils: | partition type    | 0             |[0m
+[0;32mI (1996) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (1997) MyUtils: | executing on core | 0             |[0m
+[0;32mI (1997) MyUtils: | main priority     | 1             |[0m
+[0;32mI (1997) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (1997) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (1997) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (1997) MyUtils: ------------------------------------[0m
+[0;32mI (2003) TaskDef: leds = CPU_PRO[0m
+[0;32mI (2003) TaskDef: timer = CPU_PRO[0m
+[0;32mI (2003) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (4908) ProductManager: NVS init OK![0m
+[0;32mI (5147) TaskDef: product = CPU_PRO[0m
+[0;32mI (5147) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (5252) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (5271) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (5278) [SERIAL]: Baud: 38400[0m
+[0;32mI (5279) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (5280) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (5290) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (5293) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (5306) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (5324) ProductManager: Matricola Read: [0m
+[0;32mI (6867) misc: logged message 17: ResetButton > Resetting deleting[0m
+[0;32mI (6871) ResetButton: Resetting user info[0m
+[0;32mI (6938) ResetButton: partition nvs erased[0m
+[0;32mI (6995) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (10243) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (10244) boot: compile time 14:11:04[0m
+[0;32mI (10252) boot: chip revision: 0[0m
+[0;32mI (10256) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (10256) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (10256) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (10268) boot: Enabling RNG early entropy source...[0m
+[0;32mI (10282) boot: Partition Table:[0m
+[0;32mI (10283) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (10283) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (10284) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (10284) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (10284) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (10284) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (10285) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (10285) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (10285) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (10285) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (10285) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (10293) boot: End of partition table[0m
+[0;32mI (10316) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (10388) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (10418) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (10465) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (10589) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (10634) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (10710) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (10711) boot: Disabling RNG early entropy source...[0m
+[0;32mI (10730) cpu_start: Pro cpu up.[0m
+[0;32mI (10730) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (38027) cpu_start: App cpu up.[0m
+[0;32mI (21963) cpu_start: Pro cpu start user code[0m
+[0;32mI (21963) cpu_start: cpu freq: 160000000[0m
+[0;32mI (21964) cpu_start: Application information:[0m
+[0;32mI (21964) cpu_start: Project name:     navel[0m
+[0;32mI (21965) cpu_start: App version:      1[0m
+[0;32mI (21965) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (21966) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (21966) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (21968) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (21969) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (21969) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (21970) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (21970) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (21971) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (22010) spi_flash: detected chip: gd[0m
+[0;32mI (22030) spi_flash: flash io: dio[0m
+[0;32mI (22056) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (23050) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (23052) MyUtils: |-----------------------------|[0m
+[0;32mI (23053) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (23053) MyUtils: |=============================|[0m
+[0;32mI (23054) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (23055) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (23055) MyUtils: | BT             |   yes      |[0m
+[0;32mI (23056) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (23056) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (23057) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (23058) MyUtils: | external flash |   yes      |[0m
+[0;32mI (23058) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (23059) MyUtils: -------------------------------[0m
+[0;32mI (23076) MyUtils: [0m
+[0;32mI (23082) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (23083) MyUtils: |-----------------------------------|[0m
+[0;32mI (23083) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (23084) MyUtils: |===================================|[0m
+[0;32mI (23085) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (23085) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (23086) MyUtils: | partition type    | 0             |[0m
+[0;32mI (23086) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (23087) MyUtils: | executing on core | 0             |[0m
+[0;32mI (23087) MyUtils: | main priority     | 1             |[0m
+[0;32mI (23088) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (23088) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (23089) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (23089) MyUtils: ------------------------------------[0m
+[0;32mI (23094) TaskDef: leds = CPU_PRO[0m
+[0;32mI (23094) TaskDef: timer = CPU_PRO[0m
+[0;32mI (23095) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (25805) ProductManager: NVS init OK![0m
+[0;32mI (26052) TaskDef: product = CPU_PRO[0m
+[0;32mI (26052) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (26161) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (26169) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (26169) [SERIAL]: Baud: 38400[0m
+[0;32mI (26169) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (26170) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (26170) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (26171) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (26171) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (26248) ProductManager: Matricola Read: [0m
+[0;32mI (28093) misc: logged message 18: ResetButton > Resetting deleting[0m
+[0;32mI (28097) ResetButton: Resetting user info[0m
+[0;32mI (28167) ResetButton: partition nvs erased[0m
+[0;32mI (28222) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (26140) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (26140) boot: compile time 14:11:04[0m
+[0;32mI (26151) boot: chip revision: 0[0m
+[0;32mI (26154) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (26154) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (26154) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (26168) boot: Enabling RNG early entropy source...[0m
+[0;32mI (26180) boot: Partition Table:[0m
+[0;32mI (26180) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (26180) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (26181) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (26181) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (26181) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (26182) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (26182) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (26182) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (26183) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (26183) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (26183) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (26190) boot: End of partition table[0m
+[0;32mI (26216) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (26292) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (26322) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (26375) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (26513) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (26560) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (26631) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (26631) boot: Disabling RNG early entropy source...[0m
+[0;32mI (26648) cpu_start: Pro cpu up.[0m
+[0;32mI (26649) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (45764) cpu_start: App cpu up.[0m
+[0;32mI (18780) cpu_start: Pro cpu start user code[0m
+[0;32mI (18781) cpu_start: cpu freq: 160000000[0m
+[0;32mI (18781) cpu_start: Application information:[0m
+[0;32mI (18781) cpu_start: Project name:     navel[0m
+[0;32mI (18782) cpu_start: App version:      1[0m
+[0;32mI (18782) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (18782) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (18783) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (18784) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (18785) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (18785) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (18786) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (18786) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (18786) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (18828) spi_flash: detected chip: gd[0m
+[0;32mI (18845) spi_flash: flash io: dio[0m
+[0;32mI (18866) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (19872) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (19874) MyUtils: |-----------------------------|[0m
+[0;32mI (19874) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (19874) MyUtils: |=============================|[0m
+[0;32mI (19874) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (19875) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (19875) MyUtils: | BT             |   yes      |[0m
+[0;32mI (19875) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (19876) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (19876) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (19876) MyUtils: | external flash |   yes      |[0m
+[0;32mI (19876) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (19877) MyUtils: -------------------------------[0m
+[0;32mI (19884) MyUtils: [0m
+[0;32mI (19885) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (19886) MyUtils: |-----------------------------------|[0m
+[0;32mI (19886) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (19887) MyUtils: |===================================|[0m
+[0;32mI (19887) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (19887) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (19888) MyUtils: | partition type    | 0             |[0m
+[0;32mI (19888) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (19889) MyUtils: | executing on core | 0             |[0m
+[0;32mI (19889) MyUtils: | main priority     | 1             |[0m
+[0;32mI (19889) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (19889) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (19889) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (19890) MyUtils: ------------------------------------[0m
+[0;32mI (19895) TaskDef: leds = CPU_PRO[0m
+[0;32mI (19896) TaskDef: timer = CPU_PRO[0m
+[0;32mI (19896) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (22291) ProductManager: NVS init OK![0m
+[0;32mI (22504) TaskDef: product = CPU_PRO[0m
+[0;32mI (22504) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (22607) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (22638) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (22663) ProductManager: Matricola Read: [0m
+[0;32mI (22663) [SERIAL]: Baud: 38400[0m
+[0;32mI (22666) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (22668) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (22668) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (22669) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (22670) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (24767) misc: logged message 19: ResetButton > Resetting deleting[0m
+[0;32mI (24774) ResetButton: Resetting user info[0m
+[0;32mI (24828) ResetButton: partition nvs erased[0m
+[0;32mI (24864) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (51240) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (51240) boot: compile time 14:11:04[0m
+[0;32mI (51252) boot: chip revision: 0[0m
+[0;32mI (51257) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (51258) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (51258) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (51275) boot: Enabling RNG early entropy source...[0m
+[0;32mI (51294) boot: Partition Table:[0m
+[0;32mI (51295) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (51295) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (51296) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (51296) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (51296) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (51297) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (51297) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (51297) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (51298) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (51298) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (51299) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (51310) boot: End of partition table[0m
+[0;32mI (51343) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (51435) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (51476) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (51528) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (51673) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (51728) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (51791) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (51792) boot: Disabling RNG early entropy source...[0m
+[0;32mI (51807) cpu_start: Pro cpu up.[0m
+[0;32mI (51807) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (53370) cpu_start: App cpu up.[0m
+[0;32mI (24694) cpu_start: Pro cpu start user code[0m
+[0;32mI (24695) cpu_start: cpu freq: 160000000[0m
+[0;32mI (24695) cpu_start: Application information:[0m
+[0;32mI (24695) cpu_start: Project name:     navel[0m
+[0;32mI (24695) cpu_start: App version:      1[0m
+[0;32mI (24695) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (24696) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (24696) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (24698) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (24699) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (24699) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (24700) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (24700) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (24700) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (24756) spi_flash: detected chip: gd[0m
+[0;32mI (24769) spi_flash: flash io: dio[0m
+[0;32mI (24801) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (25989) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (25992) MyUtils: |-----------------------------|[0m
+[0;32mI (25992) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (25993) MyUtils: |=============================|[0m
+[0;32mI (25993) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (25994) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (25995) MyUtils: | BT             |   yes      |[0m
+[0;32mI (25996) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (25997) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (25998) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (25998) MyUtils: | external flash |   yes      |[0m
+[0;32mI (25999) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (26000) MyUtils: -------------------------------[0m
+[0;32mI (26009) MyUtils: [0m
+[0;32mI (26012) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (26012) MyUtils: |-----------------------------------|[0m
+[0;32mI (26013) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (26013) MyUtils: |===================================|[0m
+[0;32mI (26013) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (26018) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (26018) MyUtils: | partition type    | 0             |[0m
+[0;32mI (26019) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (26020) MyUtils: | executing on core | 0             |[0m
+[0;32mI (26020) MyUtils: | main priority     | 1             |[0m
+[0;32mI (26021) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (26021) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (26021) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (26021) MyUtils: ------------------------------------[0m
+[0;32mI (26026) TaskDef: leds = CPU_PRO[0m
+[0;32mI (26026) TaskDef: timer = CPU_PRO[0m
+[0;32mI (26026) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (29247) ProductManager: NVS init OK![0m
+[0;32mI (29514) TaskDef: product = CPU_PRO[0m
+[0;32mI (29514) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (29620) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (29645) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (29671) [SERIAL]: Baud: 38400[0m
+[0;32mI (29672) ProductManager: Matricola Read: [0m
+[0;32mI (29673) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (29676) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (29676) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (29676) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (29679) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (30755) misc: logged message 20: ResetButton > Resetting deleting[0m
+[0;32mI (30757) ResetButton: Resetting user info[0m
+[0;32mI (30805) ResetButton: partition nvs erased[0m
+[0;32mI (30839) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (5999) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (5999) boot: compile time 14:11:04[0m
+[0;32mI (6010) boot: chip revision: 0[0m
+[0;32mI (6015) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (6015) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (6015) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (6032) boot: Enabling RNG early entropy source...[0m
+[0;32mI (6050) boot: Partition Table:[0m
+[0;32mI (6050) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (6050) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (6051) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (6051) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (6052) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (6052) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (6052) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (6053) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (6053) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (6053) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (6053) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (6065) boot: End of partition table[0m
+[0;32mI (6092) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (6174) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (6210) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (6257) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (6388) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (6441) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (6498) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (6498) boot: Disabling RNG early entropy source...[0m
+[0;32mI (6510) cpu_start: Pro cpu up.[0m
+[0;32mI (6511) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (7226) cpu_start: App cpu up.[0m
+[0;32mI (13780) cpu_start: Pro cpu start user code[0m
+[0;32mI (13781) cpu_start: cpu freq: 160000000[0m
+[0;32mI (13781) cpu_start: Application information:[0m
+[0;32mI (13781) cpu_start: Project name:     navel[0m
+[0;32mI (13782) cpu_start: App version:      1[0m
+[0;32mI (13783) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (13784) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (13784) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (13786) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (13787) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (13788) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (13788) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (13788) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (13789) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (13830) spi_flash: detected chip: gd[0m
+[0;32mI (13843) spi_flash: flash io: dio[0m
+[0;32mI (13859) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (14783) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (14786) MyUtils: |-----------------------------|[0m
+[0;32mI (14786) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (14786) MyUtils: |=============================|[0m
+[0;32mI (14787) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (14787) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (14788) MyUtils: | BT             |   yes      |[0m
+[0;32mI (14788) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (14788) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (14789) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (14790) MyUtils: | external flash |   yes      |[0m
+[0;32mI (14790) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (14790) MyUtils: -------------------------------[0m
+[0;32mI (14805) MyUtils: [0m
+[0;32mI (14808) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (14809) MyUtils: |-----------------------------------|[0m
+[0;32mI (14809) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (14809) MyUtils: |===================================|[0m
+[0;32mI (14810) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (14810) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (14810) MyUtils: | partition type    | 0             |[0m
+[0;32mI (14811) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (14811) MyUtils: | executing on core | 0             |[0m
+[0;32mI (14811) MyUtils: | main priority     | 1             |[0m
+[0;32mI (14812) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (14812) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (14812) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (14812) MyUtils: ------------------------------------[0m
+[0;32mI (14816) TaskDef: leds = CPU_PRO[0m
+[0;32mI (14817) TaskDef: timer = CPU_PRO[0m
+[0;32mI (14817) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (17725) ProductManager: NVS init OK![0m
+[0;32mI (17936) TaskDef: product = CPU_PRO[0m
+[0;32mI (17937) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (18039) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (18059) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (18076) [SERIAL]: Baud: 38400[0m
+[0;32mI (18094) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (18105) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (18107) ProductManager: Matricola Read: [0m
+[0;32mI (18108) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (18110) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (18112) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (19745) misc: logged message 21: ResetButton > Resetting deleting[0m
+[0;32mI (19747) ResetButton: Resetting user info[0m
+[0;32mI (19787) ResetButton: partition nvs erased[0m
+[0;32mI (19814) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (876) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (876) boot: compile time 14:11:04[0m
+[0;32mI (884) boot: chip revision: 0[0m
+[0;32mI (887) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (887) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (887) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (894) boot: Enabling RNG early entropy source...[0m
+[0;32mI (907) boot: Partition Table:[0m
+[0;32mI (907) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (907) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (908) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (908) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (908) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (908) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (909) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (909) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (909) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (909) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (909) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (915) boot: End of partition table[0m
+[0;32mI (940) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (1011) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (1036) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (1080) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (1204) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (1249) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (1314) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (1314) boot: Disabling RNG early entropy source...[0m
+[0;32mI (1327) cpu_start: Pro cpu up.[0m
+[0;32mI (1327) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (14673) cpu_start: App cpu up.[0m
+[0;32mI (16045) cpu_start: Pro cpu start user code[0m
+[0;32mI (16046) cpu_start: cpu freq: 160000000[0m
+[0;32mI (16046) cpu_start: Application information:[0m
+[0;32mI (16047) cpu_start: Project name:     navel[0m
+[0;32mI (16047) cpu_start: App version:      1[0m
+[0;32mI (16048) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (16048) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (16049) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (16050) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (16052) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (16052) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (16053) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (16053) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (16054) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (16102) spi_flash: detected chip: gd[0m
+[0;32mI (16120) spi_flash: flash io: dio[0m
+[0;32mI (16144) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (16896) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (16898) MyUtils: |-----------------------------|[0m
+[0;32mI (16898) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (16898) MyUtils: |=============================|[0m
+[0;32mI (16898) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (16899) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (16899) MyUtils: | BT             |   yes      |[0m
+[0;32mI (16899) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (16899) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (16900) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (16900) MyUtils: | external flash |   yes      |[0m
+[0;32mI (16900) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (16900) MyUtils: -------------------------------[0m
+[0;32mI (16907) MyUtils: [0m
+[0;32mI (16908) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (16909) MyUtils: |-----------------------------------|[0m
+[0;32mI (16909) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (16909) MyUtils: |===================================|[0m
+[0;32mI (16909) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (16910) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (16910) MyUtils: | partition type    | 0             |[0m
+[0;32mI (16910) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (16910) MyUtils: | executing on core | 0             |[0m
+[0;32mI (16911) MyUtils: | main priority     | 1             |[0m
+[0;32mI (16911) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (16911) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (16911) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (16912) MyUtils: ------------------------------------[0m
+[0;32mI (16918) TaskDef: leds = CPU_PRO[0m
+[0;32mI (16919) TaskDef: timer = CPU_PRO[0m
+[0;32mI (16919) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (19433) ProductManager: NVS init OK![0m
+[0;32mI (19671) TaskDef: product = CPU_PRO[0m
+[0;32mI (19671) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (19774) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (19820) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (19841) [SERIAL]: Baud: 38400[0m
+[0;32mI (19857) ProductManager: Matricola Read: [0m
+[0;32mI (19858) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (19864) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (19865) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (19866) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (19868) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (22124) misc: logged message 22: ResetButton > Resetting deleting[0m
+[0;32mI (22127) ResetButton: Resetting user info[0m
+[0;32mI (22191) ResetButton: partition nvs erased[0m
+[0;32mI (22235) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (49320) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (49320) boot: compile time 14:11:04[0m
+[0;32mI (49335) boot: chip revision: 0[0m
+[0;32mI (49340) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (49340) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (49340) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (49357) boot: Enabling RNG early entropy source...[0m
+[0;32mI (49378) boot: Partition Table:[0m
+[0;32mI (49379) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (49379) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (49379) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (49380) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (49380) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (49380) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (49381) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (49381) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (49381) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (49382) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (49382) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (49393) boot: End of partition table[0m
+[0;32mI (49426) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (49525) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (49562) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (49617) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (49762) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (49828) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (49906) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (49907) boot: Disabling RNG early entropy source...[0m
+[0;32mI (49924) cpu_start: Pro cpu up.[0m
+[0;32mI (49925) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (22576) cpu_start: App cpu up.[0m
+[0;32mI (18877) cpu_start: Pro cpu start user code[0m
+[0;32mI (18878) cpu_start: cpu freq: 160000000[0m
+[0;32mI (18878) cpu_start: Application information:[0m
+[0;32mI (18878) cpu_start: Project name:     navel[0m
+[0;32mI (18879) cpu_start: App version:      1[0m
+[0;32mI (18880) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (18881) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (18882) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (18884) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (18886) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (18888) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (18889) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (18890) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (18890) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (18947) spi_flash: detected chip: gd[0m
+[0;32mI (18965) spi_flash: flash io: dio[0m
+[0;32mI (18993) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (0) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (20101) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (20104) MyUtils: |-----------------------------|[0m
+[0;32mI (20104) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (20105) MyUtils: |=============================|[0m
+[0;32mI (20105) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (20106) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (20106) MyUtils: | BT             |   yes      |[0m
+[0;32mI (20106) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (20107) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (20107) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (20108) MyUtils: | external flash |   yes      |[0m
+[0;32mI (20108) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (20109) MyUtils: -------------------------------[0m
+[0;32mI (20117) MyUtils: [0m
+[0;32mI (20125) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (20126) MyUtils: |-----------------------------------|[0m
+[0;32mI (20126) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (20127) MyUtils: |===================================|[0m
+[0;32mI (20127) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (20128) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (20129) MyUtils: | partition type    | 0             |[0m
+[0;32mI (20130) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (20131) MyUtils: | executing on core | 0             |[0m
+[0;32mI (20132) MyUtils: | main priority     | 1             |[0m
+[0;32mI (20133) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (20133) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (20134) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (20135) MyUtils: ------------------------------------[0m
+[0;32mI (20140) TaskDef: leds = CPU_PRO[0m
+[0;32mI (20141) TaskDef: timer = CPU_PRO[0m
+[0;32mI (20141) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (22643) ProductManager: NVS init OK![0m
+[0;32mI (22868) TaskDef: product = CPU_PRO[0m
+[0;32mI (22869) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (22971) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (22996) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (23016) [SERIAL]: Baud: 38400[0m
+[0;32mI (23018) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (23025) ProductManager: Matricola Read: [0m
+[0;32mI (23031) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (23039) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (23039) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (23042) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (25018) misc: logged message 23: ResetButton > Resetting deleting[0m
+[0;32mI (25024) ResetButton: Resetting user info[0m
+[0;32mI (25086) ResetButton: partition nvs erased[0m
+[0;32mI (25140) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (44651) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (44652) boot: compile time 14:11:04[0m
+[0;32mI (44665) boot: chip revision: 0[0m
+[0;32mI (44670) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (44671) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (44671) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (44693) boot: Enabling RNG early entropy source...[0m
+[0;32mI (44714) boot: Partition Table:[0m
+[0;32mI (44715) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (44715) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (44716) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (44716) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (44717) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (44717) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (44717) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (44718) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (44718) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (44718) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (44719) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (44730) boot: End of partition table[0m
+[0;32mI (44769) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (44861) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (44909) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (44962) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (45105) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (45161) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (45237) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (45237) boot: Disabling RNG early entropy source...[0m
+[0;32mI (45255) cpu_start: Pro cpu up.[0m
+[0;32mI (45256) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (30398) cpu_start: App cpu up.[0m
+[0;32mI (22023) cpu_start: Pro cpu start user code[0m
+[0;32mI (22023) cpu_start: cpu freq: 160000000[0m
+[0;32mI (22023) cpu_start: Application information:[0m
+[0;32mI (22023) cpu_start: Project name:     navel[0m
+[0;32mI (22024) cpu_start: App version:      1[0m
+[0;32mI (22024) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (22024) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (22025) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (22026) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (22027) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (22028) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (22028) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (22029) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (22029) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (22085) spi_flash: detected chip: gd[0m
+[0;32mI (22104) spi_flash: flash io: dio[0m
+[0;32mI (22147) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (23408) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (23412) MyUtils: |-----------------------------|[0m
+[0;32mI (23412) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (23412) MyUtils: |=============================|[0m
+[0;32mI (23413) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (23415) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (23415) MyUtils: | BT             |   yes      |[0m
+[0;32mI (23417) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (23417) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (23419) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (23419) MyUtils: | external flash |   yes      |[0m
+[0;32mI (23420) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (23421) MyUtils: -------------------------------[0m
+[0;32mI (23431) MyUtils: [0m
+[0;32mI (23438) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (23439) MyUtils: |-----------------------------------|[0m
+[0;32mI (23439) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (23439) MyUtils: |===================================|[0m
+[0;32mI (23440) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (23440) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (23441) MyUtils: | partition type    | 0             |[0m
+[0;32mI (23441) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (23442) MyUtils: | executing on core | 0             |[0m
+[0;32mI (23442) MyUtils: | main priority     | 1             |[0m
+[0;32mI (23442) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (23443) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (23443) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (23443) MyUtils: ------------------------------------[0m
+[0;32mI (23448) TaskDef: leds = CPU_PRO[0m
+[0;32mI (23448) TaskDef: timer = CPU_PRO[0m
+[0;32mI (23448) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (27258) ProductManager: NVS init OK![0m
+[0;32mI (27532) ProductManager: ProductManager task started[0m
+[0;32mI (27532) TaskDef: product = CPU_PRO[0m
+ota at core = CPU_PRO
+[0;32mI (27657) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (27719) ProductManager: Matricola Read: [0m
+[0;32mI (27730) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (27735) [SERIAL]: Baud: 38400[0m
+[0;32mI (27736) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (27737) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (27737) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (27738) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (27739) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (28221) misc: logged message 24: ResetButton > Resetting deleting[0m
+[0;32mI (28231) ResetButton: Resetting user info[0m
+[0;32mI (28306) ResetButton: partition nvs erased[0m
+[0;32mI (28359) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (41558) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (41558) boot: compile time 14:11:04[0m
+[0;32mI (41575) boot: chip revision: 0[0m
+[0;32mI (41579) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (41579) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (41580) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (41595) boot: Enabling RNG early entropy source...[0m
+[0;32mI (41612) boot: Partition Table:[0m
+[0;32mI (41612) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (41613) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (41614) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (41614) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (41615) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (41615) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (41616) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (41616) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (41617) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (41617) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (41618) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (41634) boot: End of partition table[0m
+[0;32mI (41668) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (41744) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (41771) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (41810) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (41930) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (41975) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (42022) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (42023) boot: Disabling RNG early entropy source...[0m
+[0;32mI (42037) cpu_start: Pro cpu up.[0m
+[0;32mI (42038) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (38068) cpu_start: App cpu up.[0m
+[0;32mI (26471) cpu_start: Pro cpu start user code[0m
+[0;32mI (26471) cpu_start: cpu freq: 160000000[0m
+[0;32mI (26472) cpu_start: Application information:[0m
+[0;32mI (26472) cpu_start: Project name:     navel[0m
+[0;32mI (26472) cpu_start: App version:      1[0m
+[0;32mI (26472) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (26473) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (26473) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (26475) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (26476) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (26476) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (26477) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (26477) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (26477) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (26518) spi_flash: detected chip: gd[0m
+[0;32mI (26527) spi_flash: flash io: dio[0m
+[0;32mI (26548) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (773) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (780) MyUtils: |-----------------------------|[0m
+[0;32mI (781) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (781) MyUtils: |=============================|[0m
+[0;32mI (781) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (782) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (783) MyUtils: | BT             |   yes      |[0m
+[0;32mI (783) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (783) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (784) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (784) MyUtils: | external flash |   yes      |[0m
+[0;32mI (784) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (785) MyUtils: -------------------------------[0m
+[0;32mI (794) MyUtils: [0m
+[0;32mI (797) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (797) MyUtils: |-----------------------------------|[0m
+[0;32mI (798) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (798) MyUtils: |===================================|[0m
+[0;32mI (798) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (803) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (803) MyUtils: | partition type    | 0             |[0m
+[0;32mI (804) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (804) MyUtils: | executing on core | 0             |[0m
+[0;32mI (805) MyUtils: | main priority     | 1             |[0m
+[0;32mI (805) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (805) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (805) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (806) MyUtils: ------------------------------------[0m
+[0;32mI (811) TaskDef: leds = CPU_PRO[0m
+[0;32mI (812) TaskDef: timer = CPU_PRO[0m
+[0;32mI (812) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (4253) ProductManager: NVS init OK![0m
+[0;32mI (4508) TaskDef: product = CPU_PRO[0m
+[0;32mI (4508) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (4611) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (4643) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (4672) [SERIAL]: Baud: 38400[0m
+[0;32mI (4686) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (4685) ProductManager: Matricola Read: [0m
+[0;32mI (4687) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (4690) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (4691) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (4692) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (5691) misc: logged message 0: ResetButton > Resetting deleting[0m
+[0;32mI (5698) ResetButton: Resetting user info[0m
+[0;32mI (5753) ResetButton: partition nvs erased[0m
+[0;32mI (5788) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (43845) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (43846) boot: compile time 14:11:04[0m
+[0;32mI (43859) boot: chip revision: 0[0m
+[0;32mI (43869) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (43870) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (43871) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (43888) boot: Enabling RNG early entropy source...[0m
+[0;32mI (43907) boot: Partition Table:[0m
+[0;32mI (43907) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (43907) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (43908) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (43908) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (43909) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (43909) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (43909) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (43910) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (43910) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (43910) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (43910) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (43921) boot: End of partition table[0m
+[0;32mI (43956) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (44035) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (44064) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (44100) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (44230) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (44285) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (44360) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (44361) boot: Disabling RNG early entropy source...[0m
+[0;32mI (44377) cpu_start: Pro cpu up.[0m
+[0;32mI (44377) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (45704) cpu_start: App cpu up.[0m
+[0;32mI (9599) cpu_start: Pro cpu start user code[0m
+[0;32mI (9599) cpu_start: cpu freq: 160000000[0m
+[0;32mI (9600) cpu_start: Application information:[0m
+[0;32mI (9600) cpu_start: Project name:     navel[0m
+[0;32mI (9600) cpu_start: App version:      1[0m
+[0;32mI (9601) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (9601) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (9602) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (9604) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (9606) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (9607) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (9607) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (9607) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (9608) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (9653) spi_flash: detected chip: gd[0m
+[0;32mI (9668) spi_flash: flash io: dio[0m
+[0;32mI (9693) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (10540) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (10543) MyUtils: |-----------------------------|[0m
+[0;32mI (10543) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (10544) MyUtils: |=============================|[0m
+[0;32mI (10544) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (10545) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (10545) MyUtils: | BT             |   yes      |[0m
+[0;32mI (10545) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (10546) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (10546) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (10547) MyUtils: | external flash |   yes      |[0m
+[0;32mI (10547) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (10547) MyUtils: -------------------------------[0m
+[0;32mI (10562) MyUtils: [0m
+[0;32mI (10565) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (10565) MyUtils: |-----------------------------------|[0m
+[0;32mI (10565) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (10566) MyUtils: |===================================|[0m
+[0;32mI (10566) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (10567) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (10567) MyUtils: | partition type    | 0             |[0m
+[0;32mI (10568) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (10568) MyUtils: | executing on core | 0             |[0m
+[0;32mI (10568) MyUtils: | main priority     | 1             |[0m
+[0;32mI (10569) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (10569) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (10570) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (10570) MyUtils: ------------------------------------[0m
+[0;32mI (10574) TaskDef: leds = CPU_PRO[0m
+[0;32mI (10576) TaskDef: timer = CPU_PRO[0m
+[0;32mI (10576) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (14114) ProductManager: NVS init OK![0m
+[0;32mI (14376) TaskDef: product = CPU_PRO[0m
+[0;32mI (14376) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (14481) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (14526) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (14543) [SERIAL]: Baud: 38400[0m
+[0;32mI (14557) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (14558) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (14559) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (14559) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (14560) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (14573) ProductManager: Matricola Read: [0m
+[0;32mI (15582) misc: logged message 1: ResetButton > Resetting deleting[0m
+[0;32mI (15584) ResetButton: Resetting user info[0m
+[0;32mI (15676) ResetButton: partition nvs erased[0m
+[0;32mI (15722) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (14911) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (14911) boot: compile time 14:11:04[0m
+[0;32mI (14918) boot: chip revision: 0[0m
+[0;32mI (14921) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (14921) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (14921) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (14933) boot: Enabling RNG early entropy source...[0m
+[0;32mI (14949) boot: Partition Table:[0m
+[0;32mI (14949) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (14949) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (14950) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (14950) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (14951) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (14951) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (14951) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (14952) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (14952) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (14952) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (14953) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (14959) boot: End of partition table[0m
+[0;32mI (14981) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (15059) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (15088) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (15135) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (15259) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (15314) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (15370) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (15371) boot: Disabling RNG early entropy source...[0m
+[0;32mI (15384) cpu_start: Pro cpu up.[0m
+[0;32mI (15384) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (53350) cpu_start: App cpu up.[0m
+[0;32mI (15099) cpu_start: Pro cpu start user code[0m
+[0;32mI (15100) cpu_start: cpu freq: 160000000[0m
+[0;32mI (15100) cpu_start: Application information:[0m
+[0;32mI (15100) cpu_start: Project name:     navel[0m
+[0;32mI (15100) cpu_start: App version:      1[0m
+[0;32mI (15101) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (15101) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (15101) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (15103) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (15104) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (15105) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (15105) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (15105) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (15106) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (15158) spi_flash: detected chip: gd[0m
+[0;32mI (15169) spi_flash: flash io: dio[0m
+[0;32mI (15194) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (15962) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (15964) MyUtils: |-----------------------------|[0m
+[0;32mI (15964) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (15964) MyUtils: |=============================|[0m
+[0;32mI (15965) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (15966) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (15967) MyUtils: | BT             |   yes      |[0m
+[0;32mI (15967) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (15968) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (15968) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (15969) MyUtils: | external flash |   yes      |[0m
+[0;32mI (15969) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (15970) MyUtils: -------------------------------[0m
+[0;32mI (15977) MyUtils: [0m
+[0;32mI (15983) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (15983) MyUtils: |-----------------------------------|[0m
+[0;32mI (15984) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (15984) MyUtils: |===================================|[0m
+[0;32mI (15984) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (15985) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (15985) MyUtils: | partition type    | 0             |[0m
+[0;32mI (15986) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (15986) MyUtils: | executing on core | 0             |[0m
+[0;32mI (15986) MyUtils: | main priority     | 1             |[0m
+[0;32mI (15986) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (15987) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (15987) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (15987) MyUtils: ------------------------------------[0m
+[0;32mI (15990) TaskDef: leds = CPU_PRO[0m
+[0;32mI (15991) TaskDef: timer = CPU_PRO[0m
+[0;32mI (15991) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
+[0;32mI (18698) ProductManager: NVS init OK![0m
+[0;32mI (18948) TaskDef: product = CPU_PRO[0m
+[0;32mI (18948) ProductManager: ProductManager task started[0m
+ota at core = CPU_PRO
+[0;32mI (19053) TaskDef: SerialOta2_task = CPU_PRO[0m
+[0;32mI (19067) [SERIAL]: Serial status for port 1:[0m
+[0;32mI (19071) [SERIAL]: Baud: 38400[0m
+[0;32mI (19074) [SERIAL]: flow_ctrl: 0[0m
+[0;32mI (19076) [SERIAL]: uart_get_word_length: 3[0m
+[0;32mI (19076) [SERIAL]: uart_get_stop_bits: 1[0m
+[0;32mI (19088) [SERIAL]: uart_get_parity: 0[0m
+[0;32mI (19114) SerialOta2: [1;34mSerialOta task started for the first time[0m
+[0;32mI (19123) ProductManager: Matricola Read: [0m
+[0;32mI (21071) misc: logged message 2: ResetButton > Resetting deleting[0m
+[0;32mI (21077) ResetButton: Resetting user info[0m
+[0;32mI (21121) ResetButton: partition nvs erased[0m
+[0;32mI (21169) ProductManager: Saving matricola [0m
+ets Jul 29 2019 12:21:46
+
+rst:0xc (SW_CPU_RESET),boot:0x12 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:7016
+load:0x40078000,len:14292
+load:0x40080400,len:3688
+entry 0x40080678
+[0;32mI (21621) boot: ESP-IDF v4.3-dirty 2nd stage bootloader[0m
+[0;32mI (21622) boot: compile time 14:11:04[0m
+[0;32mI (21634) boot: chip revision: 0[0m
+[0;32mI (21638) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (21639) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (21639) boot.esp32: SPI Flash Size : 4MB[0m
+[0;32mI (21656) boot: Enabling RNG early entropy source...[0m
+[0;32mI (21677) boot: Partition Table:[0m
+[0;32mI (21677) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (21678) boot:  0 nvs              WiFi data        01 02 00009000 00004000[0m
+[0;32mI (21678) boot:  1 otadata          OTA data         01 00 0000d000 00002000[0m
+[0;32mI (21679) boot:  2 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (21679) boot:  3 ota_0            OTA app          00 10 00010000 00180000[0m
+[0;32mI (21679) boot:  4 ota_1            OTA app          00 11 00190000 00180000[0m
+[0;32mI (21680) boot:  5 ota_stove        Unknown data     01 40 00310000 00030000[0m
+[0;32mI (21680) boot:  6 stove_bk         Unknown data     01 40 00340000 00002000[0m
+[0;32mI (21680) boot:  7 file_sys         Unknown data     01 82 00342000 000b0000[0m
+[0;32mI (21681) boot:  8 secret1          WiFi data        01 02 003f2000 00004000[0m
+[0;32mI (21681) boot:  9 secret2          Unknown data     01 40 003f6000 00004000[0m
+[0;32mI (21690) boot: End of partition table[0m
+[0;32mI (21728) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=52250h (336464) map[0m
+[0;32mI (21814) esp_image: segment 1: paddr=00062278 vaddr=3ffb0000 size=06c7ch ( 27772) load[0m
+[0;32mI (21851) esp_image: segment 2: paddr=00068efc vaddr=40080000 size=0711ch ( 28956) load[0m
+[0;32mI (21910) esp_image: segment 3: paddr=00070020 vaddr=400d0020 size=a8a6ch (690796) map[0m
+[0;32mI (22079) esp_image: segment 4: paddr=00118a94 vaddr=4008711c size=0e09ch ( 57500) load[0m
+[0;32mI (22134) esp_image: segment 5: paddr=00126b38 vaddr=50000000 size=00010h (    16) load[0m
+[0;32mI (22209) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (22210) boot: Disabling RNG early entropy source...[0m
+[0;32mI (22225) cpu_start: Pro cpu up.[0m
+[0;32mI (22226) cpu_start: Starting app cpu, entry point is 0x400813cc[0m
+[0;32mI (7445) cpu_start: App cpu up.[0m
+[0;32mI (2886) cpu_start: Pro cpu start user code[0m
+[0;32mI (2886) cpu_start: cpu freq: 160000000[0m
+[0;32mI (2887) cpu_start: Application information:[0m
+[0;32mI (2887) cpu_start: Project name:     navel[0m
+[0;32mI (2887) cpu_start: App version:      1[0m
+[0;32mI (2888) cpu_start: Compile time:     Nov 28 2022 16:05:12[0m
+[0;32mI (2888) cpu_start: ELF file SHA256:  5408e336c09e23ec...[0m
+[0;32mI (2889) cpu_start: ESP-IDF:          v4.3-dirty[0m
+[0;32mI (2892) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (2894) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (2894) heap_init: At 3FFBD6D8 len 00022928 (138 KiB): DRAM[0m
+[0;32mI (2894) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (2895) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (2895) heap_init: At 400951B8 len 0000AE48 (43 KiB): IRAM[0m
+[0;32mI (2938) spi_flash: detected chip: gd[0m
+[0;32mI (2950) spi_flash: flash io: dio[0m
+[0;32mI (2973) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (2) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (4025) MyUtils: |     ESP32 SPECIFIC INFO     |[0m
+[0;32mI (4028) MyUtils: |-----------------------------|[0m
+[0;32mI (4029) MyUtils: |     NAME       |    VALUE   |[0m
+[0;32mI (4029) MyUtils: |=============================|[0m
+[0;32mI (4029) MyUtils: | cpu cores      |   2        |[0m
+[0;32mI (4030) MyUtils: | wifi           |   yes      |[0m
+[0;32mI (4031) MyUtils: | BT             |   yes      |[0m
+[0;32mI (4031) MyUtils: | BLE            |   yes      |[0m
+[0;32mI (4032) MyUtils: | silicon rev    |   0        |[0m
+[0;32mI (4032) MyUtils: | embedded flash |   no       |[0m
+[0;32mI (4032) MyUtils: | external flash |   yes      |[0m
+[0;32mI (4033) MyUtils: | flash size [MB]|   4        |[0m
+[0;32mI (4033) MyUtils: -------------------------------[0m
+[0;32mI (4045) MyUtils: [0m
+[0;32mI (4048) MyUtils: |             FIRMWARE INFO         |[0m
+[0;32mI (4049) MyUtils: |-----------------------------------|[0m
+[0;32mI (4049) MyUtils: |     NAME          |       VALUE   |[0m
+[0;32mI (4049) MyUtils: |===================================|[0m
+[0;32mI (4049) MyUtils: | ESP-IDF version   | v4.3-dirty    |[0m
+[0;32mI (4052) MyUtils: | partition label   | ota_0         |[0m
+[0;32mI (4053) MyUtils: | partition type    | 0             |[0m
+[0;32mI (4055) MyUtils: | partition subtype | 16            |[0m
+[0;32mI (4055) MyUtils: | executing on core | 0             |[0m
+[0;32mI (4056) MyUtils: | main priority     | 1             |[0m
+[0;32mI (4057) MyUtils: | compilation data  | Dec  6 2022   |[0m
+[0;32mI (4058) MyUtils: | compilation time  | 17:52:05      |[0m
+[0;32mI (4058) MyUtils: | firmware version  | 1.8           |[0m
+[0;32mI (4059) MyUtils: ------------------------------------[0m
+[0;32mI (4066) TaskDef: leds = CPU_PRO[0m
+[0;32mI (4067) TaskDef: timer = CPU_PRO[0m
+[0;32mI (4067) ThreadTimers: timer at core = CPU_APP[0m
+timer ready!
