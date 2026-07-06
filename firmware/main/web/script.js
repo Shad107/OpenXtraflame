@@ -107,9 +107,6 @@ async function scan() {
             o.textContent = `${lock} ${ap.ssid} (${ap.rssi} dBm)`;
             sel.appendChild(o);
         });
-        sel.addEventListener('change', () => {
-            if (sel.value) $('wifi-ssid').value = sel.value;
-        });
     } catch (e) {
         sel.innerHTML = '<option>Erreur scan</option>';
     }
@@ -280,6 +277,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
 
     $('scan').addEventListener('click', scan);
+    /* Wire ssid-select once at load so the wifi-ssid text input auto-fills
+     * whenever the user picks a scanned SSID. Attaching this handler inside
+     * scan() re-attached it every rescan (=stacked handlers) and could
+     * miss the first pick in some browsers. */
+    $('ssid-select').addEventListener('change', () => {
+        const v = $('ssid-select').value;
+        if (v) $('wifi-ssid').value = v;
+    });
     $('save').addEventListener('click', save);
     $('factory').addEventListener('click', factory);
     $('reboot').addEventListener('click', reboot);
