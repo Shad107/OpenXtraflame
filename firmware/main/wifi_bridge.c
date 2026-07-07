@@ -58,15 +58,23 @@ void wifi_bridge_mdns_query_mqtt(char *out, size_t out_size)
         mdns_hostname_set("openxtraflame");
         mdns_started = true;
     }
-    /* 1. Direct MQTT service */
+    /* 1. Direct MQTT service (=SRV port trusted, this record IS the broker) */
     if (try_ptr("_mqtt", "_tcp", 1883, out, out_size)) return;
 
-    /* 2. Any Home Assistant announcement -> assume MQTT on 1883 there */
-    if (try_ptr("_home-assistant", "_tcp", 1883, out, out_size)) return;
-
-    /* 3. Plain hostname lookup for homeassistant.local */
+    /* 2. Plain hostname lookup for homeassistant.local (=HA OS advertises
+     *    this hostname, and the broker on the Mosquitto add-on runs on the
+     *    same IP, port 1883). We deliberately DO NOT chase _home-assistant.
+     *    _tcp because its SRV record advertises HA HTTP on port 8123 and
+     *    frequently returns a Docker-internal IP that VLAN 20 clients
+     *    cannot reach. Beta11 users hit that trap. */
     esp_ip4_addr_t ip = {0};
     if (mdns_query_a("homeassistant", 1500, &ip) == ESP_OK) {
+        snprintf(out, out_size, IPSTR ":1883", IP2STR(&ip));
+        return;
+    }
+
+    /* 3. Same lookup, in case HA published as 'home-assistant' with a dash */
+    if (mdns_query_a("home-assistant", 1500, &ip) == ESP_OK) {
         snprintf(out, out_size, IPSTR ":1883", IP2STR(&ip));
     }
 }
