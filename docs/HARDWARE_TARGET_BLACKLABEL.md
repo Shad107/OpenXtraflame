@@ -80,7 +80,7 @@ Monitor UART doit montrer :
 I (xxx) MAIN: openextraflame - build ...
 I (xxx) MAIN: Board       : blacklabel-t009_3
 I (xxx) MAIN: Target      : BLACKLABEL (reflash original)
-I (xxx) MICRONOVA: Init UART1 TX=23 RX=5 @ 38400 baud 8N1
+I (xxx) MICRONOVA: Init UART1 TX=23 RX=5 @ 1200 baud 8N2 (inversé 0x24)
 ...
 I (xxx) WIFI: SoftAP up : SSID='MyStove_XX:XX:XX:XX:XX:XX'
 ```
