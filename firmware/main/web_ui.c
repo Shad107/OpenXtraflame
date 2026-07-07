@@ -560,8 +560,11 @@ esp_err_t web_ui_start(app_config_t *cfg)
     g_cfg = cfg;
 
     httpd_config_t hd = HTTPD_DEFAULT_CONFIG();
-    hd.max_uri_handlers   = 20;   /* we currently register 18 routes; the default 8
-                                   * silently dropped /ota/pull and /debug/uart. */
+    hd.max_uri_handlers   = 25;   /* room for the current 21 routes + margin;
+                                   * remember to grow this whenever a handler
+                                   * is added, ESP-IDF silently drops the
+                                   * overflow entries with only a W log line
+                                   * that's easy to miss. */
     hd.stack_size         = 6144; /* default 4096 stack-overflows during esp_ota_end()
                                    * SHA256 verify at the end of an OTA upload (=beta15
                                    * dump). 6144 leaves headroom without triggering the
