@@ -45,5 +45,6 @@ CONFIG_HTTPD_MAX_URI_LEN=256
 
 # main_task stack: default 3584 overflows when log_ring's char line[192]
 # fires during Wi-Fi driver startup (=verbose log stream from esp-idf).
-# 6144 gives ~2.5 KB headroom on top of our biggest known-frame chain.
-CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+# 8192 keeps headroom now that app_config_t alone consumes ~1 KB with
+# the wide password buffers (=wifi_pwd 128 + mqtt_user 128 + mqtt_pwd 256).
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192

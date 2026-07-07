@@ -130,8 +130,10 @@ void app_main(void)
     leds_init();
     leds_set_state(LED_STATE_BOOT);
 
-    /* 4. Load config from NVS */
-    app_config_t cfg;
+    /* 4. Load config from NVS. Keep it static so the ~1 KB blob stays
+     *    off the main task stack. Web UI and MQTT bridge hold long-lived
+     *    references, so lifetime = program lifetime anyway. */
+    static app_config_t cfg;
     config_nvs_load(&cfg);
     ESP_LOGI(TAG, "Config loaded: provisioned=%s, wifi_ssid='%s', mqtt_host='%s'",
              cfg.provisioned ? "yes" : "no",
