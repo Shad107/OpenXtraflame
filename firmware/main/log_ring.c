@@ -40,8 +40,11 @@ static int log_intercept(const char *fmt, va_list args)
     int r = s_prev_vprintf ? s_prev_vprintf(fmt, args_copy) : 0;
     va_end(args_copy);
 
-    /* Then: render into a local buffer and push into the ring. */
-    char line[256];
+    /* Then: render into a local buffer and push into the ring. Keep the
+     * buffer small so we don't blow the caller task's stack (=Wi-Fi
+     * driver tasks and main_task hit this while their stacks are still
+     * heavily used). Long lines get truncated, that's fine for humans. */
+    char line[192];
     int n = vsnprintf(line, sizeof(line), fmt, args);
     if (n > 0) {
         if ((size_t)n > sizeof(line) - 1) n = sizeof(line) - 1;

@@ -42,3 +42,8 @@ CONFIG_LWIP_MAX_SOCKETS=10
 # HTTP server
 CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
 CONFIG_HTTPD_MAX_URI_LEN=256
+
+# main_task stack: default 3584 overflows when log_ring's char line[192]
+# fires during Wi-Fi driver startup (=verbose log stream from esp-idf).
+# 6144 gives ~2.5 KB headroom on top of our biggest known-frame chain.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
