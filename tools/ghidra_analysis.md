@@ -1,3 +1,8 @@
+> 📜 **Journal historique du reverse.** Ce document reflète ce qu'on pensait AU MOMENT
+> de l'analyse. Certaines valeurs (adresses de registres, rôle maître/esclave, baud) ont été
+> **corrigées depuis** par la validation sur le vrai poêle. Pour le protocole ACTUEL et validé,
+> voir [`../docs/PROTOCOLE-MICRONOVA.md`](../docs/PROTOCOLE-MICRONOVA.md).
+
 # Analyse Ghidra du firmware Extraflame
 
 Mis à jour 2026-07-03 après installation locale et tests.
