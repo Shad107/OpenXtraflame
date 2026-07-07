@@ -18,9 +18,37 @@
 #include "mdns.h"
 
 /* --- mDNS discovery of the MQTT broker on the local network --- */
-/* Look up the first _mqtt._tcp service on the LAN. Returns
- * "IP:port" in `out` (max size 32) on success, empty string on fail.
- * Timeout 3 s to keep the boot path short. */
+/* Multi-strategy lookup. Home Assistant Mosquitto addon does not publish
+ * _mqtt._tcp by default (=only some standalone Mosquitto builds do), but
+ * HA itself publishes _home-assistant._tcp and the HA OS hostname
+ * 'homeassistant.local'. We try, in order:
+ *
+ *   1. _mqtt._tcp        (=if Mosquitto is configured to advertise)
+ *   2. _home-assistant._tcp -> use its IP with port 1883 assumption
+ *   3. mdns_query_a("homeassistant") for the plain hostname
+ *
+ * Returns "IP:port" in `out` (max size 48) on any success, empty on fail.
+ * Total budget ~4.5 s. */
+static bool try_ptr(const char *type, const char *proto, uint16_t default_port,
+                    char *out, size_t out_size)
+{
+    mdns_result_t *results = NULL;
+    esp_err_t err = mdns_query_ptr(type, proto, 1500, 5, &results);
+    if (err != ESP_OK || !results) return false;
+    bool found = false;
+    for (mdns_result_t *r = results; r; r = r->next) {
+        if (r->addr && r->addr->addr.type == ESP_IPADDR_TYPE_V4) {
+            uint16_t port = r->port > 0 ? r->port : default_port;
+            snprintf(out, out_size, IPSTR ":%d",
+                     IP2STR(&r->addr->addr.u_addr.ip4), port);
+            found = true;
+            break;
+        }
+    }
+    mdns_query_results_free(results);
+    return found;
+}
+
 void wifi_bridge_mdns_query_mqtt(char *out, size_t out_size)
 {
     out[0] = '\0';
@@ -30,21 +58,17 @@ void wifi_bridge_mdns_query_mqtt(char *out, size_t out_size)
         mdns_hostname_set("openxtraflame");
         mdns_started = true;
     }
-    mdns_result_t *results = NULL;
-    esp_err_t err = mdns_query_ptr("_mqtt", "_tcp", 3000, 5, &results);
-    if (err != ESP_OK || !results) return;
+    /* 1. Direct MQTT service */
+    if (try_ptr("_mqtt", "_tcp", 1883, out, out_size)) return;
 
-    /* Take the first result that has an IPv4 addr */
-    mdns_result_t *r = results;
-    while (r) {
-        if (r->addr && r->addr->addr.type == ESP_IPADDR_TYPE_V4) {
-            snprintf(out, out_size, IPSTR ":%d",
-                     IP2STR(&r->addr->addr.u_addr.ip4), (int)r->port);
-            break;
-        }
-        r = r->next;
+    /* 2. Any Home Assistant announcement -> assume MQTT on 1883 there */
+    if (try_ptr("_home-assistant", "_tcp", 1883, out, out_size)) return;
+
+    /* 3. Plain hostname lookup for homeassistant.local */
+    esp_ip4_addr_t ip = {0};
+    if (mdns_query_a("homeassistant", 1500, &ip) == ESP_OK) {
+        snprintf(out, out_size, IPSTR ":1883", IP2STR(&ip));
     }
-    mdns_query_results_free(results);
 }
 
 extern EventGroupHandle_t app_event_group;
