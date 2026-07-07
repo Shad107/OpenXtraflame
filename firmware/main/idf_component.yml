@@ -1,0 +1,4 @@
+## IDF Component Manager Manifest File
+dependencies:
+  espressif/mdns:
+    version: "^1.4.0"
