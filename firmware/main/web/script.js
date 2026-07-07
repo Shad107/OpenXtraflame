@@ -126,6 +126,16 @@ async function loadConfig() {
             mqttPwd.placeholder = 'Mot de passe MQTT (optionnel)';
             mqttPwd.dataset.stored = '';
         }
+        /* Same trick for mqtt_user: shows the user whether a user is
+         * already stored (=leave blank to keep it) or if the field is
+         * genuinely empty and needs filling. */
+        const mqttUser = $('mqtt-user');
+        mqttUser.value = c.mqtt_user || '';
+        if (c.mqtt_user_set) {
+            mqttUser.placeholder = 'Utilisateur défini (laisser vide pour ne pas changer)';
+        } else {
+            mqttUser.placeholder = 'Utilisateur (=souvent le user HA)';
+        }
 
         /* Guardian mode - only visible on Target Blacklabel */
         if (c.guardian_supported === false) {
@@ -365,10 +375,22 @@ async function otaPull() {
 
     /* Hard timeout so the UI never stays locked forever: if after 90 s
      * we haven't seen state=3 or state=4, we surface a generic failure
-     * and unlock. Downloads bigger than 90 s of a 1 MB firmware would
-     * mean the link is broken anyway. */
-    const hard_timeout = setTimeout(() => finish_failed(
-        'Timeout : pas de progression après 90 s. Vérifie l\'URL et la connectivité.'), 90000);
+     * and unlock. UNLESS we've seen bytes go through - in that case
+     * the module has already committed to the OTA and is rebooting,
+     * showing '❌ Échec' would be a lie. Fired via finish_failed which
+     * itself is a no-op once done=true. */
+    const hard_timeout = setTimeout(() => {
+        if (last_written > 0) {
+            /* Rebooted successfully; just reload. */
+            if (done) return;
+            done = true;
+            clearInterval(poll);
+            text.textContent = '🔄 Module en reboot, page rechargée bientôt';
+            setTimeout(() => location.reload(), 5000);
+        } else {
+            finish_failed('Timeout : pas de progression après 90 s. Vérifie l\'URL et la connectivité.');
+        }
+    }, 90000);
 
     const poll = setInterval(async () => {
         try {

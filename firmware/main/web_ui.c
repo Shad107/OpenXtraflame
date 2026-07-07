@@ -137,6 +137,7 @@ static esp_err_t handle_config_get(httpd_req_t *req)
      * empty field the user thinks he must retype. */
     cJSON_AddBoolToObject(o,   "wifi_password_set", g_cfg->wifi_password[0] != '\0');
     cJSON_AddBoolToObject(o,   "mqtt_password_set", g_cfg->mqtt_password[0] != '\0');
+    cJSON_AddBoolToObject(o,   "mqtt_user_set",     g_cfg->mqtt_username[0] != '\0');
     cJSON_AddStringToObject(o, "mqtt_host",    g_cfg->mqtt_host);
     cJSON_AddNumberToObject(o, "mqtt_port",    g_cfg->mqtt_port);
     cJSON_AddStringToObject(o, "mqtt_user",    g_cfg->mqtt_username);
