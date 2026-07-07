@@ -49,23 +49,23 @@ Fields :
 
 ### `<prefix>/cmd/on`
 
-Payload : ignoré. Envoie commande MN_RAM_ACCENDI au poêle.
+Payload : ignoré. Envoie ON : write `0x21` = `0x01`.
 
 ### `<prefix>/cmd/off`
 
-Payload : ignoré. Envoie MN_RAM_SPEGNI.
+Payload : ignoré. Envoie OFF : write `0x21` = `0x06`.
 
 ### `<prefix>/cmd/reset_alarm`
 
-Payload : ignoré. Envoie MN_RAM_SBLOCCO.
+Payload : ignoré. Reset alarme : write `0x21` = `0x00`.
 
 ### `<prefix>/cmd/setpoint`
 
-Payload : integer °C, ex `21`. Envoie au MN_RAM_TAMB.
+Payload : integer °C, ex `21`. Write consigne TEMP_SET `0x7D`.
 
 ### `<prefix>/cmd/power`
 
-Payload : integer 0-5, ex `3`. Envoie au MN_RAM_POT_REALE.
+Payload : integer 1-5, ex `3`. Write consigne POWER_SET `0x7F`.
 
 ## HA MQTT Discovery
 
@@ -147,31 +147,22 @@ openextraflame **ne reproduit PAS** ce protocole cloud. Il est destiné à un us
 
 Si tu veux garder l'accès Total Control 2.0, utilise Target External (=le module Black Label reste actif avec son firmware d'origine, l'ESP32 spare fait le bridge local en parallèle).
 
-## ⭐ MAJ 2026-07-03 SOIR - Découverte via QEMU + GDB
+## ✅ Architecture validée : le module est MAÎTRE (protocole RWMS)
 
-**Extraflame module = SLAVE UART, POELE = MASTER** :
-- Le module ESP32 fait UNIQUEMENT des UART_READ (706 hits observés)
-- Aucun UART_WRITE avant réception command du poêle
-- Pattern : polling 1 byte / 100ms timeout à l'infini
-- Buffer réception @ DRAM 0x3ffb7761
+> Une note antérieure (lecture QEMU/GDB partielle) concluait "module = esclave, poêle = maître".
+> C'était **faux** : le reverse Ghidra complet puis la validation sur le vrai poêle ont montré
+> l'inverse. Le module **interroge** le poêle par polling (protocole RWMS).
 
-**Impact pour openextraflame** :
-- micronova.c doit implémenter un slave listener, PAS un master polling
-- Attend que le poêle envoie une command
-- Répond avec les données demandées
-- Le poêle initie TOUJOURS
+- Liaison : UART1, **1200 bauds, 8N2, ligne inversée (masque `0x24`)**. PAS 38400 8N1 (ça, c'est le canal SOTA2/OTA, différent).
+- Lecture : le module envoie `[loc][addr]`, le poêle répond `[checksum][value]` (checksum additif `(loc+addr+value)&0xFF`).
+- Écriture : `[loc][addr][value][checksum]`.
+- Commandes : write sur STOVE_STATE (`0x21`) : allumer = `0x01`, éteindre = `0x06`, reset alarme = `0x00`.
+- Adresses = Micronova standard (`0x00`-`0x9F`). Détail complet : [`PROTOCOLE-MICRONOVA.md`](PROTOCOLE-MICRONOVA.md).
 
-**Correction architecture** :
 ```c
-// Ancien design (=master polling)
+// Design CORRECT : master polling (le module interroge le poêle)
 for (;;) {
-    mn_read_ram(MN_RAM_TAMB);  // faux : c'est le poêle qui appelle
-    vTaskDelay(...);
-}
-
-// Nouveau design (=slave listener)
-for (;;) {
-    uart_read_bytes(port, &cmd, 1, portMAX_DELAY);
-    handle_stove_command(cmd);
+    mn_read(0x00, addr, &value);   // [loc=0x00][addr] -> [cksum][value]
+    vTaskDelay(pdMS_TO_TICKS(1000));
 }
 ```
