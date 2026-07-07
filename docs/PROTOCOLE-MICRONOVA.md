@@ -129,14 +129,16 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 ### 3.4 Exemples d'octets concrets
 | Action | loc | addr | trame émise | réponse |
 |---|---|---|---|---|
-| Lire T_FUMI (RAM 0xD9) | 0x00 | 0xD9 | `00 D9` | `[cks][temp]`, cks=(0x00+0xD9+temp) |
-| Lire T_CAMERA (RAM 0xEF, **bank 1**) | 0x01 | 0xEF | `01 EF` | `[cks][temp]` |
-| **DÉMARRER le poêle** (write RAM ACCENDI 0xD7 = 1) | 0x80 | 0xD7 | `80 D7 01 58` | `[cks][01]` |
-| **ÉTEINDRE** (write RAM SPEGNI 0xD6 = 1) | 0x80 | 0xD6 | `80 D6 01 57` | `[cks][01]` |
-| Débloquer alarme (write RAM SBLOCCO 0xEA, **bank 1**) | 0x81 | 0xEA | `81 EA 01 6C` | - |
-| Régler consigne temp (write EEPROM SET_TEMP) | 0xA0 | *addr TEMP*¹ | `A0 <addr> <val> <cks>` | `[cks][val]` |
-> ¹ l'adresse EEPROM_SET_TEMP est à 0x0000 en flash (remplie au runtime, voir §7) -
-> à capturer sur le vrai poêle. `80 D7 01 58` : 0x80+0xD7+0x01 = 0x158 → **0x58**.
+| Lire FUMES_TEMP (0x3E) | 0x00 | 0x3E | `00 3E` | `[cks][°C]`, cks=(0x00+0x3E+val) |
+| Lire STOVE_STATE (0x21) | 0x00 | 0x21 | `00 21` | `[cks][état]` |
+| Lire TAMB (0x01, valeur = °C×2) | 0x00 | 0x01 | `00 01` | `[cks][temp×2]` |
+| **DÉMARRER le poêle** (write STOVE_STATE 0x21 = 0x01) | 0x80 | 0x21 | `80 21 01 A2` | `[cks][01]` |
+| **ÉTEINDRE** (write STOVE_STATE 0x21 = 0x06) | 0x80 | 0x21 | `80 21 06 A7` | `[cks][06]` |
+| Reset alarme (write STOVE_STATE 0x21 = 0x00) | 0x80 | 0x21 | `80 21 00 A1` | `[cks][00]` |
+| Régler consigne temp (write TEMP_SET 0x7D) | 0x80 | 0x7D | `80 7D <val> <cks>` | `[cks][val]` |
+| Régler puissance (write POWER_SET 0x7F, 1-5) | 0x80 | 0x7F | `80 7F <n> <cks>` | `[cks][n]` |
+> Checksum additif : ex. `80 21 01` → 0x80+0x21+0x01 = **0xA2**. Les commandes ON/OFF/reset
+> et les consignes s'écrivent en RAM (loc `0x80`). Adresses = Micronova standard (voir §4).
 
 ### 3.5 Timing / robustesse (relevé dans le moteur de poll `FUN_400e51e4`)
 - **Retry** : jusqu'à ~3 tentatives par registre, avec délai croissant **~100 ms × n** entre essais.
