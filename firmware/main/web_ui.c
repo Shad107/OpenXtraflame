@@ -91,6 +91,8 @@ static esp_err_t handle_stove_cmd(httpd_req_t *req)
     if (strcmp(cmd, "on") == 0)          mn_write_register(MN_RAM_STOVE_STATE, 0x01);
     else if (strcmp(cmd, "off") == 0)    mn_write_register(MN_RAM_STOVE_STATE, 0x06);
     else if (strcmp(cmd, "reset_alarm") == 0) mn_write_register(MN_RAM_STOVE_STATE, 0x00);
+    /* TODO(beta50): temp/power setters — MQTT /cmd/setpoint et /cmd/power
+     * fonctionnent déjà, endpoints HTTP à finaliser sans wildcard next. */
     else return httpd_resp_send_404(req);
     return httpd_resp_send(req, "{\"ok\":true}", 11);
 }

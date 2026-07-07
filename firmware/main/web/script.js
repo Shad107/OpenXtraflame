@@ -444,9 +444,17 @@ async function loadFirmwareLogs() {
         const r = await fetch('/debug/logs');
         const txt = await r.text();
         const pre = $('firmware-log');
+        const prevScroll = pre.scrollTop;
+        const prevMax = pre.scrollHeight;
         pre.textContent = txt || '(aucune ligne pour l\'instant)';
         $('logs-counter').textContent = `${txt.length} octets`;
-        if ($('logs-autoscroll').checked) pre.scrollTop = pre.scrollHeight;
+        if ($('logs-autoscroll').checked) {
+            pre.scrollTop = pre.scrollHeight;
+        } else {
+            /* Preserve user's manual scroll position when autoscroll is OFF.
+             * setting textContent resets scrollTop, so restore explicitly. */
+            pre.scrollTop = prevScroll;
+        }
     } catch (e) { /* silent, Wi-Fi flap during reboot */ }
 }
 
@@ -466,6 +474,7 @@ async function loadDebug() {
             pre.textContent = '(en attente de trames...)';
             return;
         }
+        const prevScroll = pre.scrollTop;
         pre.innerHTML = j.frames.map(f => {
             const t = String(f.t_ms).padStart(9, ' ');
             const d = DIR_LABEL[f.dir] || '???';
@@ -476,6 +485,9 @@ async function loadDebug() {
         }).join('\n');
         if ($('debug-autoscroll').checked && !debug_paused_scroll) {
             pre.scrollTop = pre.scrollHeight;
+        } else {
+            /* Preserve user's scroll position when autoscroll is off. */
+            pre.scrollTop = prevScroll;
         }
     } catch (e) { /* Wi-Fi flap during reboot */ }
 }
