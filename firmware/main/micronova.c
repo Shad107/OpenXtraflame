@@ -278,7 +278,7 @@ char *mn_ram_dump_json(void)
         {MN_RAM_POT_REALE,        "POT_REALE"},
         {MN_RAM_ALLARM,           "ALLARM"},
         {MN_RAM_CAUSA_STATO7,     "CAUSA_STATO7"},
-        {MN_RAM_SERBATOIO_VUOTO,  "SERBATOIO_VUOTO"},
+        {MN_RAM_SERBATORIO_VUOTO, "SERBATOIO_VUOTO"},
         {MN_RAM_BULBO,            "BULBO"},
         {MN_RAM_TAMB,             "TAMB"},
         {MN_RAM_TH20,             "TH20"},
@@ -323,7 +323,7 @@ char *mn_stats_json(void)
         cJSON_AddBoolToObject(o,   "online",          mn_snapshot.online);
         xSemaphoreGive(mn_mutex);
     }
-    cJSON_AddNumberToObject(o, "now_ms",   (double)(esp_timer_get_time() / 1000));
+    cJSON_AddNumberToObject(o, "now_ms",   (double)((int64_t)(esp_timer_get_time() / 1000)));
     cJSON_AddNumberToObject(o, "debug_seq", mn_debug_seq);
     char *s = cJSON_PrintUnformatted(o);
     cJSON_Delete(o);
