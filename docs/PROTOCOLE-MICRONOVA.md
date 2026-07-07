@@ -1,4 +1,4 @@
-# Protocole série Extraflame / Micronova — reverse du firmware d'origine « navel »
+# Protocole série Extraflame / Micronova - reverse du firmware d'origine « navel »
 
 > ## ✅ VALIDÉ SUR LE VRAI POÊLE (2026-07-07)
 > openextraflame communique avec la carte réelle en appliquant ce protocole.
@@ -17,7 +17,7 @@
 
 ---
 
-## 1. Vue d'ensemble — TROIS protocoles sur le même UART
+## 1. Vue d'ensemble - TROIS protocoles sur le même UART
 
 Le module et le poêle partagent **un seul port série** (UART1) mais y font tourner
 **trois protocoles distincts** selon la phase :
@@ -26,7 +26,7 @@ Le module et le poêle partagent **un seul port série** (UART1) mais y font tou
 |---|---|---|---|
 | **RWMS** | **MAÎTRE** | Lecture/écriture live des registres RAM/EEPROM (température, état, puissance…) | `main/uart/rwms_master.c` |
 | **SOTA2** | esclave | Canal de gestion/OTA : clone du protocole bootloader **esptool** + commandes stove | `main/ota/SerialOTA2.c` |
-| **« working mode » natif** | — | Protocole applicatif quotidien à checksum **CRC4R** (partiellement non résolu) | cluster `ProductManager` |
+| **« working mode » natif** | - | Protocole applicatif quotidien à checksum **CRC4R** (partiellement non résolu) | cluster `ProductManager` |
 
 ➡️ **Pour lire les données dans Home Assistant, c'est le protocole RWMS qui compte** (§3).
 Le module y est **MAÎTRE** : il *interroge* le poêle. C'est pourquoi une écoute
@@ -38,11 +38,11 @@ passive (module esclave) renvoie **0 trame**.
 
 | Paramètre | Valeur |
 |---|---|
-| UART | **UART1** — TX = **GPIO23**, RX = **GPIO5** |
+| UART | **UART1** - TX = **GPIO23**, RX = **GPIO5** |
 | **Débit TÉLÉMÉTRIE RWMS** (lecture registres poêle) | **1200 baud, 8N2** ⚠️ |
 | Débit canal SOTA2 (esptool/OTA/handshake init) | 38400 baud, 8N1 |
 | Flow control | aucun |
-| **Inversion de ligne** | **OUI — masque `0x24` = `RXD_INV \| TXD_INV`** (prouvé : `uart_set_line_inverse(1, 0x24)` @ 0x400e3b8x) |
+| **Inversion de ligne** | **OUI - masque `0x24` = `RXD_INV \| TXD_INV`** (prouvé : `uart_set_line_inverse(1, 0x24)` @ 0x400e3b8x) |
 | Bus | half-duplex, un fil (write-then-readback = détection d'écho/collision) |
 
 > ⚠️ **CORRECTION IMPORTANTE (confiance HAUTE, décompilé) :** la télémétrie tourne à
@@ -55,20 +55,20 @@ passive (module esclave) renvoie **0 trame**.
 
 > Le firmware d'origine référence `uart_set_line_inverse` (dans `serial.c`).
 > ⚠️ Le **masque exact** (RXD/TXD) n'a **pas** de site d'appel trouvable dans le
-> segment `.text` analysé (voir §7) — l'inversion est peut-être matérielle ou dans
+> segment `.text` analysé (voir §7) - l'inversion est peut-être matérielle ou dans
 > l'IRAM non extraite. En pratique : inverser **RXD** (indispensable pour décoder)
-> et **TXD** (pour être compris) — `UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV`.
+> et **TXD** (pour être compris) - `UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV`.
 
 ---
 
-## 3. Protocole RWMS — lecture ET écriture des registres  *(confiance : HAUTE — décompilé Ghidra)*
+## 3. Protocole RWMS - lecture ET écriture des registres  *(confiance : HAUTE - décompilé Ghidra)*
 
 Le module est **MAÎTRE** : il envoie une requête, le poêle répond. Fonctions d'origine :
 lecture `rwms_master_read` (`FUN_400e4df4`), écriture `FUN_400e4edc`, moteur de poll
 `FUN_400e51e4`/`FUN_400e5110`. **Spec complet et auto-suffisant ci-dessous.**
 
 ### 3.0 Config série (obligatoire avant tout)
-- **UART1, 1200 baud, 8 data, 2 stop bits, sans parité (8N2)** — PAS 38400 (voir §2).
+- **UART1, 1200 baud, 8 data, 2 stop bits, sans parité (8N2)** - PAS 38400 (voir §2).
 - **Ligne inversée : `uart_set_line_inverse(UART1, 0x24)`** (RXD_INV | TXD_INV).
 - Bus half-duplex : après émission, on lit la réponse sur la même ligne.
 
@@ -84,7 +84,7 @@ addr = octet BAS de l'adresse
 ```
 (Dérivation binaire : `base = source<<5`, source = 0 RAM-rd / 1 EE-rd / 4 RAM-wr / 5 EE-wr.)
 
-### 3.2 LECTURE — requête 2 octets, réponse 2 octets
+### 3.2 LECTURE - requête 2 octets, réponse 2 octets
 ```
   → ÉMET  : [loc][addr]                      (2 octets ; PAS de checksum en lecture)
   ← REÇOIT: [checksum][value]                (2 octets)
@@ -107,7 +107,7 @@ uint8_t mn_read(uint8_t loc, uint8_t addr, uint8_t *out) {
 }
 ```
 
-### 3.3 ÉCRITURE — requête 4 octets, réponse 2 octets
+### 3.3 ÉCRITURE - requête 4 octets, réponse 2 octets
 ```
   → ÉMET  : [loc][addr][value][checksum]      (4 octets)   checksum = (loc + addr + value) & 0xFF
   ← REÇOIT: [checksum][value]                 (2 octets)   checksum = (loc + addr + value) & 0xFF
@@ -133,9 +133,9 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 | Lire T_CAMERA (RAM 0xEF, **bank 1**) | 0x01 | 0xEF | `01 EF` | `[cks][temp]` |
 | **DÉMARRER le poêle** (write RAM ACCENDI 0xD7 = 1) | 0x80 | 0xD7 | `80 D7 01 58` | `[cks][01]` |
 | **ÉTEINDRE** (write RAM SPEGNI 0xD6 = 1) | 0x80 | 0xD6 | `80 D6 01 57` | `[cks][01]` |
-| Débloquer alarme (write RAM SBLOCCO 0xEA, **bank 1**) | 0x81 | 0xEA | `81 EA 01 6C` | — |
+| Débloquer alarme (write RAM SBLOCCO 0xEA, **bank 1**) | 0x81 | 0xEA | `81 EA 01 6C` | - |
 | Régler consigne temp (write EEPROM SET_TEMP) | 0xA0 | *addr TEMP*¹ | `A0 <addr> <val> <cks>` | `[cks][val]` |
-> ¹ l'adresse EEPROM_SET_TEMP est à 0x0000 en flash (remplie au runtime, voir §7) —
+> ¹ l'adresse EEPROM_SET_TEMP est à 0x0000 en flash (remplie au runtime, voir §7) -
 > à capturer sur le vrai poêle. `80 D7 01 58` : 0x80+0xD7+0x01 = 0x158 → **0x58**.
 
 ### 3.5 Timing / robustesse (relevé dans le moteur de poll `FUN_400e51e4`)
@@ -147,15 +147,15 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 
 ### ⚠️ Corrections vs `micronova.c` actuel
 1. **Débit 1200 8N2** (pas 38400 8N1). **Ligne inversée `0x24`.**
-2. **Rôle = MAÎTRE** (polling actif) — pas esclave passif.
+2. **Rôle = MAÎTRE** (polling actif) - pas esclave passif.
 3. **loc byte** = `0x00/0x20/0x80/0xA0 | bank` (lecture/écriture × RAM/EEPROM), bank en bits bas.
-4. **Checksum ADDITIF** `(loc+addr+value)&0xFF` — et non `~value`.
+4. **Checksum ADDITIF** `(loc+addr+value)&0xFF` - et non `~value`.
 5. Lecture = 2 octets émis, écriture = **4 octets** émis. Gérer l'**écho**.
 6. Vraies adresses (§4). Bank 1 pour T_CAMERA/BULBO/SBLOCCO/T_PUFFER_SUP.
 
 ---
 
-## 4. Carte des registres  *(confiance : HAUTE — VALIDÉ SUR VRAI POÊLE 2026-07-07)*
+## 4. Carte des registres  *(confiance : HAUTE - VALIDÉ SUR VRAI POÊLE 2026-07-07)*
 
 > ⚠️ **CORRECTION MAJEURE 2026-07-07 (post-live-probe) :** les adresses
 > 0xD0-0xEF listées dans les versions précédentes du reverse navel
@@ -198,15 +198,15 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 - **Teodora Evo I_VENT** (=ventilé) : TAMB, STOVE_STATE, FUMES_TEMP, FLAME_POWER, TEMP_SET/GET, POWER_SET/GET
 - **Hydro** (=T_CALD, T_IDRO) : ajouter TH20, WATER_PRES
 
-### Historique — adresses "navel" 0xD0-0xEF (=DÉPRÉCIÉES)
+### Historique - adresses "navel" 0xD0-0xEF (=DÉPRÉCIÉES)
 
 Les adresses documentées dans les V1-V3 du reverse navel (`STOVE_STATUS=0xD1`,
 `T_FUMI=0xD9`, etc.) répondent à toutes les requêtes mais avec des valeurs
 non corrélées à l'état poêle réel. Hypothèse : ce sont des adresses de la
 mémoire interne du module WiFi Black Label (=buffer LCD ou cache produit).
 
-### EEPROM (écritures) — sélection résolue
-Chrono 2/3/4 (start/stop/jours/temp/puissance) : plage 0x50–0x65, 0x9E–0xA1, 0xAF–0xB2.
+### EEPROM (écritures) - sélection résolue
+Chrono 2/3/4 (start/stop/jours/temp/puissance) : plage 0x50-0x65, 0x9E-0xA1, 0xAF-0xB2.
 Heure : jour=0x66, heures=0x67, min=0x68, date=0x69, mois=0x6A, année=0xA0.
 Compteurs heures H_1..H_5 = 0x6C/6D … 0x74/A1 ; H_TOT = 0xF8/F9 ; démarrages = 0xFA/FB.
 Mode auto = 0xFC ; contrôle zones d'air = 0xFD.
@@ -216,7 +216,7 @@ Mode auto = 0xFC ; contrôle zones d'air = 0xFD.
 
 ---
 
-## 5. Protocole SOTA2 — canal de gestion / OTA  *(confiance : HAUTE)*
+## 5. Protocole SOTA2 - canal de gestion / OTA  *(confiance : HAUTE)*
 
 **SOTA2 est un clone du protocole du bootloader série ESP32 (esptool)** : même framing
 SLIP, même en-tête 8 octets, même checksum XOR seed 0xEF, même handshake SYNC 36 octets.
@@ -225,10 +225,10 @@ peut le reflasher et l'interroger. **Non nécessaire pour lire la télémétrie.
 
 ### Framing SLIP (RFC 1055)
 - Délimiteur de trame : **`0xC0`** (END) en début et fin.
-- Échappement : **`0xDB`** — `DB DC` → `C0`, `DB DD` → `DB`.
+- Échappement : **`0xDB`** - `DB DC` → `C0`, `DB DD` → `DB`.
 - Garde de timeout inter-trame : `TIMER_UART_SLAVE_SLIP`.
 
-### En-tête de paquet (dans la trame SLIP) — layout esptool
+### En-tête de paquet (dans la trame SLIP) - layout esptool
 | Offset | Taille | Champ |
 |---|---|---|
 | 0 | 1 | direction (0x00 requête / 0x01 réponse) |
@@ -242,14 +242,14 @@ Tant que non synchronisé, **seule la commande SYNC (0x08) est acceptée**
 (sinon log `received cmd but not sync`). Validation :
 - taille payload = **36** ;
 - 32 octets comparés à la constante @ `0x3f413639` :
-  `07 07 12 20` puis **28–32 × `0x55`** (= le payload SYNC esptool standard) ;
+  `07 07 12 20` puis **28-32 × `0x55`** (= le payload SYNC esptool standard) ;
 - OK → `Sync received`.
 
 ### Checksum data *(confiance : HAUTE)*
 **XOR 8 bits des octets de data, seed `0xEF`** (= algo esptool), comparé au champ
 checksum de l'en-tête. (Ce n'est **pas** un CRC.)
 
-### Table des opcodes  *(toutes CONFIRMÉES — immédiats `movi` de la routine d'enregistrement @ 0x400e8cdc)*
+### Table des opcodes  *(toutes CONFIRMÉES - immédiats `movi` de la routine d'enregistrement @ 0x400e8cdc)*
 | Opcode | Commande | Équiv. esptool |
 |---|---|---|
 | 0x02 | FLASH_BEGIN | ✓ |
@@ -298,12 +298,12 @@ checksum de l'en-tête. (Ce n'est **pas** un CRC.)
    `SET_POWER`, `SET_TEMP`, `SET_AMB`, `SET_CAN1/2_VEL`, `SET_CAN1/2_TEMP`,
    `CHRONO_ENABLE`+`ENABLE1..4`, `CHRONO1_START`, `CHRONO1_STOP`, `CHRONO1_DAY1`.
    (Les 62 autres EEPROM + toutes les RAM sont résolues, §4.) Ce sont des registres
-   d'**écriture de consignes** — la **lecture télémétrie** (toutes les RAM) est complète.
-5. Nommage symbolique des états 2–5 de la machine SOTA2 (structure connue, noms non) —
+   d'**écriture de consignes** - la **lecture télémétrie** (toutes les RAM) est complète.
+5. Nommage symbolique des états 2-5 de la machine SOTA2 (structure connue, noms non) -
    sans impact : SOTA2 est le canal OTA, pas la télémétrie.
 6. **Décodage alarmes/états** (37 entrées idx 102-138 : `NESSUN_ALLARME`, `MANCATA_ACCENSIONE_BIT`,
    `ALLARME_SOVRATEMPERATURA_H2O_BIT`, `PWM_*`, `STATO_PUL_ORD_*`…) : les noms sont extraits,
-   mais leur **encodage numérique n'est pas propre** (mix adresse/masque, valeurs runtime-dépendantes) —
+   mais leur **encodage numérique n'est pas propre** (mix adresse/masque, valeurs runtime-dépendantes) -
    couche d'**interprétation** de STOVE_STATUS/ALLARM à corréler en conditions réelles.
    N'empêche pas de lire les registres bruts (§3), juste de traduire status→libellé.
 
@@ -311,12 +311,12 @@ checksum de l'en-tête. (Ce n'est **pas** un CRC.)
 
 ## 8. Implications pour openextraflame (`micronova.c`)
 Pour que la lecture live fonctionne, il faut :
-1. **Débit = 1200 baud, 8N2** (⚠️ PAS 38400 — voir §2), sur UART1.
+1. **Débit = 1200 baud, 8N2** (⚠️ PAS 38400 - voir §2), sur UART1.
 2. **Inverser la ligne** : `uart_set_line_inverse(UART1, 0x24)` (= `RXD_INV | TXD_INV`, valeur prouvée).
 3. **Passer en MODE MAÎTRE** : *poller* le poêle (envoyer `[loc][addr]`, lire `[cksum][value]`),
    au lieu d'écouter passivement.
 4. **Checksum additif** `(loc+addr+value)&0xFF`.
-5. Utiliser les **vraies adresses** (§4) — les valeurs actuelles de l'enum sont des placeholders.
+5. Utiliser les **vraies adresses** (§4) - les valeurs actuelles de l'enum sont des placeholders.
 6. Gérer le **bank 1** (sondes T_CAMERA/BULBO/SBLOCCO/T_PUFFER_SUP) : `loc = bank`.
 7. Sauter l'**écho** éventuel `[loc][addr]` avant la vraie réponse.
 
@@ -326,7 +326,7 @@ Pour que la lecture live fonctionne, il faut :
 
 ---
 
-## Annexe — artefacts d'analyse
+## Annexe - artefacts d'analyse
 - Dump : `~/Desktop/extraflame_dump.bin` (backup : `firmware-backups/extraflame_dump_ORIGINAL.bin`)
 - Projet Ghidra + segments carvés + scripts : `scratchpad/` (SetupMem.java, ExtractProto.java)
 - Adresses clés : registration commandes `0x400e8cdc` ; SYNC `0x400e88a0` ;
