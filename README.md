@@ -42,17 +42,37 @@ Une même codebase, deux cibles via `-DOPENXFLAME_TARGET=...` :
 
 Le premier flash est **filaire uniquement** (=via CH340G USB-UART). Ensuite tous les upgrades passent par OTA depuis le Web UI.
 
-1. Télécharger le tarball complet depuis [releases](https://github.com/Shad107/OpenXtraflame/releases/latest) :
-   `openxtraflame-vX.Y.Z-blacklabel.tar.gz`
+1. Télécharger le bundle initial flash depuis [releases](https://github.com/Shad107/OpenXtraflame/releases/latest) :
+   `openxtraflame-blacklabel-full-flash.tar.gz` (=Extraflame Black Label) ou `openxtraflame-atom-lite-full-flash.tar.gz` (=M5Stack Atom Lite ou ESP32 dev kit)
 2. Décompresser + brancher le CH340G (=voir le guide de câblage sur [isno.fr](https://www.isno.fr/projets/openxtraflame), il faut maintenir le pin `IO0` de l'ESP32 à `GND` pendant le reset)
 3. Flasher :
    ```bash
-   ./flash.sh /dev/ttyUSB0     # Linux
-   .\flash.ps1 -Port COM3      # Windows PowerShell
+   tar xzf openxtraflame-blacklabel-full-flash.tar.gz
+   cd blacklabel-full-flash
+   ./flash.sh /dev/ttyUSB0     # Linux, remplacer par COM3 sous Windows
+   ```
+   Ou avec `esptool.py` directement :
+   ```bash
+   esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 \
+       --before default_reset --after hard_reset \
+       write_flash --flash_mode dio --flash_size 4MB --flash_freq 40m \
+       0x1000 bootloader.bin \
+       0x8000 partition-table.bin \
+       0xd000 ota_data_initial.bin \
+       0x10000 openextraflame.bin
    ```
 4. Rebrancher le module dans le poêle, se connecter au SoftAP `openxtraflame-XXXXXX` (=open, mdp libre au premier boot), ouvrir `http://192.168.4.1/`, renseigner le SSID + le broker MQTT, sauvegarder + redémarrer.
 
-Une fois en STA, le poêle apparaît dans Home Assistant via MQTT Discovery (=à venir en v0.2.x).
+Une fois en STA, le poêle apparaît dans Home Assistant via MQTT Discovery.
+
+Les upgrades ultérieurs passent par OTA : upload direct dans le Web UI, ou pull depuis une URL HTTPS (=on utilise catbox.moe / github releases pour publier les binaires OTA-only `openxtraflame-blacklabel-module.bin` ou `openxtraflame-m5stack-atom-lite.bin`).
+
+### GPIO câblage (=à connecter au SERIAL 4-pin du poêle)
+
+| Cible | TX (fil marron) | RX (fil blanc) | GND (fil vert) | À NE PAS toucher |
+|---|---|---|---|---|
+| `blacklabel` | GPIO23 | GPIO5 | GND | fil JAUNE = +12V (crame l'ESP32) |
+| `external` (Atom Lite) | GPIO23 | GPIO19 | GND | fil JAUNE = +12V |
 
 ## 🏗️ Architecture
 
