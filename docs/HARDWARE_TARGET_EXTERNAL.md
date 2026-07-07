@@ -89,7 +89,7 @@ I (xxx) MAIN: ===============================================
 I (xxx) MAIN:   openextraflame - build Jul  3 2026 18:00:00
 I (xxx) MAIN:   Board       : external-esp32
 I (xxx) MAIN:   Target      : EXTERNAL (spare ESP32)
-I (xxx) MICRONOVA: Init UART1 TX=17 RX=16 @ 38400 baud 8N1
+I (xxx) MICRONOVA: Init UART1 TX=17 RX=16 @ 1200 baud 8N2 (inversé 0x24)
 I (xxx) MICRONOVA: Micronova task started
 I (xxx) WIFI: SoftAP up : SSID='openextraflame_XXX'
 I (xxx) WEB: Web UI listening on :80
