@@ -1,3 +1,8 @@
+> 📜 **Journal historique du reverse.** Ce document reflète ce qu'on pensait AU MOMENT
+> de l'analyse. Certaines valeurs (adresses de registres, rôle maître/esclave, baud) ont été
+> **corrigées depuis** par la validation sur le vrai poêle. Pour le protocole ACTUEL et validé,
+> voir [`../docs/PROTOCOLE-MICRONOVA.md`](../docs/PROTOCOLE-MICRONOVA.md).
+
 # Session dump 2026-07-03 - logs bruts
 
 Traces complètes de la session reverse engineering du module Extraflame Black Label.
