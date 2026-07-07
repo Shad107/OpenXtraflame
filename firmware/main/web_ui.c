@@ -223,7 +223,7 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     GET_STR_KEEP_EMPTY("wifi_pwd",     g_cfg->wifi_password);
     GET_STR_KEEP_EMPTY("mqtt_host",    g_cfg->mqtt_host);
     GET_NUM("mqtt_port",               g_cfg->mqtt_port, uint16_t);
-    GET_STR("mqtt_user",               g_cfg->mqtt_username);
+    GET_STR_KEEP_EMPTY("mqtt_user",    g_cfg->mqtt_username);
     GET_STR_KEEP_EMPTY("mqtt_pwd",     g_cfg->mqtt_password);
     GET_STR_KEEP_EMPTY("mqtt_prefix",  g_cfg->mqtt_topic_prefix);
     GET_BOOL("mqtt_tls",               g_cfg->mqtt_use_tls);
