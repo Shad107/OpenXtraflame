@@ -137,7 +137,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 **Via QEMU + GDB runtime capture** :
 - Module = SLAVE UART Micronova (=poêle est MASTER)
 - 706 UART_READ hits, 0 UART_WRITE avant reception command
-- UART_NUM_1, TX=GPIO_NUM_23, RX=GPIO_NUM_5, 38400 8N1
+- UART_NUM_1, TX=GPIO_NUM_23, RX=GPIO_NUM_5, 1200 8N2 (ligne inversée 0x24)
 - 5 LEDs sur GPIO 22, 25, 26, 32, 33
 
 ### Code refactored
@@ -195,7 +195,7 @@ des commands Micronova, observe les réponses.
 - ✅ Read response : `[value] [~value]`
 - ✅ Write ACK : `[value] [~value]`
 - ✅ Shadow RAM persiste entre reads/writes
-- ✅ UART 38400 8N1 fonctionne à travers socket TCP
+- ✅ UART fonctionne à travers socket TCP (test QEMU historique @ 38400 ; le poêle réel = 1200 8N2 inversé)
 
 **Ce qu'il reste à valider physiquement** :
 - Adresses HEX exactes des registres RAM_ Micronova (=peut différer entre modèles poêle)
@@ -253,8 +253,8 @@ Proposée par Olivier (=voir docs/IDEAS.md) :
 
 ### Validation QEMU-Xtensa ✅
 - Boot du firmware `blacklabel` émulé : bootloader → app OK, table de partitions OK,
-  GPIO LEDs (25/26/32/33), Micronova UART1 TX=23 RX=5 @ 38400 8N1, slave listener,
-  config NVS defaults — tout démarre proprement.
+  GPIO LEDs (25/26/32/33), Micronova UART1 TX=23 RX=5 @ 1200 8N2 inversé (0x24), master polling,
+  config NVS defaults : tout démarre proprement.
 - Crash `Guru Meditation (LoadStorePIFAddrError)` au démarrage radio Wi-Fi =
   **limitation connue de QEMU** (pas d'émulation de la radio Wi-Fi ESP32), PAS un bug.
   Prouvé : un build avec Wi-Fi désactivé boote sans aucun crash (0 panic, 1 seul POWERON).
