@@ -36,6 +36,8 @@ void config_nvs_defaults(app_config_t *cfg)
     cfg->stove_type           = STOVE_TYPE_UNKNOWN;
     cfg->ha_discovery_enabled = true;
     cfg->publish_interval_ms  = 5000;
+    cfg->mn_baud_rate         = 38400;   // QEMU capture, some stoves need 1200
+    cfg->mn_stop_bits         = 1;       // 1 or 2 (=Micronova legacy is 8N2)
 }
 
 static esp_err_t get_str_or_default(nvs_handle_t h, const char *key, char *out, size_t max_len)
@@ -89,6 +91,8 @@ esp_err_t config_nvs_load(app_config_t *cfg)
         cfg->ha_discovery_enabled = (u8 != 0);
     }
     nvs_get_u16(h, KEY_PUBLISH_INTERVAL, &cfg->publish_interval_ms);
+    nvs_get_u32(h, "mn_baud", &cfg->mn_baud_rate);
+    nvs_get_u8 (h, "mn_stopb", &cfg->mn_stop_bits);
 
     nvs_close(h);
     return ESP_OK;
@@ -116,6 +120,8 @@ esp_err_t config_nvs_save(const app_config_t *cfg)
     nvs_set_str(h, KEY_STOVE_NAME, cfg->stove_name);
     nvs_set_u8(h, KEY_HA_DISCOVERY, cfg->ha_discovery_enabled ? 1 : 0);
     nvs_set_u16(h, KEY_PUBLISH_INTERVAL, cfg->publish_interval_ms);
+    nvs_set_u32(h, "mn_baud",  cfg->mn_baud_rate);
+    nvs_set_u8 (h, "mn_stopb", cfg->mn_stop_bits);
 
     err = nvs_commit(h);
     nvs_close(h);

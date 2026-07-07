@@ -36,19 +36,18 @@ static char sub_topic_prefix[128] = "";
 static void handle_command(const char *topic, size_t tlen,
                             const char *data,  size_t dlen)
 {
-    /* Slave design : nous ne pouvons pas envoyer d'ordre directement au poêle.
-     * Au lieu de ça, on écrit dans le shadow RAM. Le poêle lira cette valeur
-     * quand il polle le registre correspondant, appliquant ainsi la commande.
-     */
-    if (strstr(topic, "/cmd/on"))          { mn_set_ram(MN_RAM_ACCENDI, 1);      return; }
-    if (strstr(topic, "/cmd/off"))         { mn_set_ram(MN_RAM_SPEGNI, 1);       return; }
-    if (strstr(topic, "/cmd/reset_alarm")) { mn_set_ram(MN_RAM_SBLOCCO, 1);      return; }
+    /* Master design : the ESP32 polls the stove and pushes writes on the bus.
+     * mn_write_register() updates the local shadow AND queues a Micronova
+     * write frame that the master task will send at the next slot. */
+    if (strstr(topic, "/cmd/on"))          { mn_write_register(MN_RAM_ACCENDI, 1);  return; }
+    if (strstr(topic, "/cmd/off"))         { mn_write_register(MN_RAM_SPEGNI, 1);   return; }
+    if (strstr(topic, "/cmd/reset_alarm")) { mn_write_register(MN_RAM_SBLOCCO, 1);  return; }
     if (strstr(topic, "/cmd/setpoint")) {
         char buf[8] = {0};
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            mn_set_ram(MN_RAM_TAMB, (uint8_t)v);
+            mn_write_register(MN_RAM_TAMB, (uint8_t)v);
         }
         return;
     }
@@ -57,7 +56,7 @@ static void handle_command(const char *topic, size_t tlen,
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            mn_set_ram(MN_RAM_POT_REALE, (uint8_t)v);
+            mn_write_register(MN_RAM_POT_REALE, (uint8_t)v);
         }
         return;
     }

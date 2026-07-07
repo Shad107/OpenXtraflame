@@ -49,6 +49,12 @@ typedef struct {
     bool     ha_discovery_enabled;  // publish MQTT discovery topics
     uint16_t publish_interval_ms;   // between OUT/status publishes
 
+    /* Micronova UART tuning (=some stove models use 1200 8N2, others
+     * 38400 8N1. Configurable at runtime so users can experiment
+     * without rebuilding the firmware. */
+    uint32_t mn_baud_rate;          // 1200 / 2400 / 9600 / 19200 / 38400
+    uint8_t  mn_stop_bits;          // 1 or 2
+
 #ifdef TARGET_BLACKLABEL
     /* Guardian Mode - OPT-IN, disabled by default
      * ONLY available on TARGET_BLACKLABEL because it requires the

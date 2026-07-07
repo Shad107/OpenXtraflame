@@ -40,33 +40,39 @@ char *mn_debug_dump_json(void);
 /* Total number of frames ever pushed since boot. */
 uint32_t mn_debug_seq(void);
 
-/* Registres RAM Micronova - identifiés par constants Extraflame */
+/* Registres RAM Micronova - VRAIES adresses extraites du binaire d'origine
+ * navel (rodata offset 0x64EAE, tableaux parallèles nom/valeur).
+ *
+ * Encodage : octet bas = adresse dans la banque, octet haut = numéro de banque.
+ * Bank 0 (0xDx) = accessible via read/write RAM standard [0x00 addr].
+ * Bank 1 (0x1EA..0x1EF) = extended page, nécessite une commande spécifique
+ * non encore implémentée (=T_CAMERA, BULBO, SBLOCCO, T_PUFFER_SUP).
+ *
+ * Registres marqués ABSENT (=0xFFFF dans le firmware d'origine) : T_BOILER,
+ * T_H20_RIT, T_PUFFER_INF, MOD, STATO_GESTITO. Notre modèle ne les a pas.
+ */
 typedef enum {
-    /* Read (=status/temperature) */
-    MN_RAM_STOVE_STATUS      = 0x21,  // placeholder, à vérifier
-    MN_RAM_STATO_GESTITO     = 0x22,
-    MN_RAM_MOD               = 0x23,
-    MN_RAM_POT_REALE         = 0x24,
-    MN_RAM_ALLARM            = 0x25,
-    MN_RAM_CAUSA_STATO7      = 0x26,
-    MN_RAM_SERBATORIO_VUOTO  = 0x27,
-    MN_RAM_BULBO             = 0x28,
-    MN_RAM_TAMB              = 0x30,
-    MN_RAM_TH20              = 0x31,
-    MN_RAM_T_FUMI            = 0x32,
-    MN_RAM_T_CAMERA          = 0x33,
-    MN_RAM_T_BOILER          = 0x34,
-    MN_RAM_T_H20_RIT         = 0x35,
-    MN_RAM_T_PUFFER_INF      = 0x36,
-    MN_RAM_T_PUFFER_SUP      = 0x37,
+    /* Bank 0 - lecture directe [0x00 addr] */
+    MN_RAM_TH20              = 0xD0,   // eau
+    MN_RAM_STOVE_STATUS      = 0xD1,
+    MN_RAM_ALLARM            = 0xD2,
+    MN_RAM_TAMB              = 0xD3,   // temp ambiante
+    MN_RAM_SPEGNI            = 0xD6,   // write: éteindre
+    MN_RAM_ACCENDI           = 0xD7,   // write: allumer
+    MN_RAM_POT_REALE         = 0xD8,   // puissance réelle
+    MN_RAM_T_FUMI            = 0xD9,   // fumées
 
-    /* Write (=commands from stove) */
-    MN_RAM_ACCENDI           = 0x50,
-    MN_RAM_SPEGNI            = 0x51,
-    MN_RAM_RESET_UTENTE      = 0x52,
-    MN_RAM_SBLOCCO           = 0x53,
+    /* Bank 1 - non implémenté (=extended page command) */
+    MN_RAM_SBLOCCO           = 0x1EA,
+    MN_RAM_BULBO             = 0x1EB,
+    MN_RAM_T_PUFFER_SUP      = 0x1EE,
+    MN_RAM_T_CAMERA          = 0x1EF,
 
-    MN_RAM_MAX               = 0x100,
+    /* Placeholders retirés (=absents sur notre modèle Teodora Evo I_VENT) :
+     *   MOD, STATO_GESTITO, CAUSA_STATO7, SERBATORIO_VUOTO, T_BOILER,
+     *   T_H20_RIT, T_PUFFER_INF, RESET_UTENTE */
+
+    MN_RAM_MAX               = 0x200,   // bank1 max = 0x1EF+1
 } mn_ram_addr_t;
 
 /* Etats poele (=STATO_PUL_ORD_* constants d'Extraflame) */
@@ -106,12 +112,14 @@ esp_err_t micronova_start(void);
 /* Thread-safe snapshot getter */
 void mn_get_snapshot(mn_stove_state_snapshot_t *out);
 
-/* Set RAM register value (=called from MQTT command handler)
- * Writes to internal RAM shadow. Poêle will read it via Micronova frame.
- * Ex: to change setpoint, MQTT publishes to <prefix>/cmd/setpoint 21 ->
- * mn_set_ram(MN_RAM_TAMB, 21) -> next stove read gets 21.
- */
+/* Set RAM shadow value (=used by the master poll path after a reply is read).
+ * Does NOT trigger a bus write. For a user-visible write, use
+ * mn_write_register() below. */
 esp_err_t mn_set_ram(mn_ram_addr_t addr, uint8_t value);
+
+/* Queue an actual Micronova WRITE frame to the stove and update the shadow.
+ * Non-blocking; the master task drains the queue between polls. */
+esp_err_t mn_write_register(mn_ram_addr_t addr, uint8_t value);
 
 /* Get current RAM shadow value */
 uint8_t mn_get_ram(mn_ram_addr_t addr);
@@ -122,3 +130,38 @@ char *mn_ram_dump_json(void);
 
 /* Return runtime stats (=frames counts, last activity ms). */
 char *mn_stats_json(void);
+
+/* Sniffer: pause the master task, capture raw UART bytes for duration_ms
+ * (clamped 100..15000), fire one probe ping halfway through, return JSON.
+ * Caller frees. */
+char *mn_sniffer_capture(int duration_ms);
+
+/* Send arbitrary TX bytes and capture whatever arrives on RX within
+ * timeout_ms. Master task is paused for the duration. tx_hex is a
+ * space-separated hex string (e.g. "20 00" or "0x00 0x21"). Caller frees. */
+char *mn_raw_tx(const char *tx_hex, int timeout_ms);
+
+/* Same but with an optional SLIP wrapper (=C0 payload C0 + escape rules). */
+char *mn_raw_tx_ex(const char *tx_hex, int timeout_ms, bool wrap_slip);
+
+/* Sweep every 8-bit address from start..end with a given opcode, capturing
+ * any reply within per_addr_ms. Report which addresses responded. Caller
+ * frees the returned JSON. */
+char *mn_addr_scan(uint8_t opcode, uint8_t start, uint8_t end, int per_addr_ms);
+
+/* Live UART reconfig without reboot. baud=0 means keep current.
+ * rx_inv/tx_inv apply logic inversion (=for RS-232-style signaling).
+ * Returns a heap-allocated status JSON. */
+char *mn_reconfig_uart(int baud, int rx_inv, int tx_inv);
+
+/* Extended reconfig also lets you switch stop bits (=1 or 2, 0=keep). */
+char *mn_reconfig_uart_ex(int baud, int rx_inv, int tx_inv, int stop_bits);
+
+/* Sample GPIO5 (RX pin) raw at ~100kHz for duration_ms.
+ * Returns transitions/duty ratio to determine if poêle is driving any signal
+ * at all - bypasses the UART peripheral entirely. */
+char *mn_rx_raw_sample(int duration_ms);
+
+/* Sample GPIO23 (TX pin) as INPUT while firing a burst of UART TX bytes.
+ * Verifies our TX line actually pulses when the UART peripheral drives it. */
+char *mn_tx_self_check(void);

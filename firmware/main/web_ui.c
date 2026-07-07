@@ -86,9 +86,9 @@ static esp_err_t handle_stove_cmd(httpd_req_t *req)
 {
     /* Extract command from URL after /api/stove/ */
     const char *cmd = req->uri + strlen("/api/stove/");
-    if (strcmp(cmd, "on") == 0)          mn_set_ram(MN_RAM_ACCENDI, 1);
-    else if (strcmp(cmd, "off") == 0)    mn_set_ram(MN_RAM_SPEGNI, 1);
-    else if (strcmp(cmd, "reset_alarm") == 0) mn_set_ram(MN_RAM_SBLOCCO, 1);
+    if (strcmp(cmd, "on") == 0)          mn_write_register(MN_RAM_ACCENDI, 1);
+    else if (strcmp(cmd, "off") == 0)    mn_write_register(MN_RAM_SPEGNI, 1);
+    else if (strcmp(cmd, "reset_alarm") == 0) mn_write_register(MN_RAM_SBLOCCO, 1);
     else return httpd_resp_send_404(req);
     return httpd_resp_send(req, "{\"ok\":true}", 11);
 }
@@ -530,6 +530,133 @@ static esp_err_t handle_debug_uart(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* POST /debug/tx-check - verify our TX pin actually pulses by sampling
+ * GPIO23 as input while UART sends a burst. */
+static esp_err_t handle_debug_tx_check(httpd_req_t *req)
+{
+    char *out = mn_tx_self_check();
+    if (!out) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
+/* POST /debug/rx-raw?ms=500 - bypass UART, sample GPIO5 raw at ~100kHz. */
+static esp_err_t handle_debug_rx_raw(httpd_req_t *req)
+{
+    int ms = 500;
+    char q[32];
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) == ESP_OK) {
+        char v[16];
+        if (httpd_query_key_value(q, "ms", v, sizeof(v)) == ESP_OK) ms = atoi(v);
+    }
+    char *out = mn_rx_raw_sample(ms);
+    if (!out) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
+/* POST /debug/uart-set  body: {"baud":38400,"rx_inv":true,"tx_inv":false}
+ * Live UART reconfig without reboot. */
+static esp_err_t handle_debug_uart_set(httpd_req_t *req)
+{
+    char body[128] = {0};
+    int rd = httpd_req_recv(req, body, sizeof(body) - 1);
+    if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+    cJSON *root = cJSON_Parse(body);
+    if (!root) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+    int baud   = 0, rx_inv = -1, tx_inv = -1, stop_bits = 0;
+    cJSON *j;
+    j = cJSON_GetObjectItem(root, "baud");      if (cJSON_IsNumber(j)) baud      = j->valueint;
+    j = cJSON_GetObjectItem(root, "rx_inv");    if (cJSON_IsBool(j))   rx_inv    = cJSON_IsTrue(j) ? 1 : 0;
+    j = cJSON_GetObjectItem(root, "tx_inv");    if (cJSON_IsBool(j))   tx_inv    = cJSON_IsTrue(j) ? 1 : 0;
+    j = cJSON_GetObjectItem(root, "stop_bits"); if (cJSON_IsNumber(j)) stop_bits = j->valueint;
+    cJSON_Delete(root);
+
+    char *out = mn_reconfig_uart_ex(baud, rx_inv, tx_inv, stop_bits);
+    if (!out) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
+/* POST /debug/uart-tx  body: {"hex":"20 00","timeout_ms":500}
+ * Fires arbitrary bytes on UART1 and returns whatever comes back. */
+static esp_err_t handle_debug_uart_tx(httpd_req_t *req)
+{
+    char body[256] = {0};
+    int rd = httpd_req_recv(req, body, sizeof(body) - 1);
+    if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+    cJSON *root = cJSON_Parse(body);
+    if (!root) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+    const cJSON *hex  = cJSON_GetObjectItem(root, "hex");
+    const cJSON *tm   = cJSON_GetObjectItem(root, "timeout_ms");
+    const cJSON *slip = cJSON_GetObjectItem(root, "slip");
+    if (!cJSON_IsString(hex)) { cJSON_Delete(root); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no hex"); }
+    int timeout_ms = cJSON_IsNumber(tm) ? tm->valueint : 500;
+    bool wrap = cJSON_IsBool(slip) && cJSON_IsTrue(slip);
+
+    char *out = mn_raw_tx_ex(hex->valuestring, timeout_ms, wrap);
+    cJSON_Delete(root);
+    if (!out) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
+/* POST /debug/uart-scan?opcode=32&start=0&end=63&ms=100
+ * Sweeps a Micronova opcode across a byte-address range and reports which
+ * addresses returned a reply. Good for locating matricola (=EEPROM opcode 0x20). */
+static esp_err_t handle_debug_uart_scan(httpd_req_t *req)
+{
+    int opcode = 0x20, start = 0, end = 63, ms = 100;
+    char q[64];
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) == ESP_OK) {
+        char v[16];
+        if (httpd_query_key_value(q, "opcode", v, sizeof(v)) == ESP_OK) opcode = (int)strtol(v, NULL, 0);
+        if (httpd_query_key_value(q, "start",  v, sizeof(v)) == ESP_OK) start  = (int)strtol(v, NULL, 0);
+        if (httpd_query_key_value(q, "end",    v, sizeof(v)) == ESP_OK) end    = (int)strtol(v, NULL, 0);
+        if (httpd_query_key_value(q, "ms",     v, sizeof(v)) == ESP_OK) ms     = atoi(v);
+    }
+    char *out = mn_addr_scan((uint8_t)opcode, (uint8_t)start, (uint8_t)end, ms);
+    if (!out) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
+/* POST /debug/uart-sniffer?ms=5000 - pause master task, capture raw UART bytes,
+ * emit one probe ping halfway, return hex dump. */
+static esp_err_t handle_debug_uart_sniffer(httpd_req_t *req)
+{
+    int duration_ms = 5000;
+    char q[32];
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) == ESP_OK) {
+        char v[16];
+        if (httpd_query_key_value(q, "ms", v, sizeof(v)) == ESP_OK) {
+            duration_ms = atoi(v);
+        }
+    }
+    char *json = mn_sniffer_capture(duration_ms);
+    if (!json) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return ESP_OK;
+}
+
 /* --- Pull an OTA image from an arbitrary URL (github release, mirror, etc.) --- */
 
 static void ota_pull_bg_task(void *arg)
@@ -586,7 +713,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
     g_cfg = cfg;
 
     httpd_config_t hd = HTTPD_DEFAULT_CONFIG();
-    hd.max_uri_handlers   = 25;   /* room for the current 21 routes + margin;
+    hd.max_uri_handlers   = 30;   /* room for the current 26 routes + margin;
                                    * remember to grow this whenever a handler
                                    * is added, ESP-IDF silently drops the
                                    * overflow entries with only a W log line
@@ -629,6 +756,12 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
         { .uri = "/mqtt/debug",           .method = HTTP_GET,  .handler = handle_mqtt_debug,   },
         { .uri = "/mqtt/test",            .method = HTTP_POST, .handler = handle_mqtt_test,    },
+        { .uri = "/debug/uart-sniffer",   .method = HTTP_POST, .handler = handle_debug_uart_sniffer,},
+        { .uri = "/debug/uart-tx",        .method = HTTP_POST, .handler = handle_debug_uart_tx,     },
+        { .uri = "/debug/uart-scan",      .method = HTTP_POST, .handler = handle_debug_uart_scan,   },
+        { .uri = "/debug/uart-set",       .method = HTTP_POST, .handler = handle_debug_uart_set,    },
+        { .uri = "/debug/rx-raw",         .method = HTTP_POST, .handler = handle_debug_rx_raw,      },
+        { .uri = "/debug/tx-check",       .method = HTTP_POST, .handler = handle_debug_tx_check,    },
     };
     for (size_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++) {
         httpd_register_uri_handler(server, &routes[i]);
