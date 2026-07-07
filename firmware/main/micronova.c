@@ -212,8 +212,8 @@ static bool mn_do_transaction(uint8_t cmd, uint16_t reg_addr, uint8_t value_to_w
     mn_debug_push(is_write ? MN_DIR_RX_WRITE : MN_DIR_RX_READ,
                   addr, is_write ? value_to_write : 0);
     if (is_write) {
-        ESP_LOGI(TAG, "TX write [0x%02X 0x%02X 0x%02X] -> reg=0x%03X",
-                 tx[0], tx[1], tx[2], reg_addr);
+        ESP_LOGI(TAG, "TX write [0x%02X 0x%02X 0x%02X 0x%02X] -> reg=0x%03X val=0x%02X cks=0x%02X",
+                 tx[0], tx[1], tx[2], tx[3], reg_addr, value_to_write, tx[3]);
     } else {
         ESP_LOGI(TAG, "TX read  [0x%02X 0x%02X] -> reg=0x%03X (bank=%u)",
                  tx[0], tx[1], reg_addr, bank);

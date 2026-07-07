@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 # Target selection: external (default) or blacklabel
 # We use OPENXFLAME_TARGET because plain "TARGET" is a CMake reserved word.
 if(NOT DEFINED OPENXFLAME_TARGET)
-    set(OPENXFLAME_TARGET "external")
+    set(OPENXFLAME_TARGET "blacklabel")
 endif()
 
 message(STATUS "Building openextraflame for target: ${OPENXFLAME_TARGET}")
@@ -19,7 +19,7 @@ endif()
 
 # Firmware version stamped into esp_app_get_description()->version, shown in
 # the Web UI header and the OTA tab. Bump on each release.
-set(PROJECT_VER "v0.1.0-beta43")
+set(PROJECT_VER "v0.1.0-beta44")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(openextraflame)
