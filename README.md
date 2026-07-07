@@ -1,94 +1,153 @@
-# openextraflame
+# OpenXtraflame
 
-Custom firmware open-source pour les poêles à granulés Extraflame (et compatibles Micronova).
+**Firmware ESP32 open-source qui remplace la dépendance cloud du module Wi-Fi Extraflame Black Label par un contrôle 100 % local via MQTT / Home Assistant.**
 
-**Statut : ⚠️ EN DÉVELOPPEMENT PRIVÉ - PAS ENCORE PUBLIÉ**
+[![Latest release](https://img.shields.io/github/v/release/Shad107/OpenXtraflame?include_prereleases&label=release)](https://github.com/Shad107/OpenXtraflame/releases)
+[![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2.3-blue)](https://docs.espressif.com/projects/esp-idf/en/v5.2.3/)
+[![License MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Targets](https://img.shields.io/badge/targets-Black%20Label%20%7C%20M5Stack%20ATOM-orange)]()
 
-## Objectif
+Le poêle à granulés Extraflame Teodora Evo (et cousins Micronova : EdilKamin, LAMINOX, Freepoint, Karmek One) se pilote depuis l'app officielle **Total Control 2** via un broker MQTT propriétaire hébergé par [Omnyvore srl](https://omnyvore.com). OpenXtraflame remplace complètement cette couche cloud par un bridge MQTT local vers **Home Assistant** — le module d'origine reste installé, aucune modification visible, aucune dépendance externe.
 
-Remplacer la dépendance cloud Omnyvore (`mqtt.extraflame.it:8883`) par un contrôle 100% local via MQTT vers Home Assistant / Mosquitto.
+📖 **Article complet du reverse engineering + guide pas à pas** : [www.isno.fr/projets/openxtraflame](https://www.isno.fr/projets/openxtraflame)
 
-## Deux targets
+---
 
-### Target A : "External" (=recommandé, safe)
+## ✨ Fonctionnalités
 
-Firmware pour un ESP32 spare connecté en parallèle au bus série du poêle. Le module Extraflame Black Label reste INTACT.
+- 🔥 **Bridge Micronova UART slave** — décode les frames 38400 bps 8N1 du poêle master
+- 📡 **Bridge MQTT local** vers Mosquitto / Home Assistant, sans passer par le cloud
+- 🌐 **Web UI embarquée** — Dashboard, Wi-Fi, MQTT, Poêle, OTA, Debug, Avancé
+- 📶 **Provisioning SoftAP + dual APSTA** — le SoftAP `openxtraflame-XXXX` reste up en permanence, never brick
+- ⬆️ **OTA** upload direct depuis le navigateur OU pull depuis une URL HTTPS (=CA bundle Mozilla)
+- 🔁 **Auto-wipe `phy_init` au changement de version firmware** — évite qu'un OTA hérite d'une calibration RF invalide
+- 🛡️ **Rollback safety** — `esp_ota_mark_app_valid_cancel_rollback()` sur boot réussi, un firmware buggé rollback tout seul
+- 🔍 **Live log Micronova** dans l'onglet Debug (=64 dernières trames RX/TX, refresh 1 s)
+- 💡 **Mapping des 4 LEDs** conservé (=POWER / WI-FI / SERVER / BLE), sémantique identique à l'usine
 
-- Matériel : ESP32-WROOM-32 spare + fils dupont
-- Câblage : bus série poêle (=connecteur TA côté main board)
-- Approche similaire à philibertc/micronova_controller
-- Public/documenté sur www.isno.fr
+## 🎯 Cibles supportées
 
-### Target B : "Black Label Replacement" (=avancé)
+Une même codebase, deux cibles via `-DOPENXFLAME_TARGET=...` :
 
-Firmware qui REMPLACE celui d'origine sur le module Extraflame Black Label. Nécessite dump du firmware original en backup.
+| Cible | Matériel | Cas d'usage |
+|---|---|---|
+| `external` | M5Stack ATOM Lite (=ESP32-PICO ~12 €) branché en parallèle du bus poêle | Validation / dev / installation qui garde le module Extraflame intact |
+| `blacklabel` | Module Wi-Fi Extraflame Black Label T009_3 (=le vrai) | Remplacement complet du firmware d'origine, zéro modification visible |
 
-- Matériel : module Black Label 289€ Extraflame
-- Réutilise pinout SERIAL 4-pin natif
-- Restauration possible via dump firmware original
-- Non-public, usage personnel uniquement
+## 🚀 Installation rapide (=Black Label)
 
-## Architecture
+Le premier flash est **filaire uniquement** (=via CH340G USB-UART). Ensuite tous les upgrades passent par OTA depuis le Web UI.
 
-```
-┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│                 │  UART   │                 │  Wi-Fi  │                 │
-│  Poêle          │38400 8N1│  ESP32 avec     │  MQTT   │ Home Assistant  │
-│  Extraflame     ├─────────┤  openextraflame ├─────────┤ + Mosquitto     │
-│  Teodora Evo    │Micronova│  firmware       │  local  │ (=local only)   │
-│                 │  proto  │                 │         │                 │
-└─────────────────┘         └─────────────────┘         └─────────────────┘
-```
+1. Télécharger le tarball complet depuis [releases](https://github.com/Shad107/OpenXtraflame/releases/latest) :
+   `openxtraflame-vX.Y.Z-blacklabel.tar.gz`
+2. Décompresser + brancher le CH340G (=voir le guide de câblage sur [isno.fr](https://www.isno.fr/projets/openxtraflame), il faut maintenir le pin `IO0` de l'ESP32 à `GND` pendant le reset)
+3. Flasher :
+   ```bash
+   ./flash.sh /dev/ttyUSB0     # Linux
+   .\flash.ps1 -Port COM3      # Windows PowerShell
+   ```
+4. Rebrancher le module dans le poêle, se connecter au SoftAP `openxtraflame-XXXXXX` (=open, mdp libre au premier boot), ouvrir `http://192.168.4.1/`, renseigner le SSID + le broker MQTT, sauvegarder + redémarrer.
 
-## Roadmap
+Une fois en STA, le poêle apparaît dans Home Assistant via MQTT Discovery (=à venir en v0.2.x).
 
-- [x] Dump firmware original Extraflame Black Label
-- [x] Analyse partitions + protocoles
-- [x] Cartographie complète firmware
-- [ ] Setup ESP-IDF v5.x + toolchain
-- [ ] Skeleton code + build
-- [ ] Wi-Fi manager fork tonyp7
-- [ ] MQTT client vers Mosquitto local
-- [ ] UART Micronova protocole
-- [ ] Web UI SoftAP config
-- [ ] Test sur ESP32 spare (=Target A)
-- [ ] Test sur Black Label (=Target B, avec backup)
-- [ ] Integration HA MQTT Discovery
-- [ ] Documentation www.isno.fr
-- [ ] Release publique GitHub
-
-## Structure du projet
+## 🏗️ Architecture
 
 ```
-openextraflame/
-├── README.md                    # ce fichier
-├── LICENSE                       # MIT
-├── docker-compose.yml            # env dev reproductible
-├── Dockerfile.esp-idf            # container ESP-IDF v5
+┌─────────────────┐       ┌─────────────────┐        ┌─────────────────┐
+│                 │  UART │                 │  MQTT  │                 │
+│  Poêle          │38400  │  ESP32 flashé   │  Wi-Fi │ Home Assistant  │
+│  Extraflame     ├───────┤  OpenXtraflame  ├────────┤ + Mosquitto     │
+│  (Micronova     │Master │  (slave listener│  local │ (local only,    │
+│   master)       │       │   + RAM shadow) │        │  zero cloud)    │
+└─────────────────┘       └─────────────────┘        └─────────────────┘
+```
+
+- Le poêle est **master Micronova** — on l'a découvert en breakpointant les fonctions UART sous QEMU/GDB, contrairement à toutes les implémentations communautaires qui supposent le module en master.
+- Le firmware maintient une **RAM shadow** répliquant les registres Micronova (`RAM_STATO`, `RAM_TAMB`, `RAM_TFUMI`, `RAM_ALLARME`, `RAM_ACCENDI`, `RAM_SPEGNI`, ...). Les commandes MQTT écrivent dans le shadow, le poêle les lit à son prochain poll.
+
+## 🔨 Build from source
+
+Prérequis : Docker (=on utilise l'image officielle `espressif/idf:v5.2.3`).
+
+```bash
+docker run --rm -v $PWD/firmware:/project -w /project \
+  espressif/idf:v5.2.3 \
+  idf.py -DOPENXFLAME_TARGET=blacklabel build
+```
+
+Le binaire d'app sort dans `firmware/build/openextraflame.bin`. Pour le tarball complet (=à utiliser en flash filaire propre), joindre également :
+
+- `firmware/build/bootloader/bootloader.bin`
+- `firmware/build/partition_table/partition-table.bin`
+- `firmware/build/ota_data_initial.bin`
+
+Un exemple de script `flash.sh` / `flash.ps1` est fourni dans chaque tarball de release.
+
+## 📁 Structure du projet
+
+```
+OpenXtraflame/
+├── README.md                    ← ce fichier
+├── LICENSE                       ← MIT
+├── docker-compose.yml            ← env dev reproductible
+├── Dockerfile.esp-idf            ← image ESP-IDF v5.2.3
 ├── firmware/
-│   ├── main/                     # code C ESP-IDF
-│   ├── components/               # libs custom
-│   ├── boards/
-│   │   ├── external/             # config Target A
-│   │   └── blacklabel/           # config Target B
-│   └── build.sh
-├── web/                          # HTML/CSS/JS pour SoftAP UI
-├── docs/                         # documentation utilisateur
-├── analysis/                     # reverse engineering notes
-├── ha-config/                    # exemples HA yaml
-└── tools/                        # scripts helpers
+│   ├── CMakeLists.txt            ← PROJECT_VER + OPENXFLAME_TARGET
+│   ├── partitions.csv            ← layout Black Label conservé
+│   ├── sdkconfig.defaults
+│   └── main/                     ← code C ESP-IDF
+│       ├── main.c                ← boot banner + phy_init wipe on version change
+│       ├── wifi_bridge.c         ← SoftAP + STA dual APSTA
+│       ├── mqtt_bridge.c         ← publish state + subscribe cmds
+│       ├── micronova.c           ← slave listener + RAM shadow + debug ring buffer
+│       ├── web_ui.c              ← HTTPD + endpoints REST
+│       ├── ota.c                 ← upload / pull URL / rollback
+│       └── web/                  ← index.html + script.js + style.css (=embedded)
+├── analysis/                     ← reverse engineering notes
+├── ha-config/                    ← exemples HA YAML
+└── tools/                        ← scripts helpers
 ```
 
-## Analyse du firmware Extraflame
+## 🗺️ Roadmap
 
-Voir [analysis/firmware-cartography.md](analysis/firmware-cartography.md) pour reverse engineering complet.
+**v0.1.x — Public MVP** (=actuel) :
 
-Voir [analysis/session_2026-07-03_logs.md](analysis/session_2026-07-03_logs.md) pour logs bruts session dump.
+- [x] Reverse engineering complet du module Extraflame Black Label
+- [x] Firmware Target External (=M5Stack ATOM Lite) validé
+- [x] Firmware Target Black Label validé sur hardware réel
+- [x] Web UI + provisioning + OTA + rollback safety
+- [x] Auto phy_init wipe on version change
 
-## Licence
+**v0.2.x — Home Assistant native** :
 
-MIT (=voir LICENSE)
+- [ ] MQTT Discovery : auto-provisionner climate + sensors dans HA
+- [ ] Auto-discovery du broker MQTT via mDNS (`_mqtt._tcp.local`)
+- [ ] Bouton "Détecter HA" dans l'onglet MQTT du Web UI
 
-## Disclaimer
+**v0.3.x — Ecosystème** :
 
-Ce projet est un travail de reverse engineering effectué sur du matériel personnel dans un but éducatif et pour usage personnel. Aucun code binaire dérivé d'Extraflame n'est distribué. L'utilisation de ce firmware sur votre matériel est à vos risques et périls. Extraflame ne fournit pas de support pour cette utilisation.
+- [ ] Guardian mode : archive silencieuse des OTA officielles Extraflame (=filet si Omnyvore ferme)
+- [ ] Support autres poêles Micronova (=EdilKamin, LAMINOX, ...) via profils dispatcher
+
+## 🤝 Contribuer
+
+Les issues et PRs sont bienvenues. Ce projet est un side project, les réponses peuvent être lentes.
+
+Pour un bug de firmware :
+1. Ouvrir un moniteur série et coller les logs (=`python -m serial.tools.miniterm COM3 115200`)
+2. Préciser la version installée (=visible dans le banner boot ou l'onglet OTA du Web UI)
+
+## 📜 Licence
+
+MIT — voir [LICENSE](LICENSE).
+
+## ⚠️ Disclaimer
+
+Reverse engineering effectué sur du matériel personnel dans un but éducatif et de préservation (=si Omnyvore ferme demain, mon poêle perd son pilotage à distance). Aucun code binaire dérivé du firmware Extraflame n'est distribué. L'utilisation de ce firmware sur ton matériel est à tes risques et périls. Extraflame ne fournit pas de support pour cette utilisation.
+
+## 🙏 Crédits
+
+- [philibertc/micronova_controller](https://github.com/philibertc/micronova_controller) et [Jorre05/micronova](https://github.com/Jorre05/micronova) pour avoir défriché le protocole Micronova côté ESP externe
+- Espressif pour ESP-IDF et l'excellente doc sur l'ESP32
+- La communauté Ghidra pour le support natif Xtensa qui a rendu la décompilation possible
+- L'équipe Home Assistant pour l'intégration MQTT et son modèle Discovery
