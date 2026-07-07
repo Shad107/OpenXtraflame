@@ -792,24 +792,33 @@ esp_err_t micronova_start(void)
         .source_clk = UART_SCLK_DEFAULT,
     };
 
-    ESP_ERROR_CHECK(uart_driver_install(STOVE_UART_NUM,
-                                        MN_RX_BUFFER_SIZE,
-                                        MN_TX_BUFFER_SIZE,
-                                        0, NULL, 0));
+    /* Ordre d'init exact du firmware navel v4.3 (=doc reverse V3) :
+     *   uart_param_config → uart_set_line_inverse(0x24) → uart_set_pin
+     *   → uart_driver_install
+     * L'inversion doit être posée AVANT uart_set_pin car sur ESP-IDF v5.x,
+     * uart_set_pin() peut interférer avec le bit d'inversion du GPIO matrix. */
     ESP_ERROR_CHECK(uart_param_config(STOVE_UART_NUM, &cfg));
+
+    ESP_ERROR_CHECK(uart_set_line_inverse(STOVE_UART_NUM,
+                                          UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV));
+    ESP_LOGI(TAG, "UART%d line inversion set (0x24 = RXD_INV|TXD_INV)", STOVE_UART_NUM);
+
     ESP_ERROR_CHECK(uart_set_pin(STOVE_UART_NUM,
                                  STOVE_UART_TX_PIN,
                                  STOVE_UART_RX_PIN,
                                  UART_PIN_NO_CHANGE,
                                  UART_PIN_NO_CHANGE));
 
-    /* Bus interne Extraflame/Micronova = TTL INVERSÉ (=polarité RS-232 aux
-     * niveaux TTL, sans driver physique). Sans inversion, le signal RX est
-     * indécodable = 0 trame. Confirmé : le firmware d'origine "navel" appelle
-     * uart_set_line_inverse() dans son serial.c. */
+    ESP_ERROR_CHECK(uart_driver_install(STOVE_UART_NUM,
+                                        MN_RX_BUFFER_SIZE,
+                                        MN_TX_BUFFER_SIZE,
+                                        0, NULL, 0));
+
+    /* Re-poser l'inversion APRÈS uart_set_pin, au cas où v5.x l'aurait clearée.
+     * L'appel est idempotent et fixe CONF0.RXD_INV=1 CONF0.TXD_INV=1. */
     ESP_ERROR_CHECK(uart_set_line_inverse(STOVE_UART_NUM,
                                           UART_SIGNAL_RXD_INV | UART_SIGNAL_TXD_INV));
-    ESP_LOGI(TAG, "UART%d line inversion enabled (RXD_INV|TXD_INV)", STOVE_UART_NUM);
+    ESP_LOGI(TAG, "UART%d line inversion re-applied post pin/driver", STOVE_UART_NUM);
 
     /* Bus open-collector: force le pull-up interne sur RX pour maintenir l'idle
      * HIGH quand le poêle ne parle pas. uart_set_pin() désactive les pull-ups
