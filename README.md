@@ -165,6 +165,19 @@ Pour un bug de firmware :
 1. Ouvrir un moniteur série et coller les logs (=`python -m serial.tools.miniterm COM3 115200`)
 2. Préciser la version installée (=visible dans le banner boot ou l'onglet OTA du Web UI)
 
+## ⚠️ Avertissement / Disclaimer
+
+OpenXtraflame est un projet **indépendant**, **non affilié à Extraflame, Micronova ou Omnyvore srl** et non approuvé par eux. Les marques citées appartiennent à leurs propriétaires respectifs et ne sont employées qu'à des fins d'interopérabilité et de description.
+
+Ce firmware résulte d'un travail de **rétro-ingénierie à fin d'interopérabilité** (documenter le protocole série Micronova pour piloter le poêle en local, sans le cloud). **Aucun binaire propriétaire d'Extraflame n'est distribué** dans ce dépôt.
+
+Usage à tes propres risques :
+- Reflasher le module remplace le firmware d'origine et **annule la garantie**.
+- Un poêle à granulés est un appareil de chauffage à combustion : une mauvaise manipulation peut avoir des conséquences matérielles ou de sécurité.
+- Projet fourni "tel quel", sans aucune garantie (voir la licence MIT).
+
+Fais **toujours une sauvegarde du firmware d'origine** avant de flasher.
+
 ## 📜 Licence
 
 MIT : voir [LICENSE](LICENSE).
