@@ -359,6 +359,7 @@ async function otaPull() {
 
     let done = false;
     let last_written = 0;
+    let consecutive_fetch_fails = 0;
     const start = performance.now();
 
     const finish_failed = (msg) => {
@@ -402,6 +403,7 @@ async function otaPull() {
             bar.style.width = pct + '%';
             text.textContent = `${label} (${pct}%)`;
             last_written = s.written || last_written;
+            consecutive_fetch_fails = 0;  /* reset streak on any success */
             if (s.state === 3) {          /* REBOOTING */
                 text.textContent = '🔄 Reboot en cours, patiente ~10 s...';
                 bar.style.width = '100%';
@@ -414,14 +416,18 @@ async function otaPull() {
                 finish_failed(s.message);
             }
         } catch (e) {
-            /* /ota/status is no longer answering. Two possible causes:
-             *   a) module rebooted -> new firmware still coming up
-             *   b) network hiccup / genuine failure before OTA started
-             * If we saw any bytes written OR we're past 15 s, treat as
-             * a successful reboot (=cancel the hard-timeout error toast
-             * that would otherwise fire at 90 s). */
+            /* /ota/status didn't answer this poll. This might be:
+             *   a) module rebooted (=new firmware still coming up), OR
+             *   b) a plain network hiccup during a long download.
+             * Only conclude 'reboot' after several consecutive misses
+             * so a single Wi-Fi flap doesn't flip the UI to 'rebooting'
+             * while the OTA is still writing to flash. Poll every
+             * 800 ms => need 5 misses = ~4 s of silence before we act. */
+            consecutive_fetch_fails++;
             const elapsed = (performance.now() - start) / 1000;
-            if ((last_written > 0 || elapsed > 15) && !done) {
+            const looks_rebooted =
+                consecutive_fetch_fails >= 5 && (last_written > 0 || elapsed > 15);
+            if (looks_rebooted && !done) {
                 done = true;
                 clearInterval(poll);
                 clearTimeout(hard_timeout);
