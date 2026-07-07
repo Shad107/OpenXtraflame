@@ -223,10 +223,22 @@ esp_err_t mqtt_bridge_test(const char *host, uint16_t port,
     char uri[192];
     snprintf(uri, sizeof(uri), "%s://%s:%u",
              use_tls ? "mqtts" : "mqtt", host, (unsigned)port);
+
+    /* Distinct client_id so the transient test client doesn't clash with
+     * the main long-lived client on the broker (=broker would kick the
+     * older session on identical client_id, which flapped the real
+     * client during the test). MAC + suffix guarantees uniqueness. */
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    char client_id[48];
+    snprintf(client_id, sizeof(client_id), "openxtraflame_test_%02X%02X%02X",
+             mac[3], mac[4], mac[5]);
+
     esp_mqtt_client_config_t cfg = {
         .broker.address.uri = uri,
         .credentials.username = (user && user[0]) ? user : NULL,
         .credentials.authentication.password = (pwd && pwd[0]) ? pwd : NULL,
+        .credentials.client_id = client_id,
         .session.keepalive = 5,
         .network.timeout_ms = 3000,
         .network.disable_auto_reconnect = true,

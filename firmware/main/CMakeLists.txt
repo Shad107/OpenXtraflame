@@ -8,6 +8,7 @@ idf_component_register(
         "web_ui.c"
         "leds.c"
         "ota.c"
+        "log_ring.c"
     INCLUDE_DIRS
         "."
     EMBED_TXTFILES

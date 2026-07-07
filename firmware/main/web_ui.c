@@ -22,6 +22,7 @@
 #include "mqtt_bridge.h"
 #include "micronova.h"
 #include "ota.h"
+#include "log_ring.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 #include "esp_app_desc.h"
@@ -445,6 +446,18 @@ static esp_err_t handle_ota_status(httpd_req_t *req)
 
 /* --- Debug : dump Micronova ring buffer to the browser --- */
 
+/* GET /debug/logs : dump the ESP_LOG ring buffer as a plain text stream. */
+static esp_err_t handle_debug_logs(httpd_req_t *req)
+{
+    char *dump = log_ring_dump();
+    if (!dump) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "text/plain; charset=utf-8");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, dump, strlen(dump));
+    free(dump);
+    return ESP_OK;
+}
+
 static esp_err_t handle_debug_uart(httpd_req_t *req)
 {
     char *json = mn_debug_dump_json();
@@ -545,6 +558,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/ota/rollback",         .method = HTTP_POST, .handler = handle_ota_rollback, },
         { .uri = "/ota/pull",             .method = HTTP_POST, .handler = handle_ota_pull,     },
         { .uri = "/debug/uart",           .method = HTTP_GET,  .handler = handle_debug_uart,   },
+        { .uri = "/debug/logs",           .method = HTTP_GET,  .handler = handle_debug_logs,   },
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
         { .uri = "/mqtt/test",            .method = HTTP_POST, .handler = handle_mqtt_test,    },

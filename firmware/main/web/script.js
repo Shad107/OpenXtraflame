@@ -432,6 +432,18 @@ async function otaPull() {
     }, 800);
 }
 
+/* --- Firmware logs (=ESP_LOG stream) --- */
+async function loadFirmwareLogs() {
+    try {
+        const r = await fetch('/debug/logs');
+        const txt = await r.text();
+        const pre = $('firmware-log');
+        pre.textContent = txt || '(aucune ligne pour l\'instant)';
+        $('logs-counter').textContent = `${txt.length} octets`;
+        if ($('logs-autoscroll').checked) pre.scrollTop = pre.scrollHeight;
+    } catch (e) { /* silent, Wi-Fi flap during reboot */ }
+}
+
 /* --- Debug Micronova bus --- */
 
 const DIR_LABEL = ['RX-READ ', 'RX-WRITE', 'TX-REPLY'];
@@ -550,6 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('debug-log').textContent = '(vidé, prochain sondage dans <1 s)';
     });
     setInterval(loadDebug, 1000);
+    setInterval(loadFirmwareLogs, 2000);
 
     const guardianEl = $('guardian-enabled');
     if (guardianEl) guardianEl.addEventListener('change', toggleGuardianSettings);

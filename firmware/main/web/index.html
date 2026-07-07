@@ -240,6 +240,22 @@
                 </label>
             </div>
         </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Logs firmware (=UART miniterm)</h3>
+                <span class="hint" id="logs-counter">0 octets</span>
+            </div>
+            <p class="hint">Les mêmes lignes <code>ESP_LOGI/W/E</code> que tu verrais dans <code>python -m serial.tools.miniterm COM3 115200</code>, mais sans avoir à brancher le CH340G. Rafraîchi toutes les 2 s.</p>
+            <pre id="firmware-log" class="debug-log">(chargement...)</pre>
+            <div class="button-row">
+                <label class="toggle" style="margin-left:auto">
+                    <input id="logs-autoscroll" type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                    <span>Auto-scroll</span>
+                </label>
+            </div>
+        </div>
     </section>
 
     <section id="tab-advanced" class="tab-content">

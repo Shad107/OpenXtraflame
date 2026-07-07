@@ -33,6 +33,7 @@
 #include "web_ui.h"
 #include "leds.h"
 #include "ota.h"
+#include "log_ring.h"
 
 static const char *TAG = "MAIN";
 
@@ -107,6 +108,10 @@ void app_main(void)
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+
+    /* 1a. Install the log ring interceptor as early as possible so we
+     *     capture the boot banner + partition table + Wi-Fi init. */
+    log_ring_init();
 
     /* 1b. If the firmware version differs from what booted last time, wipe
      *     the phy_init partition so the new driver recalibrates from scratch. */
