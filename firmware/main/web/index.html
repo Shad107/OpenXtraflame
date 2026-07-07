@@ -301,6 +301,18 @@
     <p>OpenXtraflame · <a href="https://www.isno.fr">isno.fr</a></p>
 </footer>
 
+<!-- Toast + confirm dialog containers -->
+<div id="toast-container" aria-live="polite"></div>
+<div id="confirm-backdrop" hidden>
+    <div id="confirm-dialog" role="dialog" aria-modal="true">
+        <p id="confirm-msg"></p>
+        <div class="confirm-actions">
+            <button class="btn btn-secondary" id="confirm-cancel">Annuler</button>
+            <button class="btn btn-primary" id="confirm-ok">Confirmer</button>
+        </div>
+    </div>
+</div>
+
 <script src="/script.js"></script>
 </body>
 </html>

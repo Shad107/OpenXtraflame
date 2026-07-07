@@ -3,6 +3,41 @@ const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 const j = (u, o = {}) => fetch(u, o).then(r => r.json());
 
+/* --- Toast notifications (=replace native alert()) --- */
+/* Non-blocking notifications shown top-right, auto-dismiss after 4 s.
+ * Types : 'info' (bleu), 'success' (vert), 'warn' (orange), 'error' (rouge). */
+function toast(msg, type = 'info', ms = 4000) {
+    const c = $('toast-container');
+    if (!c) return;  /* safe when DOM not ready */
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.textContent = msg;
+    c.appendChild(el);
+    /* Slide in on next frame */
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+    }, ms);
+}
+
+/* Modal confirm (=replace native confirm() which is silently blocked on
+ * some mobile Chrome contexts). Returns a Promise<boolean>. */
+function ask(msg) {
+    return new Promise(resolve => {
+        $('confirm-msg').textContent = msg;
+        $('confirm-backdrop').hidden = false;
+        const done = ok => {
+            $('confirm-backdrop').hidden = true;
+            $('confirm-ok').onclick = null;
+            $('confirm-cancel').onclick = null;
+            resolve(ok);
+        };
+        $('confirm-ok').onclick = () => done(true);
+        $('confirm-cancel').onclick = () => done(false);
+    });
+}
+
 /* Theme toggle */
 function initTheme() {
     const saved = localStorage.getItem('theme');
@@ -134,18 +169,33 @@ async function save() {
         cfg.guardian_token = $('guardian-token').value;
         cfg.guardian_action = parseInt($('guardian-action').value, 10);
     }
-    await fetch('/config.json', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(cfg),
-    });
-    alert('✅ Configuration sauvegardée. Le module redémarre.');
-    await fetch('/reboot', {method: 'POST'});
+    const save_btn = $('save');
+    const orig_label = save_btn.textContent;
+    save_btn.disabled = true;
+    save_btn.textContent = '⏳ Sauvegarde...';
+    try {
+        const r = await fetch('/config.json', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cfg),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        toast('✅ Configuration sauvegardée. Redémarrage...', 'success');
+        setTimeout(async () => {
+            try { await fetch('/reboot', {method: 'POST'}); } catch (e) {}
+            setTimeout(() => location.reload(), 8000);
+        }, 800);
+    } catch (e) {
+        toast(`❌ Échec sauvegarde : ${e.message}`, 'error', 6000);
+        save_btn.disabled = false;
+        save_btn.textContent = orig_label;
+    }
 }
 
 /* Factory reset */
 async function factory() {
-    if (!confirm('⚠️ Effacer toute la configuration et redémarrer ?')) return;
+    const ok = await ask('⚠️ Effacer toute la configuration et redémarrer ? Le module reviendra en mode SoftAP de provisioning.');
+    if (!ok) return;
     const btn = $('factory');
     btn.textContent = '⏳ Reset usine...';
     btn.disabled = true;
@@ -164,8 +214,16 @@ async function reboot() {
 
 /* Stove commands */
 async function stoveCmd(cmd) {
-    const r = await fetch('/api/stove/' + cmd, {method: 'POST'});
-    if (!r.ok) alert('Erreur commande');
+    try {
+        const r = await fetch('/api/stove/' + cmd, {method: 'POST'});
+        if (!r.ok) {
+            toast(`❌ Commande poêle refusée (HTTP ${r.status})`, 'error');
+            return;
+        }
+        toast(`✅ Commande '${cmd}' envoyée`, 'success', 2500);
+    } catch (e) {
+        toast(`❌ Impossible d'envoyer la commande : ${e.message}`, 'error');
+    }
 }
 
 /* OTA upload */
@@ -195,8 +253,12 @@ async function otaUpload(file) {
 }
 
 async function otaRollback() {
-    if (!confirm('Retour à la version précédente ?')) return;
-    await fetch('/ota/rollback', {method: 'POST'});
+    const ok = await ask('Retour à la version précédente ? Le module va rebooter sur le slot OTA d\'avant.');
+    if (!ok) return;
+    try {
+        await fetch('/ota/rollback', {method: 'POST'});
+        toast('↩️ Rollback en cours, reboot dans quelques secondes', 'info', 5000);
+    } catch (e) { /* connection dies mid-response, expected */ }
     setTimeout(() => location.reload(), 5000);
 }
 
@@ -226,7 +288,7 @@ async function otaCheck() {
 
 async function otaPull() {
     const url = $('ota-url').value.trim();
-    if (!url) { alert('Renseigne une URL'); return; }
+    if (!url) { toast('Renseigne une URL avant de cliquer Pull', 'warn'); return; }
     const btn = $('ota-pull');
     btn.textContent = '⏳ Téléchargement en cours...';
     btn.disabled = true;

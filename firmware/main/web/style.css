@@ -496,3 +496,70 @@ input:focus, select:focus {
 .debug-log .dir-rx-read  { color: var(--text-muted); }
 .debug-log .dir-rx-write { color: var(--warning); }
 .debug-log .dir-tx-reply { color: var(--success); }
+
+/* --- Toast notifications --- */
+#toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: min(400px, calc(100vw - 2rem));
+    pointer-events: none;
+}
+.toast {
+    background: var(--bg-card);
+    border-left: 4px solid var(--primary);
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    color: var(--text);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: auto;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.toast-info    { border-left-color: var(--primary); }
+.toast-success { border-left-color: var(--success); background: var(--success-soft); }
+.toast-warn    { border-left-color: var(--warning); background: var(--warning-soft); }
+.toast-error   { border-left-color: var(--danger);  background: var(--danger-soft); color: #7f1d1d; }
+
+/* --- Modal confirm dialog --- */
+#confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+#confirm-backdrop[hidden] { display: none; }
+#confirm-dialog {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 1.5rem;
+    max-width: 420px;
+    width: 100%;
+}
+#confirm-dialog p {
+    margin: 0 0 1.2rem 0;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+.confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
