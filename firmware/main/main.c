@@ -198,7 +198,13 @@ void app_main(void)
         }
     }
 
-    /* 9. Main loop: monitor state, blink LEDs, periodic heartbeat */
+    /* 9. Main loop: monitor state, blink LEDs, periodic heartbeat.
+     *    Also handles deferred OTA validation: if we booted from a
+     *    PENDING_VERIFY slot, mark it valid only after we've reached
+     *    Wi-Fi STA connected AND stayed alive for ~60 s. Any crash
+     *    before that => bootloader rollback to previous slot. */
+    uint32_t healthy_ticks = 0;   /* seconds Wi-Fi has been up without crash */
+    bool     app_marked_valid = false;
     for (;;) {
         EventBits_t bits = xEventGroupGetBits(app_event_group);
 
@@ -213,6 +219,21 @@ void app_main(void)
             state = LED_STATE_WIFI_OFFLINE;
         }
         leds_set_state(state);
+
+        /* Deferred rollback safety */
+        if (!app_marked_valid) {
+            if (bits & WIFI_STA_CONNECTED_BIT) {
+                healthy_ticks++;
+                if (healthy_ticks >= 60) {
+                    ESP_LOGI(TAG, "60 s healthy uptime + Wi-Fi up => marking firmware valid");
+                    ota_mark_valid();
+                    app_marked_valid = true;
+                }
+            } else {
+                /* reset on Wi-Fi drop so a flapping STA doesn't count */
+                healthy_ticks = 0;
+            }
+        }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

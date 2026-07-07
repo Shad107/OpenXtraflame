@@ -31,13 +31,19 @@ esp_err_t ota_init(void)
         strncpy(status.active_version, desc->version, sizeof(status.active_version) - 1);
     }
 
-    /* Mark current app valid on first successful boot */
+    /* Do NOT mark app valid here. If we did, a firmware that crashes
+     * later (=e.g. beta23 stack overflow after Wi-Fi start) would still
+     * be considered 'valid' and the bootloader would keep booting it.
+     * Instead, ota_mark_valid() is called explicitly from main.c once
+     * the module has proven it can run: Wi-Fi STA up + ~60 s uptime.
+     * Until then the running slot stays in PENDING_VERIFY and any
+     * unclean reboot => bootloader rollback to the previous known-good
+     * slot automatically. */
     const esp_partition_t *running = esp_ota_get_running_partition();
     esp_ota_img_states_t s;
     if (esp_ota_get_state_partition(running, &s) == ESP_OK) {
         if (s == ESP_OTA_IMG_PENDING_VERIFY) {
-            ESP_LOGI(TAG, "Marking firmware as valid (=first successful boot)");
-            esp_ota_mark_app_valid_cancel_rollback();
+            ESP_LOGW(TAG, "Running slot is PENDING_VERIFY; rollback will trigger if we crash before ota_mark_valid()");
         }
     }
     return ESP_OK;
