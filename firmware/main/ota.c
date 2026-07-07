@@ -131,11 +131,6 @@ esp_err_t ota_upload_abort(void)
 
 esp_err_t ota_pull_from_url(const char *url)
 {
-    /* crt_bundle_attach lets esp_https_ota validate any HTTPS server whose
-     * CA is in the ESP-IDF-embedded Mozilla CA bundle. Without this,
-     * esp_https_ota refuses HTTPS URLs with 'No option for server
-     * verification is enabled'. Falls back to plain HTTP silently if the
-     * URL is http://. */
     esp_http_client_config_t http_cfg = {
         .url = url,
         .crt_bundle_attach = esp_crt_bundle_attach,
@@ -146,20 +141,75 @@ esp_err_t ota_pull_from_url(const char *url)
 
     xSemaphoreTake(ota_mutex, portMAX_DELAY);
     status.state = OTA_STATE_RECEIVING;
-    strncpy(status.message, url, sizeof(status.message) - 1);
+    status.total_bytes = 0;
+    status.written_bytes = 0;
+    strncpy(status.message, "connexion...", sizeof(status.message) - 1);
     xSemaphoreGive(ota_mutex);
 
-    esp_err_t err = esp_https_ota(&ota_cfg);
-    if (err == ESP_OK) {
-        ESP_LOGI(TAG, "OTA pull success, rebooting");
-        esp_restart();
-    } else {
+    /* Low-level API: gives us per-chunk progress so /ota/status can drive
+     * a real UI progress bar. esp_https_ota() top-level does not expose
+     * that. */
+    esp_https_ota_handle_t handle = NULL;
+    esp_err_t err = esp_https_ota_begin(&ota_cfg, &handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "esp_https_ota_begin failed: %s", esp_err_to_name(err));
         xSemaphoreTake(ota_mutex, portMAX_DELAY);
         status.state = OTA_STATE_FAILED;
         strncpy(status.message, esp_err_to_name(err), sizeof(status.message) - 1);
         xSemaphoreGive(ota_mutex);
+        return err;
     }
-    return err;
+
+    int total = esp_https_ota_get_image_size(handle);
+    xSemaphoreTake(ota_mutex, portMAX_DELAY);
+    status.total_bytes = total > 0 ? total : 0;
+    strncpy(status.message, "téléchargement...", sizeof(status.message) - 1);
+    xSemaphoreGive(ota_mutex);
+
+    /* Perform loop: each call reads one HTTP chunk and writes it to flash. */
+    while (1) {
+        err = esp_https_ota_perform(handle);
+        if (err != ESP_ERR_HTTPS_OTA_IN_PROGRESS) break;
+        xSemaphoreTake(ota_mutex, portMAX_DELAY);
+        status.written_bytes = esp_https_ota_get_image_len_read(handle);
+        xSemaphoreGive(ota_mutex);
+    }
+
+    if (!esp_https_ota_is_complete_data_received(handle)) {
+        ESP_LOGE(TAG, "OTA incomplete: %s", esp_err_to_name(err));
+        esp_https_ota_abort(handle);
+        xSemaphoreTake(ota_mutex, portMAX_DELAY);
+        status.state = OTA_STATE_FAILED;
+        strncpy(status.message, "téléchargement incomplet", sizeof(status.message) - 1);
+        xSemaphoreGive(ota_mutex);
+        return err;
+    }
+
+    xSemaphoreTake(ota_mutex, portMAX_DELAY);
+    status.state = OTA_STATE_VERIFYING;
+    status.written_bytes = status.total_bytes;
+    strncpy(status.message, "SHA256 verify...", sizeof(status.message) - 1);
+    xSemaphoreGive(ota_mutex);
+
+    err = esp_https_ota_finish(handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "esp_https_ota_finish failed: %s", esp_err_to_name(err));
+        xSemaphoreTake(ota_mutex, portMAX_DELAY);
+        status.state = OTA_STATE_FAILED;
+        strncpy(status.message, esp_err_to_name(err), sizeof(status.message) - 1);
+        xSemaphoreGive(ota_mutex);
+        return err;
+    }
+
+    xSemaphoreTake(ota_mutex, portMAX_DELAY);
+    status.state = OTA_STATE_REBOOTING;
+    strncpy(status.message, "reboot...", sizeof(status.message) - 1);
+    xSemaphoreGive(ota_mutex);
+
+    ESP_LOGI(TAG, "OTA pull success, rebooting in 1s...");
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    esp_restart();
+    return ESP_OK;
 }
 
 esp_err_t ota_rollback(void)
