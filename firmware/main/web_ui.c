@@ -131,7 +131,11 @@ static esp_err_t handle_config_get(httpd_req_t *req)
     cJSON *o = cJSON_CreateObject();
     cJSON_AddBoolToObject(o,   "provisioned",  g_cfg->provisioned);
     cJSON_AddStringToObject(o, "wifi_ssid",    g_cfg->wifi_ssid);
-    /* Do not echo passwords */
+    /* Never echo the passwords themselves, but flag whether they exist so
+     * the UI can render 'already set, leave blank to keep' instead of an
+     * empty field the user thinks he must retype. */
+    cJSON_AddBoolToObject(o,   "wifi_password_set", g_cfg->wifi_password[0] != '\0');
+    cJSON_AddBoolToObject(o,   "mqtt_password_set", g_cfg->mqtt_password[0] != '\0');
     cJSON_AddStringToObject(o, "mqtt_host",    g_cfg->mqtt_host);
     cJSON_AddNumberToObject(o, "mqtt_port",    g_cfg->mqtt_port);
     cJSON_AddStringToObject(o, "mqtt_user",    g_cfg->mqtt_username);

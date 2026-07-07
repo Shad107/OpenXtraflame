@@ -104,6 +104,29 @@ async function loadConfig() {
         $('ha-discovery').checked = !!c.ha_discovery;
         $('publish-interval').value = c.publish_interval_ms || 5000;
 
+        /* Password fields: never echo the stored value. Instead, use the
+         * placeholder to signal explicitly whether it's already set. If it
+         * is, the user knows to LEAVE THE FIELD BLANK to keep the current
+         * password. If it's not set, they must fill it. */
+        const wifiPwd = $('wifi-pwd');
+        const mqttPwd = $('mqtt-pwd');
+        wifiPwd.value = '';
+        mqttPwd.value = '';
+        if (c.wifi_password_set) {
+            wifiPwd.placeholder = '•••••••• (défini, laisser vide pour ne pas changer)';
+            wifiPwd.dataset.stored = '1';
+        } else {
+            wifiPwd.placeholder = 'Mot de passe Wi-Fi';
+            wifiPwd.dataset.stored = '';
+        }
+        if (c.mqtt_password_set) {
+            mqttPwd.placeholder = '•••••••• (défini, laisser vide pour ne pas changer)';
+            mqttPwd.dataset.stored = '1';
+        } else {
+            mqttPwd.placeholder = 'Mot de passe MQTT (optionnel)';
+            mqttPwd.dataset.stored = '';
+        }
+
         /* Guardian mode - only visible on Target Blacklabel */
         if (c.guardian_supported === false) {
             $('guardian-card').style.display = 'none';
