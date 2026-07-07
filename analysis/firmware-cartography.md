@@ -1,3 +1,7 @@
+> ⚠️ **Doc d'analyse (journal du reverse).** Les noms `RAM_*` ci-dessous sont les constantes
+> INTERNES du firmware navel. Pour le protocole **validé sur le vrai poêle** (adresses Micronova
+> standard 0x00-0x9F, 1200 8N2, master polling), voir [`../docs/PROTOCOLE-MICRONOVA.md`](../docs/PROTOCOLE-MICRONOVA.md).
+
 # Cartographie complète du firmware Extraflame Black Label T009_3
 
 Reverse engineering exhaustif du firmware original (v1, nov 28 2022) pour construction du firmware `openextraflame` custom.
@@ -610,7 +614,7 @@ GPIO_SET_LEVEL gpio=33 level=0/1 cycling
 | RX pin | GPIO_NUM_5 |
 | RTS pin | UART_PIN_NO_CHANGE (=255) |
 | CTS pin | UART_PIN_NO_CHANGE (=255) |
-| Baud rate | 38400 |
+| Baud rate | 1200 (8N2, ligne inversée 0x24) |
 | Data bits | 8 |
 | Parity | None |
 | Stop bits | 1 |
