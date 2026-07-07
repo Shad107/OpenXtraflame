@@ -53,7 +53,7 @@ uint32_t mn_debug_seq(void);
  * registres du contrôleur poêle.
  */
 typedef enum {
-    /* Températures — encodage temp×2 (=diviser par 2 pour °C) */
+    /* Températures - encodage temp×2 (=diviser par 2 pour °C) */
     MN_RAM_TAMB              = 0x01,   // ambient
     MN_RAM_TH20              = 0x03,   // eau (=absent sur I_VENT, ignoré)
     MN_RAM_STOVE_STATE       = 0x21,   // 0=OFF 1=Starting 2=PelletLoading 3=Ignition 4=Work 5=Cleaning 6=FinalCleaning 7=Standby 8=PelletAlarm 9=IgnitionFailAlarm

@@ -287,7 +287,7 @@ async function otaUpload(file) {
     };
     xhr.onerror = () => {
         text.textContent = '❌ Connexion perdue pendant l\'upload';
-        toast('Connexion perdue pendant l\'upload — retente', 'error', 6000);
+        toast('Connexion perdue pendant l\'upload - retente', 'error', 6000);
     };
     xhr.send(file);
 }
@@ -326,7 +326,7 @@ async function otaCheck() {
     }
 }
 
-/* OTA state enum from firmware ota.h — kept aligned by convention. */
+/* OTA state enum from firmware ota.h - kept aligned by convention. */
 const OTA_STATE_LABEL = {
     0: 'Prêt',
     1: '📥 Téléchargement du firmware...',
