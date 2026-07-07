@@ -160,7 +160,14 @@ esp_err_t mqtt_bridge_publish_state(void)
     cJSON_AddNumberToObject(o, "power",     s.power_level);
     cJSON_AddNumberToObject(o, "alarm",     s.alarm_code);
     cJSON_AddNumberToObject(o, "t_ambient", s.t_ambient);
-    cJSON_AddNumberToObject(o, "t_water",   s.t_water);
+    /* t_water only if stove is a hydro model (=I_CALD/I_IDRO). On the
+     * ventilated I_VENT models the register 0x03 is absent and returns 0,
+     * so publishing it produces a confusing constant 0 in HA. */
+    if (local_cfg.stove_type == STOVE_TYPE_I_CALD ||
+        local_cfg.stove_type == STOVE_TYPE_I_IDRO ||
+        local_cfg.stove_type == STOVE_TYPE_I_IDRO_2) {
+        cJSON_AddNumberToObject(o, "t_water", s.t_water);
+    }
     cJSON_AddNumberToObject(o, "t_smoke",   s.t_smoke);
     cJSON_AddNumberToObject(o, "setpoint",  s.set_temperature);
     char *json = cJSON_PrintUnformatted(o);
@@ -343,8 +350,12 @@ esp_err_t mqtt_bridge_publish_discovery(void)
                   sensor("Température ambiante", "t_ambient", "°C", "temperature"));
     publish_disco("sensor", "t_smoke",
                   sensor("Température fumées",   "t_smoke",   "°C", "temperature"));
-    publish_disco("sensor", "t_water",
-                  sensor("Température eau",      "t_water",   "°C", "temperature"));
+    if (local_cfg.stove_type == STOVE_TYPE_I_CALD ||
+        local_cfg.stove_type == STOVE_TYPE_I_IDRO ||
+        local_cfg.stove_type == STOVE_TYPE_I_IDRO_2) {
+        publish_disco("sensor", "t_water",
+                      sensor("Température eau",  "t_water",   "°C", "temperature"));
+    }
     publish_disco("sensor", "power_level",
                   sensor("Puissance",            "power",     NULL, NULL));
     publish_disco("sensor", "alarm_code",

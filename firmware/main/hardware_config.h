@@ -18,18 +18,25 @@
  * ------------------------------------------------------------------------ */
 #ifdef TARGET_EXTERNAL
 
-    // UART to stove (=Micronova bus)
-    // ⭐ MAJ 2026-07-03 : Extraflame Black Label utilise :
-    //   UART_NUM_1, TX=GPIO23, RX=GPIO5, 38400 baud 8N1 no flow ctrl
-    //   (=confirmé via QEMU + GDB runtime capture)
-    // Sur spare ESP32, match Blacklabel = UART_NUM_1 (=aussi testable via QEMU)
+    /* UART to stove (=Micronova bus) - config Micronova standard.
+     *
+     * PIN CHOICE 2026-07-07 : match M5Stack Atom Lite exposed GPIOs.
+     * Atom Lite bottom pins (=accessible sans démontage) : G19 G21 G22 G23 G25 G33.
+     * On utilise :
+     *   TX = GPIO23 : câble MARRON du connecteur SERIAL 4-pin du poêle
+     *   RX = GPIO19 : câble BLANC
+     *   GND = pin GND : câble VERT (=jamais toucher JAUNE = +12V !)
+     *
+     * Baud d'application forcé à 1200 8N2 dans micronova.c au boot (=cf. reverse
+     * philibertc/ridiculouslab). Les constantes ci-dessous sont ignorées côté
+     * runtime, elles servent uniquement à la première configuration UART. */
     #define STOVE_UART_NUM              UART_NUM_1
-    #define STOVE_UART_TX_PIN           GPIO_NUM_17
-    #define STOVE_UART_RX_PIN           GPIO_NUM_16
-    #define STOVE_UART_BAUD             38400
+    #define STOVE_UART_TX_PIN           GPIO_NUM_23  /* MARRON câble poêle */
+    #define STOVE_UART_RX_PIN           GPIO_NUM_19  /* BLANC câble poêle */
+    #define STOVE_UART_BAUD             1200
     #define STOVE_UART_DATA_BITS        UART_DATA_8_BITS
     #define STOVE_UART_PARITY           UART_PARITY_DISABLE
-    #define STOVE_UART_STOP_BITS        UART_STOP_BITS_1
+    #define STOVE_UART_STOP_BITS        UART_STOP_BITS_2
 
     // Status LED (single onboard)
     #define STATUS_LED_ENABLED          1
