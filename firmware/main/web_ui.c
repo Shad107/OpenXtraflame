@@ -340,6 +340,58 @@ static esp_err_t handle_ota_rollback(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* POST /mqtt/test : quick broker connectivity test with the params in the
+ * JSON body. Empty user/pwd -> anonymous or use stored (=if provided as
+ * empty via UI intent). Returns {ok, message}. */
+static esp_err_t handle_mqtt_test(httpd_req_t *req)
+{
+    char buf[512];
+    if (read_body(req, buf, sizeof(buf)) != ESP_OK) {
+        return httpd_resp_send_500(req);
+    }
+    cJSON *o = cJSON_Parse(buf);
+    if (!o) return httpd_resp_send_500(req);
+
+    const cJSON *h  = cJSON_GetObjectItem(o, "host");
+    const cJSON *p  = cJSON_GetObjectItem(o, "port");
+    const cJSON *u  = cJSON_GetObjectItem(o, "user");
+    const cJSON *w  = cJSON_GetObjectItem(o, "pwd");
+    const cJSON *tls = cJSON_GetObjectItem(o, "tls");
+
+    const char *host = (cJSON_IsString(h) && h->valuestring[0]) ? h->valuestring : NULL;
+    int         port = cJSON_IsNumber(p) ? (int)p->valuedouble : 1883;
+    const char *user = (cJSON_IsString(u) && u->valuestring[0]) ? u->valuestring : g_cfg->mqtt_username;
+    /* Empty password from UI = use the stored one (=lets user test without retyping). */
+    const char *pwd  = (cJSON_IsString(w) && w->valuestring[0]) ? w->valuestring : g_cfg->mqtt_password;
+    bool use_tls     = cJSON_IsBool(tls) ? cJSON_IsTrue(tls) : g_cfg->mqtt_use_tls;
+
+    if (!host) {
+        cJSON_Delete(o);
+        cJSON *r = cJSON_CreateObject();
+        cJSON_AddBoolToObject(r, "ok", false);
+        cJSON_AddStringToObject(r, "message", "Host manquant");
+        char *out = cJSON_PrintUnformatted(r);
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_send(req, out, strlen(out));
+        free(out); cJSON_Delete(r);
+        return ESP_OK;
+    }
+
+    char msg[96] = {0};
+    esp_err_t err = mqtt_bridge_test(host, (uint16_t)port, user, pwd, use_tls,
+                                      msg, sizeof(msg));
+    cJSON_Delete(o);
+
+    cJSON *r = cJSON_CreateObject();
+    cJSON_AddBoolToObject(r, "ok", err == ESP_OK);
+    cJSON_AddStringToObject(r, "message", msg);
+    char *out = cJSON_PrintUnformatted(r);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, out, strlen(out));
+    free(out); cJSON_Delete(r);
+    return ESP_OK;
+}
+
 /* GET /mqtt/discover : do a live mDNS lookup for _mqtt._tcp and return
  * {"host":"192.168.50.7","port":1883} or {"host":""} on timeout. */
 static esp_err_t handle_mqtt_discover(httpd_req_t *req)
@@ -478,6 +530,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/debug/uart",           .method = HTTP_GET,  .handler = handle_debug_uart,   },
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
+        { .uri = "/mqtt/test",            .method = HTTP_POST, .handler = handle_mqtt_test,    },
     };
     for (size_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++) {
         httpd_register_uri_handler(server, &routes[i]);

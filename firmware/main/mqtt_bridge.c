@@ -165,6 +165,89 @@ esp_err_t mqtt_bridge_publish_state(void)
     return ESP_OK;
 }
 
+/* ---- Transient test client ---- */
+
+typedef struct {
+    SemaphoreHandle_t done;
+    esp_err_t         result;
+    char              msg[96];
+} test_ctx_t;
+
+static void test_event_handler(void *arg, esp_event_base_t base,
+                                int32_t id, void *data)
+{
+    test_ctx_t *ctx = (test_ctx_t *)arg;
+    esp_mqtt_event_handle_t event = data;
+    switch ((esp_mqtt_event_id_t)id) {
+    case MQTT_EVENT_CONNECTED:
+        ctx->result = ESP_OK;
+        snprintf(ctx->msg, sizeof(ctx->msg), "Connexion + auth OK");
+        xSemaphoreGive(ctx->done);
+        break;
+    case MQTT_EVENT_ERROR:
+        if (event->error_handle) {
+            if (event->error_handle->connect_return_code == MQTT_CONNECTION_REFUSE_BAD_USERNAME) {
+                ctx->result = ESP_ERR_INVALID_RESPONSE;
+                snprintf(ctx->msg, sizeof(ctx->msg), "Broker : credentials refusés");
+            } else if (event->error_handle->connect_return_code != 0) {
+                ctx->result = ESP_ERR_INVALID_RESPONSE;
+                snprintf(ctx->msg, sizeof(ctx->msg), "Broker : refuse (CONNACK=%d)",
+                         event->error_handle->connect_return_code);
+            } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+                ctx->result = ESP_ERR_TIMEOUT;
+                snprintf(ctx->msg, sizeof(ctx->msg), "TCP/TLS impossible (=port fermé, TLS mismatch, etc.)");
+            } else {
+                ctx->result = ESP_FAIL;
+                snprintf(ctx->msg, sizeof(ctx->msg), "Erreur MQTT interne");
+            }
+        } else {
+            ctx->result = ESP_FAIL;
+            snprintf(ctx->msg, sizeof(ctx->msg), "Erreur inconnue");
+        }
+        xSemaphoreGive(ctx->done);
+        break;
+    default:
+        break;
+    }
+}
+
+esp_err_t mqtt_bridge_test(const char *host, uint16_t port,
+                           const char *user, const char *pwd, bool use_tls,
+                           char *out_msg, size_t out_msg_size)
+{
+    test_ctx_t ctx = {0};
+    ctx.done = xSemaphoreCreateBinary();
+    ctx.result = ESP_ERR_TIMEOUT;
+    snprintf(ctx.msg, sizeof(ctx.msg), "Pas de réponse du broker");
+
+    char uri[192];
+    snprintf(uri, sizeof(uri), "%s://%s:%u",
+             use_tls ? "mqtts" : "mqtt", host, (unsigned)port);
+    esp_mqtt_client_config_t cfg = {
+        .broker.address.uri = uri,
+        .credentials.username = (user && user[0]) ? user : NULL,
+        .credentials.authentication.password = (pwd && pwd[0]) ? pwd : NULL,
+        .session.keepalive = 5,
+        .network.timeout_ms = 3000,
+        .network.disable_auto_reconnect = true,
+    };
+    esp_mqtt_client_handle_t c = esp_mqtt_client_init(&cfg);
+    if (!c) {
+        vSemaphoreDelete(ctx.done);
+        if (out_msg) snprintf(out_msg, out_msg_size, "esp_mqtt_client_init failed");
+        return ESP_FAIL;
+    }
+    esp_mqtt_client_register_event(c, ESP_EVENT_ANY_ID, test_event_handler, &ctx);
+    esp_mqtt_client_start(c);
+    xSemaphoreTake(ctx.done, pdMS_TO_TICKS(5000));
+    esp_mqtt_client_stop(c);
+    esp_mqtt_client_destroy(c);
+    vSemaphoreDelete(ctx.done);
+
+    if (out_msg) strncpy(out_msg, ctx.msg, out_msg_size - 1);
+    return ctx.result;
+}
+
 /* ---- HA MQTT Discovery ---- */
 
 static char device_id[24] = "";       /* openxtraflame_XXXXXX */

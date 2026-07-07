@@ -422,6 +422,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('scan').addEventListener('click', scan);
 
+    /* Test MQTT connection against the values currently in the form */
+    $('mqtt-test').addEventListener('click', async () => {
+        const btn = $('mqtt-test');
+        const span = $('mqtt-test-result');
+        const orig = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Test...';
+        span.textContent = '';
+        try {
+            const body = {
+                host: $('mqtt-host').value.trim(),
+                port: parseInt($('mqtt-port').value, 10) || 1883,
+                user: $('mqtt-user').value,
+                pwd:  $('mqtt-pwd').value,       /* empty = server uses stored */
+                tls:  $('mqtt-tls').checked,
+            };
+            const r = await fetch('/mqtt/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body),
+            }).then(x => x.json());
+            span.textContent = r.ok ? `✅ ${r.message}` : `❌ ${r.message}`;
+            toast(r.message, r.ok ? 'success' : 'error', 6000);
+        } catch (e) {
+            span.textContent = '❌ Erreur réseau';
+            toast('Erreur pendant le test : ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = orig;
+        }
+    });
+
     /* Wire the MQTT broker mDNS discovery button */
     $('mqtt-discover').addEventListener('click', async () => {
         const btn = $('mqtt-discover');
