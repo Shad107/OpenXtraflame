@@ -15,7 +15,7 @@ Le poêle à granulés Extraflame Teodora Evo (et cousins Micronova : EdilKamin,
 
 ## ✨ Fonctionnalités
 
-- 🔥 **Bridge Micronova UART slave** — décode les frames 38400 bps 8N1 du poêle master
+- 🔥 **Bridge Micronova UART maître** — interroge le poêle par polling RWMS à **1200 bauds 8N2, ligne inversée (0x24)**
 - 📡 **Bridge MQTT local** vers Mosquitto / Home Assistant, sans passer par le cloud
 - 🏠 **HA MQTT Discovery natif** — au premier `MQTT_EVENT_CONNECTED`, le module publie 11 topics retenus qui font apparaître automatiquement un device `Extraflame - OpenXtraflame Black Label` avec sensors T°/puissance/état, switch on/off, button reset, number setpoint et select puissance
 - 🔎 **Détection auto du broker MQTT** — bouton "🔍 Détecter HA" qui tente `_mqtt._tcp`, `_home-assistant._tcp` puis `homeassistant.local` en mDNS et remplit host + port
@@ -57,17 +57,17 @@ Une fois en STA, le poêle apparaît dans Home Assistant via MQTT Discovery (=à
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐       ┌─────────────────┐        ┌─────────────────┐
-│                 │  UART │                 │  MQTT  │                 │
-│  Poêle          │38400  │  ESP32 flashé   │  Wi-Fi │ Home Assistant  │
-│  Extraflame     ├───────┤  OpenXtraflame  ├────────┤ + Mosquitto     │
-│  (Micronova     │Master │  (slave listener│  local │ (local only,    │
-│   master)       │       │   + RAM shadow) │        │  zero cloud)    │
-└─────────────────┘       └─────────────────┘        └─────────────────┘
+┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
+│                 │  UART  │                 │  MQTT  │                 │
+│  Poêle          │1200 8N2│  ESP32 flashé   │  Wi-Fi │ Home Assistant  │
+│  Extraflame     ├────────┤  OpenXtraflame  ├────────┤ + Mosquitto     │
+│  (carte         │inversé │  (MAÎTRE RWMS   │  local │ (local only,    │
+│   Micronova)    │  0x24  │   + RAM shadow) │        │  zero cloud)    │
+└─────────────────┘        └─────────────────┘        └─────────────────┘
 ```
 
-- Le poêle est **master Micronova** — on l'a découvert en breakpointant les fonctions UART sous QEMU/GDB, contrairement à toutes les implémentations communautaires qui supposent le module en master.
-- Le firmware maintient une **RAM shadow** répliquant les registres Micronova (`RAM_STATO`, `RAM_TAMB`, `RAM_TFUMI`, `RAM_ALLARME`, `RAM_ACCENDI`, `RAM_SPEGNI`, ...). Les commandes MQTT écrivent dans le shadow, le poêle les lit à son prochain poll.
+- Le **module est maître Micronova** : il *interroge* le poêle par polling (protocole RWMS, `[loc][addr]` → `[checksum][value]`, checksum additif). **Validé sur le vrai poêle : UART1, 1200 bauds 8N2, ligne inversée (masque `0x24`).** Détail complet dans [`docs/PROTOCOLE-MICRONOVA.md`](docs/PROTOCOLE-MICRONOVA.md).
+- Le firmware maintient une **RAM shadow** des registres Micronova **standard** (STOVE_STATE `0x21`, temp fumées `0x3E`, temp ambiante `0x01`÷2, ...). Les commandes MQTT (allumer/éteindre = write à `0x21`, consignes) sont **poussées au poêle par le module maître**.
 
 ## 🔨 Build from source
 
