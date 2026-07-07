@@ -17,11 +17,15 @@ Le poêle à granulés Extraflame Teodora Evo (et cousins Micronova : EdilKamin,
 
 - 🔥 **Bridge Micronova UART slave** — décode les frames 38400 bps 8N1 du poêle master
 - 📡 **Bridge MQTT local** vers Mosquitto / Home Assistant, sans passer par le cloud
+- 🏠 **HA MQTT Discovery natif** — au premier `MQTT_EVENT_CONNECTED`, le module publie 11 topics retenus qui font apparaître automatiquement un device `Extraflame - OpenXtraflame Black Label` avec sensors T°/puissance/état, switch on/off, button reset, number setpoint et select puissance
+- 🔎 **Détection auto du broker MQTT** — bouton "🔍 Détecter HA" qui tente `_mqtt._tcp`, `_home-assistant._tcp` puis `homeassistant.local` en mDNS et remplit host + port
 - 🌐 **Web UI embarquée** — Dashboard, Wi-Fi, MQTT, Poêle, OTA, Debug, Avancé
 - 📶 **Provisioning SoftAP + dual APSTA** — le SoftAP `openxtraflame-XXXX` reste up en permanence, never brick
-- ⬆️ **OTA** upload direct depuis le navigateur OU pull depuis une URL HTTPS (=CA bundle Mozilla)
+- ⬆️ **OTA** upload direct depuis le navigateur OU pull depuis une URL HTTPS (=CA bundle Mozilla, barre de progression réelle via `esp_https_ota_perform` loop)
 - 🔁 **Auto-wipe `phy_init` au changement de version firmware** — évite qu'un OTA hérite d'une calibration RF invalide
 - 🛡️ **Rollback safety** — `esp_ota_mark_app_valid_cancel_rollback()` sur boot réussi, un firmware buggé rollback tout seul
+- 💀 **Last Will Testament MQTT** — HA grise instantanément les entités si le module disparaît
+- 🔒 **Protection anti-clobber** des credentials Wi-Fi/MQTT — un save depuis un onglet non lié n'écrase plus le password stocké
 - 🔍 **Live log Micronova** dans l'onglet Debug (=64 dernières trames RX/TX, refresh 1 s)
 - 💡 **Mapping des 4 LEDs** conservé (=POWER / WI-FI / SERVER / BLE), sémantique identique à l'usine
 
@@ -110,24 +114,28 @@ OpenXtraflame/
 
 ## 🗺️ Roadmap
 
-**v0.1.x — Public MVP** (=actuel) :
+**v0.1.x — Public MVP** (=✅ livré) :
 
 - [x] Reverse engineering complet du module Extraflame Black Label
 - [x] Firmware Target External (=M5Stack ATOM Lite) validé
 - [x] Firmware Target Black Label validé sur hardware réel
 - [x] Web UI + provisioning + OTA + rollback safety
 - [x] Auto phy_init wipe on version change
+- [x] UI polie : toasts non bloquants, modal dialogs, placeholders passwords intelligents
+- [x] Barre de progression OTA réelle via polling `/ota/status`
 
-**v0.2.x — Home Assistant native** :
+**v0.2.x — Home Assistant native** (=✅ livré) :
 
-- [ ] MQTT Discovery : auto-provisionner climate + sensors dans HA
-- [ ] Auto-discovery du broker MQTT via mDNS (`_mqtt._tcp.local`)
-- [ ] Bouton "Détecter HA" dans l'onglet MQTT du Web UI
+- [x] MQTT Discovery : 11 entités auto-provisionnées dans HA (=sensors, switch, button, number, select)
+- [x] Last Will Testament sur `<prefix>/availability` — HA grise auto quand le module coupe
+- [x] Auto-discovery du broker MQTT via mDNS (=fallbacks `_mqtt._tcp`, `_home-assistant._tcp`, `homeassistant.local`)
+- [x] Bouton "🔍 Détecter HA" dans l'onglet MQTT du Web UI
 
 **v0.3.x — Ecosystème** :
 
 - [ ] Guardian mode : archive silencieuse des OTA officielles Extraflame (=filet si Omnyvore ferme)
-- [ ] Support autres poêles Micronova (=EdilKamin, LAMINOX, ...) via profils dispatcher
+- [ ] Support autres poêles Micronova (=EdilKamin, LAMINOX, Freepoint, Karmek One) via profils dispatcher par `stove_type`
+- [ ] Publication sur ESP-IDF Component Registry pour permettre le fork facile
 
 ## 🤝 Contribuer
 
