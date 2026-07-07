@@ -135,7 +135,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 ### Découvertes finales session
 
 **Via QEMU + GDB runtime capture** :
-- Module = SLAVE UART Micronova (=poêle est MASTER)
+- Module = MAÎTRE UART Micronova (=il interroge le poêle par polling RWMS)
 - 706 UART_READ hits, 0 UART_WRITE avant reception command
 - UART_NUM_1, TX=GPIO_NUM_23, RX=GPIO_NUM_5, 1200 8N2 (ligne inversée 0x24)
 - 5 LEDs sur GPIO 22, 25, 26, 32, 33
@@ -143,7 +143,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 ### Code refactored
 
 - `micronova.h` : slave API (`mn_set_ram`, `mn_get_ram`)
-- `micronova.c` : slave listener task + watchdog + RAM shadow
+- `micronova.c` : master polling task + watchdog + RAM shadow
 - `mqtt_bridge.c` : MQTT commands → shadow RAM writes (=poêle applique au prochain read)
 - `hardware_config.h` : GPIOs corrects TX=23 RX=5
 
@@ -157,7 +157,7 @@ docker compose run esp-idf idf.py -DOPENXFLAME_TARGET=external build
 
 ### Tools ajoutés
 
-- `tools/fake_stove_simulator.py` : simule un poêle master pour tester le slave
+- `tools/fake_stove_simulator.py` : simule un poêle (répond aux requêtes) pour tester le polling maître
 - `tools/sanitize_dump.py` : sanitise dump pour publication (=remplace MAC/secure_code)
 
 ### État final projet - 90% complete
@@ -190,7 +190,7 @@ des commands Micronova, observe les réponses.
 | Re-read 0x30 | `00 30` | `2a d5` (=value=42) | ✅ shadow persist |
 
 **Ce qui est validé** :
-- ✅ Slave listener démarre correctement (=avant Wi-Fi pour QEMU)
+- ✅ Task Micronova démarre correctement (=avant Wi-Fi pour QEMU)
 - ✅ Format frame Micronova : `[cmd] [addr] [val] [~val]`
 - ✅ Read response : `[value] [~value]`
 - ✅ Write ACK : `[value] [~value]`
@@ -227,7 +227,7 @@ Proposée par Olivier (=voir docs/IDEAS.md) :
 ### État final projet - fin session 12h30m
 
 - [x] Reverse engineering complet
-- [x] Firmware compilable + slave listener validé QEMU
+- [x] Firmware compilable + task Micronova validé QEMU
 - [x] Architecture correcte (slave)
 - [x] Tools tests + probe QEMU
 - [x] Documentation exhaustive (=docs/ + analysis/)
