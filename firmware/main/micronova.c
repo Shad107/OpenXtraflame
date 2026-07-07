@@ -324,7 +324,7 @@ char *mn_stats_json(void)
         xSemaphoreGive(mn_mutex);
     }
     cJSON_AddNumberToObject(o, "now_ms",   (double)((int64_t)(esp_timer_get_time() / 1000)));
-    cJSON_AddNumberToObject(o, "debug_seq", mn_debug_seq);
+    cJSON_AddNumberToObject(o, "debug_seq", mn_debug_seq());
     char *s = cJSON_PrintUnformatted(o);
     cJSON_Delete(o);
     return s;
