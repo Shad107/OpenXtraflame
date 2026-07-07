@@ -348,6 +348,7 @@ async function otaPull() {
     }).catch(() => {});
 
     let done = false;
+    let last_written = 0;
     const start = performance.now();
 
     const finish_failed = (msg) => {
@@ -378,6 +379,7 @@ async function otaPull() {
                 : 5;
             bar.style.width = pct + '%';
             text.textContent = `${label} (${pct}%)`;
+            last_written = s.written || last_written;
             if (s.state === 3) {          /* REBOOTING */
                 text.textContent = '🔄 Reboot en cours, patiente ~10 s...';
                 bar.style.width = '100%';
@@ -390,16 +392,19 @@ async function otaPull() {
                 finish_failed(s.message);
             }
         } catch (e) {
-            /* Wi-Fi flap right after reboot: only assume success if we
-             * saw at least some progress (=written > 0). Otherwise it
-             * was probably a real failure before the OTA ever started. */
+            /* /ota/status is no longer answering. Two possible causes:
+             *   a) module rebooted -> new firmware still coming up
+             *   b) network hiccup / genuine failure before OTA started
+             * If we saw any bytes written OR we're past 15 s, treat as
+             * a successful reboot (=cancel the hard-timeout error toast
+             * that would otherwise fire at 90 s). */
             const elapsed = (performance.now() - start) / 1000;
-            if (elapsed > 15 && !done) {
+            if ((last_written > 0 || elapsed > 15) && !done) {
                 done = true;
                 clearInterval(poll);
                 clearTimeout(hard_timeout);
                 text.textContent = '🔄 Module en reboot, page rechargée bientôt';
-                setTimeout(() => location.reload(), 8000);
+                setTimeout(() => location.reload(), 10000);
             }
         }
     }, 800);

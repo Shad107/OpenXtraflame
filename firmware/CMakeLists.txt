@@ -19,7 +19,7 @@ endif()
 
 # Firmware version stamped into esp_app_get_description()->version, shown in
 # the Web UI header and the OTA tab. Bump on each release.
-set(PROJECT_VER "v0.1.0-beta14")
+set(PROJECT_VER "v0.1.0-beta15")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(openextraflame)

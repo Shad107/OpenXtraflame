@@ -106,8 +106,8 @@ esp_err_t ota_upload_end(void)
     strncpy(status.message, "rebooting", sizeof(status.message) - 1);
     xSemaphoreGive(ota_mutex);
 
-    ESP_LOGI(TAG, "OTA success, rebooting in 2s...");
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    ESP_LOGI(TAG, "OTA success, rebooting in 3s...");
+    vTaskDelay(pdMS_TO_TICKS(3000));
     esp_restart();
     return ESP_OK;
 
@@ -206,8 +206,11 @@ esp_err_t ota_pull_from_url(const char *url)
     strncpy(status.message, "reboot...", sizeof(status.message) - 1);
     xSemaphoreGive(ota_mutex);
 
-    ESP_LOGI(TAG, "OTA pull success, rebooting in 1s...");
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_LOGI(TAG, "OTA pull success, rebooting in 3s...");
+    /* Give the Web UI polling loop (=every 800 ms) enough time to catch
+     * the REBOOTING state at least once and switch its UI to 'reboot in
+     * progress' before the socket dies. */
+    vTaskDelay(pdMS_TO_TICKS(3000));
     esp_restart();
     return ESP_OK;
 }
