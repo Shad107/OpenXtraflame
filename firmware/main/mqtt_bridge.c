@@ -12,10 +12,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "mqtt_bridge.h"
 #include "micronova.h"
 #include "mqtt_client.h"
 #include "esp_log.h"
+#include "esp_mac.h"
+#include "esp_app_desc.h"
 #include "cJSON.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -111,11 +114,22 @@ esp_err_t mqtt_bridge_start(const app_config_t *cfg)
              cfg->mqtt_use_tls ? "mqtts" : "mqtt",
              cfg->mqtt_host, (unsigned)cfg->mqtt_port);
 
+    /* Last Will Testament: on disconnect the broker publishes 'offline' to
+     * the availability topic, HA immediately greys out all our entities
+     * without waiting for a keepalive timeout. */
+    static char lwt_topic[160];
+    snprintf(lwt_topic, sizeof(lwt_topic), "%s/availability", sub_topic_prefix);
+
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri       = uri,
         .credentials.username     = (cfg->mqtt_username[0] ? cfg->mqtt_username : NULL),
         .credentials.authentication.password = (cfg->mqtt_password[0] ? cfg->mqtt_password : NULL),
         .session.keepalive        = 30,
+        .session.last_will.topic  = lwt_topic,
+        .session.last_will.msg    = "offline",
+        .session.last_will.msg_len = 7,
+        .session.last_will.qos    = 1,
+        .session.last_will.retain = 1,
     };
 
     client = esp_mqtt_client_init(&mqtt_cfg);
@@ -151,10 +165,186 @@ esp_err_t mqtt_bridge_publish_state(void)
     return ESP_OK;
 }
 
+/* ---- HA MQTT Discovery ---- */
+
+static char device_id[24] = "";       /* openxtraflame_XXXXXX */
+static char state_topic[160] = "";    /* <prefix>/<stove>/state */
+static char avail_topic[160] = "";    /* <prefix>/<stove>/availability */
+
+/* Publish a single discovery config topic. `component` = sensor / switch / etc. */
+static void publish_disco(const char *component, const char *obj_id, cJSON *payload)
+{
+    char topic[192];
+    snprintf(topic, sizeof(topic),
+             "homeassistant/%s/%s/%s/config",
+             component, device_id, obj_id);
+    /* Common bits every entity needs */
+    cJSON_AddStringToObject(payload, "unique_id",       obj_id);
+    cJSON_AddStringToObject(payload, "object_id",       obj_id);
+    cJSON_AddStringToObject(payload, "availability_topic", avail_topic);
+    cJSON_AddStringToObject(payload, "payload_available",     "online");
+    cJSON_AddStringToObject(payload, "payload_not_available", "offline");
+
+    /* Device block shared by all entities so HA groups them */
+    cJSON *dev = cJSON_CreateObject();
+    cJSON *ids = cJSON_CreateArray();
+    cJSON_AddItemToArray(ids, cJSON_CreateString(device_id));
+    cJSON_AddItemToObject(dev, "identifiers",  ids);
+    cJSON_AddStringToObject(dev, "manufacturer", "Extraflame");
+    cJSON_AddStringToObject(dev, "model",        "OpenXtraflame Black Label");
+    cJSON_AddStringToObject(dev, "name",         local_cfg.stove_name);
+    const esp_app_desc_t *desc = esp_app_get_description();
+    cJSON_AddStringToObject(dev, "sw_version", desc ? desc->version : "unknown");
+    cJSON_AddItemToObject(payload, "device", dev);
+
+    char *json = cJSON_PrintUnformatted(payload);
+    esp_mqtt_client_publish(client, topic, json, 0, 1 /*qos*/, 1 /*retain*/);
+    free(json);
+    cJSON_Delete(payload);
+}
+
+/* Helpers to build the various entity types with minimal repetition. */
+static cJSON *sensor(const char *name, const char *json_key,
+                     const char *unit, const char *device_class)
+{
+    cJSON *p = cJSON_CreateObject();
+    cJSON_AddStringToObject(p, "name",  name);
+    cJSON_AddStringToObject(p, "state_topic", state_topic);
+    char tpl[64]; snprintf(tpl, sizeof(tpl), "{{ value_json.%s }}", json_key);
+    cJSON_AddStringToObject(p, "value_template", tpl);
+    if (unit)         cJSON_AddStringToObject(p, "unit_of_measurement", unit);
+    if (device_class) cJSON_AddStringToObject(p, "device_class",        device_class);
+    return p;
+}
+
 esp_err_t mqtt_bridge_publish_discovery(void)
 {
-    /* Publish HA MQTT Discovery for a climate entity + several sensors */
-    /* Skeleton: user extends per stove type */
-    ESP_LOGI(TAG, "TODO: publish HA discovery topics");
+    if (!client) return ESP_ERR_INVALID_STATE;
+
+    /* Compute stable device_id from Wi-Fi MAC once. */
+    if (device_id[0] == '\0') {
+        uint8_t mac[6];
+        esp_read_mac(mac, ESP_MAC_WIFI_STA);
+        snprintf(device_id, sizeof(device_id),
+                 "openxtraflame_%02X%02X%02X",
+                 mac[3], mac[4], mac[5]);
+    }
+    /* Topics already built during mqtt_bridge_start */
+    snprintf(state_topic, sizeof(state_topic), "%s/state",        sub_topic_prefix);
+    snprintf(avail_topic, sizeof(avail_topic), "%s/availability", sub_topic_prefix);
+
+    ESP_LOGI(TAG, "Publishing HA discovery for device_id=%s", device_id);
+
+    /* --- Sensors --- */
+    publish_disco("sensor", "t_ambient",
+                  sensor("Température ambiante", "t_ambient", "°C", "temperature"));
+    publish_disco("sensor", "t_smoke",
+                  sensor("Température fumées",   "t_smoke",   "°C", "temperature"));
+    publish_disco("sensor", "t_water",
+                  sensor("Température eau",      "t_water",   "°C", "temperature"));
+    publish_disco("sensor", "power_level",
+                  sensor("Puissance",            "power",     NULL, NULL));
+    publish_disco("sensor", "alarm_code",
+                  sensor("Code alarme",          "alarm",     NULL, NULL));
+
+    /* Stove state as text sensor with a mapping in value_template */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "État poêle");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{% set s = value_json.state %}"
+            "{{ {0:'Off',1:'Allumage',2:'Chargement pellets',3:'Ignition',"
+            "4:'En marche',5:'Nettoyage brasier',6:'Nettoyage final',"
+            "7:'Standby',8:'Alarme',9:'Alarme mémoire'}.get(s, 'Inconnu') }}");
+        publish_disco("sensor", "state", p);
+    }
+
+    /* --- Binary sensor Online --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Online");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.online else 'OFF' }}");
+        cJSON_AddStringToObject(p, "payload_on",  "ON");
+        cJSON_AddStringToObject(p, "payload_off", "OFF");
+        cJSON_AddStringToObject(p, "device_class", "connectivity");
+        publish_disco("binary_sensor", "online", p);
+    }
+
+    /* --- Switch on/off --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Poêle");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.state in [1,2,3,4,5,7] else 'OFF' }}");
+        char cmd_on[160], cmd_off[160];
+        snprintf(cmd_on,  sizeof(cmd_on),  "%s/cmd/on",  sub_topic_prefix);
+        snprintf(cmd_off, sizeof(cmd_off), "%s/cmd/off", sub_topic_prefix);
+        cJSON *ct = cJSON_CreateObject();
+        cJSON_AddStringToObject(ct, "on",  cmd_on);
+        cJSON_AddStringToObject(ct, "off", cmd_off);
+        /* HA switch supports command_topic on/off directly; use two entities */
+        cJSON_AddStringToObject(p, "command_topic", cmd_on);
+        cJSON_AddStringToObject(p, "payload_on",  "1");
+        cJSON_AddStringToObject(p, "payload_off", "0");
+        cJSON_AddStringToObject(p, "state_on",  "ON");
+        cJSON_AddStringToObject(p, "state_off", "OFF");
+        cJSON_Delete(ct);
+        publish_disco("switch", "on_off", p);
+    }
+
+    /* --- Button Reset alarme --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Reset alarme");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/reset_alarm", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON_AddStringToObject(p, "payload_press", "1");
+        publish_disco("button", "reset_alarm", p);
+    }
+
+    /* --- Number Setpoint T° --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Consigne température");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.setpoint }}");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/setpoint", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON_AddNumberToObject(p, "min", 10);
+        cJSON_AddNumberToObject(p, "max", 30);
+        cJSON_AddNumberToObject(p, "step", 1);
+        cJSON_AddStringToObject(p, "unit_of_measurement", "°C");
+        cJSON_AddStringToObject(p, "mode", "slider");
+        publish_disco("number", "setpoint", p);
+    }
+
+    /* --- Select puissance 1..5 --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Niveau puissance");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.power|string }}");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/power", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON *opts = cJSON_CreateArray();
+        for (int i = 1; i <= 5; i++) {
+            char s[4]; snprintf(s, sizeof(s), "%d", i);
+            cJSON_AddItemToArray(opts, cJSON_CreateString(s));
+        }
+        cJSON_AddItemToObject(p, "options", opts);
+        publish_disco("select", "power_level_cmd", p);
+    }
+
+    /* Also publish availability=online now that discovery is out. */
+    esp_mqtt_client_publish(client, avail_topic, "online", 0, 1, 1);
+
+    ESP_LOGI(TAG, "HA discovery published (11 entities)");
     return ESP_OK;
 }
