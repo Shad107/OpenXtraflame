@@ -340,6 +340,36 @@ static esp_err_t handle_ota_rollback(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* GET /mqtt/discover : do a live mDNS lookup for _mqtt._tcp and return
+ * {"host":"192.168.50.7","port":1883} or {"host":""} on timeout. */
+static esp_err_t handle_mqtt_discover(httpd_req_t *req)
+{
+    char found[48] = "";
+    wifi_bridge_mdns_query_mqtt(found, sizeof(found));
+
+    cJSON *o = cJSON_CreateObject();
+    if (found[0] != '\0') {
+        char *colon = strchr(found, ':');
+        if (colon) {
+            *colon = '\0';
+            cJSON_AddStringToObject(o, "host", found);
+            cJSON_AddNumberToObject(o, "port", atoi(colon + 1));
+        } else {
+            cJSON_AddStringToObject(o, "host", found);
+            cJSON_AddNumberToObject(o, "port", 1883);
+        }
+    } else {
+        cJSON_AddStringToObject(o, "host", "");
+        cJSON_AddStringToObject(o, "message", "Aucun broker MQTT trouvé sur le LAN (=mDNS timeout)");
+    }
+    char *out = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
 /* GET /ota/status : current OTA progress/state as JSON */
 static esp_err_t handle_ota_status(httpd_req_t *req)
 {
@@ -447,6 +477,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/ota/pull",             .method = HTTP_POST, .handler = handle_ota_pull,     },
         { .uri = "/debug/uart",           .method = HTTP_GET,  .handler = handle_debug_uart,   },
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
+        { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
     };
     for (size_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++) {
         httpd_register_uri_handler(server, &routes[i]);

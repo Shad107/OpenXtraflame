@@ -15,6 +15,37 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "cJSON.h"
+#include "mdns.h"
+
+/* --- mDNS discovery of the MQTT broker on the local network --- */
+/* Look up the first _mqtt._tcp service on the LAN. Returns
+ * "IP:port" in `out` (max size 32) on success, empty string on fail.
+ * Timeout 3 s to keep the boot path short. */
+void wifi_bridge_mdns_query_mqtt(char *out, size_t out_size)
+{
+    out[0] = '\0';
+    static bool mdns_started = false;
+    if (!mdns_started) {
+        if (mdns_init() != ESP_OK) return;
+        mdns_hostname_set("openxtraflame");
+        mdns_started = true;
+    }
+    mdns_result_t *results = NULL;
+    esp_err_t err = mdns_query_ptr("_mqtt", "_tcp", 3000, 5, &results);
+    if (err != ESP_OK || !results) return;
+
+    /* Take the first result that has an IPv4 addr */
+    mdns_result_t *r = results;
+    while (r) {
+        if (r->addr && r->addr->addr.type == ESP_IPADDR_TYPE_V4) {
+            snprintf(out, out_size, IPSTR ":%d",
+                     IP2STR(&r->addr->addr.u_addr.ip4), (int)r->port);
+            break;
+        }
+        r = r->next;
+    }
+    mdns_query_results_free(results);
+}
 
 extern EventGroupHandle_t app_event_group;
 extern const int WIFI_STA_CONNECTED_BIT;

@@ -26,6 +26,7 @@ idf_component_register(
         app_update
         mbedtls
         esp-tls
+        mdns
         driver
         json
 )

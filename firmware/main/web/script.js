@@ -421,6 +421,29 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
 
     $('scan').addEventListener('click', scan);
+
+    /* Wire the MQTT broker mDNS discovery button */
+    $('mqtt-discover').addEventListener('click', async () => {
+        const btn = $('mqtt-discover');
+        const orig = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ mDNS...';
+        try {
+            const r = await j('/mqtt/discover');
+            if (r.host) {
+                $('mqtt-host').value = r.host;
+                if (r.port) $('mqtt-port').value = r.port;
+                toast(`✅ Broker détecté : ${r.host}:${r.port}`, 'success');
+            } else {
+                toast(r.message || 'Aucun broker MQTT trouvé sur le LAN', 'warn', 5000);
+            }
+        } catch (e) {
+            toast('Erreur mDNS : ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = orig;
+        }
+    });
     /* Wire ssid-select once at load so the wifi-ssid text input auto-fills
      * whenever the user picks a scanned SSID. Attaching this handler inside
      * scan() re-attached it every rescan (=stacked handlers) and could
