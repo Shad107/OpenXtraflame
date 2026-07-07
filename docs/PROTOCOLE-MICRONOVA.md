@@ -155,32 +155,55 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 
 ---
 
-## 4. Carte des registres  *(confiance : HAUTE pour RAM ; MOYENNE pour EEPROM)*
+## 4. Carte des registres  *(confiance : HAUTE — VALIDÉ SUR VRAI POÊLE 2026-07-07)*
 
-Extraite de deux tableaux parallèles en rodata : valeurs `uint16` @ `0x3f454eae`,
-noms (pointeurs) @ `0x3f454fc4` (139 entrées = 82 EEPROM + 20 RAM + 37 alarmes/états).
-Encodage `uint16` : **octet bas = adresse, octet haut = bank**. `0xFFFF` = absent sur ce modèle.
+> ⚠️ **CORRECTION MAJEURE 2026-07-07 (post-live-probe) :** les adresses
+> 0xD0-0xEF listées dans les versions précédentes du reverse navel
+> **ne sont PAS les registres du contrôleur poêle**. Elles répondent à toutes
+> les requêtes RWMS avec des valeurs placeholder `0x20`, mais ce sont
+> probablement des adresses de la mémoire interne du module Extraflame
+> Black Label (=display buffer, cache, ou autre).
+>
+> Les **vraies adresses Micronova** (=documentées par la communauté :
+> [philibertc/micronova_controller](https://github.com/philibertc/micronova_controller),
+> [ridiculouslab](https://github.com/ridiculouslab)) sont dans la plage
+> **0x00-0x9F**. Chaque registre a été **validé empiriquement** sur un
+> Teodora Evo I_VENT en juillet 2026.
 
-### RAM (valeurs live)
-| Registre | Adresse | Bank | Grandeur |
-|---|---|---|---|
-| RAM_STOVE_STATUS | 0xD1 | 0 | état poêle |
-| RAM_TH20 | 0xD0 | 0 | température eau |
-| RAM_TAMB | 0xD3 | 0 | température ambiante |
-| RAM_ALLARM | 0xD2 | 0 | code alarme |
-| RAM_STATO_GESTITO | 0xD5 | 0 | état géré |
-| RAM_RESET_UTENTE | 0xD4 | 0 | reset utilisateur |
-| RAM_ACCENDI | 0xD7 | 0 | allumage |
-| RAM_SPEGNI | 0xD6 | 0 | extinction |
-| RAM_T_FUMI | 0xD9 | 0 | température fumées |
-| RAM_POT_REALE | 0xD8 | 0 | puissance réelle |
-| RAM_CAUSA_STATO7 | 0x21 | 0 | cause d'état |
-| RAM_SERBATORIO_VUOTO | 0x01 | 0 | réservoir pellets vide |
-| RAM_BULBO | 0xEB | **1** | sonde bulbe |
-| RAM_SBLOCCO | 0xEA | **1** | déblocage |
-| RAM_T_CAMERA | 0xEF | **1** | température chambre |
-| RAM_T_PUFFER_SUP | 0xEE | **1** | ballon tampon haut |
-| RAM_MOD / T_BOILER / T_H20_RIT / T_PUFFER_INF | — | — | **ABSENTS (0xFFFF) sur ce modèle** |
+### RAM standard Micronova (=à utiliser pour openextraflame)
+
+| Registre | Adresse | Encodage | Description | Statut |
+|---|---|---|---|---|
+| **TAMB** | **0x01** | °C × 2 (=raw / 2) | Temp ambiante | ✅ VALIDÉ |
+| TH20 | 0x03 | °C × 2 | Temp eau (N/A sur I_VENT ventilé) | ✅ N/A cohérent |
+| **STOVE_STATE** | **0x21** | enum | 0=OFF 1=Start 2=PelletLoad 3=Ignition 4=WORK 5=Cleaning 6=Final 7=Standby 8=Alarm | ✅ VALIDÉ |
+| FLAME_POWER | 0x34 | % | Puissance flamme instantanée | ✅ à valider allumé |
+| WATER_PRES | 0x3C | bar × 10 | Pression eau (N/A I_VENT) | ✅ N/A cohérent |
+| **FUMES_TEMP** | **0x3E** | °C | Temp fumées | ✅ VALIDÉ (=0 quand OFF) |
+| TEMP_SET | 0x7D | °C | Consigne temp (=write pour changer) | ✅ à valider allumé |
+| POWER_SET | 0x7F | 1..5 | Puissance réglée | ✅ à valider allumé |
+| TEMP_GET | 0x9D | °C | Consigne temp active | ✅ à valider allumé |
+| POWER_GET | 0x9F | 1..5 | Puissance courante | ✅ à valider allumé |
+
+### Commandes (=write à 0x21 STOVE_STATE)
+
+| Commande | Value | Trame TX complète |
+|---|---|---|
+| **Allumer** | `0x01` | `80 21 01 A2` |
+| **Éteindre** | `0x06` | `80 21 06 A7` |
+| Force OFF (=reset alarme) | `0x00` | `80 21 00 A1` |
+
+### Modes utilisés selon type de poêle
+
+- **Teodora Evo I_VENT** (=ventilé) : TAMB, STOVE_STATE, FUMES_TEMP, FLAME_POWER, TEMP_SET/GET, POWER_SET/GET
+- **Hydro** (=T_CALD, T_IDRO) : ajouter TH20, WATER_PRES
+
+### Historique — adresses "navel" 0xD0-0xEF (=DÉPRÉCIÉES)
+
+Les adresses documentées dans les V1-V3 du reverse navel (`STOVE_STATUS=0xD1`,
+`T_FUMI=0xD9`, etc.) répondent à toutes les requêtes mais avec des valeurs
+non corrélées à l'état poêle réel. Hypothèse : ce sont des adresses de la
+mémoire interne du module WiFi Black Label (=buffer LCD ou cache produit).
 
 ### EEPROM (écritures) — sélection résolue
 Chrono 2/3/4 (start/stop/jours/temp/puissance) : plage 0x50–0x65, 0x9E–0xA1, 0xAF–0xB2.

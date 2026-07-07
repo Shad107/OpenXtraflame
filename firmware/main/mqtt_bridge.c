@@ -39,15 +39,17 @@ static void handle_command(const char *topic, size_t tlen,
     /* Master design : the ESP32 polls the stove and pushes writes on the bus.
      * mn_write_register() updates the local shadow AND queues a Micronova
      * write frame that the master task will send at the next slot. */
-    if (strstr(topic, "/cmd/on"))          { mn_write_register(MN_RAM_ACCENDI, 1);  return; }
-    if (strstr(topic, "/cmd/off"))         { mn_write_register(MN_RAM_SPEGNI, 1);   return; }
-    if (strstr(topic, "/cmd/reset_alarm")) { mn_write_register(MN_RAM_SBLOCCO, 1);  return; }
+    /* Standard Micronova: STOVE_STATE register (=0x21) drives all commands. */
+    if (strstr(topic, "/cmd/on"))          { mn_write_register(MN_RAM_STOVE_STATE, 0x01); return; }
+    if (strstr(topic, "/cmd/off"))         { mn_write_register(MN_RAM_STOVE_STATE, 0x06); return; }
+    if (strstr(topic, "/cmd/reset_alarm")) { mn_write_register(MN_RAM_STOVE_STATE, 0x00); return; }
     if (strstr(topic, "/cmd/setpoint")) {
         char buf[8] = {0};
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            mn_write_register(MN_RAM_TAMB, (uint8_t)v);
+            /* Micronova standard: TEMP_SET register at 0x7D, encoding raw °C */
+            mn_write_register(MN_RAM_TEMP_SET, (uint8_t)v);
         }
         return;
     }
@@ -56,7 +58,7 @@ static void handle_command(const char *topic, size_t tlen,
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            mn_write_register(MN_RAM_POT_REALE, (uint8_t)v);
+            mn_write_register(MN_RAM_POWER_SET, (uint8_t)v);
         }
         return;
     }

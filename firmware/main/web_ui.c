@@ -86,9 +86,11 @@ static esp_err_t handle_stove_cmd(httpd_req_t *req)
 {
     /* Extract command from URL after /api/stove/ */
     const char *cmd = req->uri + strlen("/api/stove/");
-    if (strcmp(cmd, "on") == 0)          mn_write_register(MN_RAM_ACCENDI, 1);
-    else if (strcmp(cmd, "off") == 0)    mn_write_register(MN_RAM_SPEGNI, 1);
-    else if (strcmp(cmd, "reset_alarm") == 0) mn_write_register(MN_RAM_SBLOCCO, 1);
+    /* Micronova standard: single STOVE_STATE register (=0x21) drives commands.
+     * Write 0x01 = turn on ; write 0x06 = turn off ; write 0x00 = force off. */
+    if (strcmp(cmd, "on") == 0)          mn_write_register(MN_RAM_STOVE_STATE, 0x01);
+    else if (strcmp(cmd, "off") == 0)    mn_write_register(MN_RAM_STOVE_STATE, 0x06);
+    else if (strcmp(cmd, "reset_alarm") == 0) mn_write_register(MN_RAM_STOVE_STATE, 0x00);
     else return httpd_resp_send_404(req);
     return httpd_resp_send(req, "{\"ok\":true}", 11);
 }

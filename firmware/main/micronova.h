@@ -40,41 +40,42 @@ char *mn_debug_dump_json(void);
 /* Total number of frames ever pushed since boot. */
 uint32_t mn_debug_seq(void);
 
-/* Registres RAM Micronova - VRAIES adresses extraites du binaire d'origine
- * navel (rodata offset 0x64EAE, tableaux parallèles nom/valeur).
+/* Registres RAM Micronova STANDARD - documenté par la communauté
+ * (=philibertc/micronova_controller, ridiculouslab).
  *
- * Encodage : octet bas = adresse dans la banque, octet haut = numéro de banque.
- * Bank 0 (0xDx) = accessible via read/write RAM standard [0x00 addr].
- * Bank 1 (0x1EA..0x1EF) = extended page, nécessite une commande spécifique
- * non encore implémentée (=T_CAMERA, BULBO, SBLOCCO, T_PUFFER_SUP).
+ * Ces adresses sont validées en LIVE contre notre Teodora Evo I_VENT
+ * (2026-07-07) : elles donnent des valeurs cohérentes avec l'état du poêle
+ * (0x01=61→30.5°C ambient ; 0x21=0→OFF ; 0x3E=0→pas de fumées) alors que
+ * les adresses 0xD0-0xEF du reverse navel donnent des valeurs bidon (0x20).
  *
- * Registres marqués ABSENT (=0xFFFF dans le firmware d'origine) : T_BOILER,
- * T_H20_RIT, T_PUFFER_INF, MOD, STATO_GESTITO. Notre modèle ne les a pas.
+ * La doc du reverse navel (offset rodata 0x64EAE) pointe probablement vers
+ * un espace mémoire INTERNE du module Extraflame Black Label, pas vers les
+ * registres du contrôleur poêle.
  */
 typedef enum {
-    /* Bank 0 - lecture directe [0x00 addr] */
-    MN_RAM_TH20              = 0xD0,   // eau
-    MN_RAM_STOVE_STATUS      = 0xD1,
-    MN_RAM_ALLARM            = 0xD2,
-    MN_RAM_TAMB              = 0xD3,   // temp ambiante
-    MN_RAM_RESET_UTENTE      = 0xD4,   // reset utilisateur
-    MN_RAM_STATO_GESTITO     = 0xD5,   // état géré
-    MN_RAM_SPEGNI            = 0xD6,   // write: éteindre
-    MN_RAM_ACCENDI           = 0xD7,   // write: allumer
-    MN_RAM_POT_REALE         = 0xD8,   // puissance réelle
-    MN_RAM_T_FUMI            = 0xD9,   // fumées
+    /* Températures — encodage temp×2 (=diviser par 2 pour °C) */
+    MN_RAM_TAMB              = 0x01,   // ambient
+    MN_RAM_TH20              = 0x03,   // eau (=absent sur I_VENT, ignoré)
+    MN_RAM_STOVE_STATE       = 0x21,   // 0=OFF 1=Starting 2=PelletLoading 3=Ignition 4=Work 5=Cleaning 6=FinalCleaning 7=Standby 8=PelletAlarm 9=IgnitionFailAlarm
+    MN_RAM_FLAME_POWER       = 0x34,
+    MN_RAM_WATER_PRESSURE    = 0x3C,
+    MN_RAM_FUMES_TEMP        = 0x3E,
+    MN_RAM_TEMP_SET          = 0x7D,   // écrire consigne (=0x80|0x7D)
+    MN_RAM_POWER_SET         = 0x7F,
+    MN_RAM_TEMP_GET          = 0x9D,
+    MN_RAM_POWER_GET         = 0x9F,
 
-    /* Bank 1 - non implémenté (=extended page command) */
-    MN_RAM_SBLOCCO           = 0x1EA,
-    MN_RAM_BULBO             = 0x1EB,
-    MN_RAM_T_PUFFER_SUP      = 0x1EE,
-    MN_RAM_T_CAMERA          = 0x1EF,
+    /* Alias legacy pour compat (=à supprimer plus tard) */
+    MN_RAM_STOVE_STATUS      = MN_RAM_STOVE_STATE,
+    MN_RAM_T_FUMI            = MN_RAM_FUMES_TEMP,
+    MN_RAM_POT_REALE         = MN_RAM_POWER_GET,   /* now empirically = pwr%2 or step */
+    MN_RAM_ALLARM            = 0x40,               /* WARN: guess, non validé */
+    MN_RAM_ACCENDI           = MN_RAM_STOVE_STATE, /* ON = write 0x21 = 1 */
+    MN_RAM_SPEGNI            = MN_RAM_STOVE_STATE, /* OFF = write 0x21 = 6 */
+    MN_RAM_SBLOCCO           = 0x41,               /* WARN: guess */
+    MN_RAM_T_CAMERA          = MN_RAM_FUMES_TEMP,  /* alias approx */
 
-    /* Placeholders retirés (=absents sur notre modèle Teodora Evo I_VENT) :
-     *   MOD, STATO_GESTITO, CAUSA_STATO7, SERBATORIO_VUOTO, T_BOILER,
-     *   T_H20_RIT, T_PUFFER_INF, RESET_UTENTE */
-
-    MN_RAM_MAX               = 0x200,   // bank1 max = 0x1EF+1
+    MN_RAM_MAX               = 0x100,
 } mn_ram_addr_t;
 
 /* Etats poele (=STATO_PUL_ORD_* constants d'Extraflame) */

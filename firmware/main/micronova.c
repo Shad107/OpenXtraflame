@@ -100,13 +100,14 @@ void mn_get_snapshot(mn_stove_state_snapshot_t *out)
 static void update_snapshot_from_shadow(void)
 {
     if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(200)) != pdTRUE) return;
-    mn_snapshot.state           = (mn_stove_state_t)mn_ram_shadow[MN_RAM_STOVE_STATUS];
-    mn_snapshot.power_level     = mn_ram_shadow[MN_RAM_POT_REALE];
+    /* Micronova standard encoding: température × 2 pour ambient. */
+    mn_snapshot.state           = (mn_stove_state_t)mn_ram_shadow[MN_RAM_STOVE_STATE];
+    mn_snapshot.power_level     = mn_ram_shadow[MN_RAM_POWER_GET];
     mn_snapshot.alarm_code      = mn_ram_shadow[MN_RAM_ALLARM];
-    mn_snapshot.t_ambient       = mn_ram_shadow[MN_RAM_TAMB];
-    mn_snapshot.t_water         = mn_ram_shadow[MN_RAM_TH20];
-    mn_snapshot.t_smoke         = mn_ram_shadow[MN_RAM_T_FUMI];
-    mn_snapshot.t_chamber       = mn_ram_shadow[MN_RAM_T_CAMERA];
+    mn_snapshot.t_ambient       = (float)mn_ram_shadow[MN_RAM_TAMB] / 2.0f;
+    mn_snapshot.t_water         = (float)mn_ram_shadow[MN_RAM_TH20] / 2.0f;
+    mn_snapshot.t_smoke         = mn_ram_shadow[MN_RAM_FUMES_TEMP];
+    mn_snapshot.t_chamber       = mn_ram_shadow[MN_RAM_FLAME_POWER];
     mn_snapshot.last_updated_ms = (uint32_t)(esp_timer_get_time() / 1000);
     xSemaphoreGive(mn_mutex);
 }
@@ -126,15 +127,18 @@ static void update_snapshot_from_shadow(void)
 /* Poll list is mutable at runtime via /debug/poll-list.
  * Contains up to 32 register addresses (=uint16 to allow bank 1). */
 #define POLL_LIST_MAX 32
+/* Poll list = adresses Micronova STANDARD validées empiriquement 2026-07-07 sur
+ * Teodora Evo I_VENT. Encodage : °C via /2 (=philibertc convention).
+ * (=Les adresses 0xD0-0xEF de la doc navel donnaient des placeholders 0x20 bidon.) */
 static uint16_t poll_list[POLL_LIST_MAX] = {
-    MN_RAM_STOVE_STATUS,   /* 0xD1 */
-    MN_RAM_TAMB,           /* 0xD3 */
-    MN_RAM_TH20,           /* 0xD0 */
-    MN_RAM_T_FUMI,         /* 0xD9 */
-    MN_RAM_POT_REALE,      /* 0xD8 */
-    MN_RAM_ALLARM,         /* 0xD2 */
-    MN_RAM_STATO_GESTITO,  /* 0xD5 */
-    MN_RAM_RESET_UTENTE,   /* 0xD4 */
+    MN_RAM_STOVE_STATE,    /* 0x21 : 0=OFF, 4=WORK, ... */
+    MN_RAM_TAMB,           /* 0x01 : ambient °C×2 */
+    MN_RAM_FUMES_TEMP,     /* 0x3E : fumées °C */
+    MN_RAM_FLAME_POWER,    /* 0x34 : flame % */
+    MN_RAM_POWER_GET,      /* 0x9F : puissance courante 1..5 */
+    MN_RAM_TEMP_GET,       /* 0x9D : consigne actuelle */
+    MN_RAM_POWER_SET,      /* 0x7F : puissance settée */
+    MN_RAM_TEMP_SET,       /* 0x7D : consigne settée */
 };
 static int poll_list_count = 8;
 static int poll_interval_ms = 150;   /* delay between two polls */
@@ -424,6 +428,9 @@ char *mn_raw_tx_ex(const char *tx_hex, int timeout_ms, bool wrap_slip)
         return s;
     }
 
+    /* Safety: clear any stuck pause left over from a previous crashed scan. */
+    mn_sniffer_pause = false;
+    vTaskDelay(pdMS_TO_TICKS(50));
     mn_sniffer_pause = true;
     vTaskDelay(pdMS_TO_TICKS(150));
     uart_flush(STOVE_UART_NUM);
@@ -632,9 +639,14 @@ char *mn_addr_scan(uint8_t opcode, uint8_t start, uint8_t end, int per_addr_ms)
     if (per_addr_ms < 30)  per_addr_ms = 30;
     if (per_addr_ms > 500) per_addr_ms = 500;
     if (end < start) { uint8_t t = start; start = end; end = t; }
-    /* keep scan bounded so the httpd doesn't timeout */
-    if ((int)end - (int)start > 128) end = start + 128;
+    /* Keep scan tight so the httpd handler returns well before its recv/send
+     * timeout (=5s default). At 150 ms/addr the max is 32 addresses. */
+    if ((int)end - (int)start > 32) end = start + 32;
 
+    /* Safety net: always start from a known state, even if a previous scan
+     * left the pause stuck. */
+    mn_sniffer_pause = false;
+    vTaskDelay(pdMS_TO_TICKS(50));
     mn_sniffer_pause = true;
     vTaskDelay(pdMS_TO_TICKS(150));
 
@@ -908,19 +920,16 @@ char *mn_ram_dump_json(void)
 {
     static const struct { uint16_t addr; const char *name; } LABELS[] = {
         /* Bank 0 (=addressable via standard read/write) */
-        {MN_RAM_TH20,             "TH20"},
-        {MN_RAM_STOVE_STATUS,     "STOVE_STATUS"},
-        {MN_RAM_ALLARM,           "ALLARM"},
         {MN_RAM_TAMB,             "TAMB"},
-        {MN_RAM_SPEGNI,           "SPEGNI"},
-        {MN_RAM_ACCENDI,          "ACCENDI"},
-        {MN_RAM_POT_REALE,        "POT_REALE"},
-        {MN_RAM_T_FUMI,           "T_FUMI"},
-        /* Bank 1 (=extended page, not yet accessible) */
-        {MN_RAM_SBLOCCO,          "SBLOCCO"},
-        {MN_RAM_BULBO,            "BULBO"},
-        {MN_RAM_T_PUFFER_SUP,     "T_PUFFER_SUP"},
-        {MN_RAM_T_CAMERA,         "T_CAMERA"},
+        {MN_RAM_TH20,             "TH20"},
+        {MN_RAM_STOVE_STATE,      "STOVE_STATE"},
+        {MN_RAM_FLAME_POWER,      "FLAME_POWER"},
+        {MN_RAM_WATER_PRESSURE,   "WATER_PRES"},
+        {MN_RAM_FUMES_TEMP,       "FUMES_TEMP"},
+        {MN_RAM_TEMP_SET,         "TEMP_SET"},
+        {MN_RAM_POWER_SET,        "POWER_SET"},
+        {MN_RAM_TEMP_GET,         "TEMP_GET"},
+        {MN_RAM_POWER_GET,        "POWER_GET"},
     };
 
     cJSON *arr = cJSON_CreateArray();
@@ -968,23 +977,18 @@ char *mn_stats_json(void)
  * users can iterate on register semantics without reflashing. */
 char *mn_registers_live_json(void)
 {
-    /* Static table mapping addr -> {name, unit, scale_hint} */
+    /* Micronova standard registers (validées empiriquement 2026-07-07) */
     struct { uint16_t a; const char *name; const char *unit; const char *hint; } LABELS[] = {
-        { MN_RAM_STOVE_STATUS, "STOVE_STATUS",  "",       "0..9 enum" },
-        { MN_RAM_TH20,         "TH20 (eau)",    "°C",     "raw" },
-        { MN_RAM_ALLARM,       "ALLARM",        "code",   "0 si pas d'alarme" },
-        { MN_RAM_TAMB,         "TAMB (ambiant)","°C",     "raw" },
-        { MN_RAM_STATO_GESTITO,"STATO_GESTITO", "",       "état géré" },
-        { MN_RAM_RESET_UTENTE, "RESET_UTENTE",  "",       "" },
-        { MN_RAM_ACCENDI,      "ACCENDI",       "",       "1=allumer" },
-        { MN_RAM_SPEGNI,       "SPEGNI",        "",       "1=éteindre" },
-        { MN_RAM_POT_REALE,    "POT_REALE",     "%",      "0..100 pot instant" },
-        { MN_RAM_T_FUMI,       "T_FUMI",        "°C",     "raw (=peut nécessiter table)" },
-        /* Bank 1 (=extended, not polled by default) */
-        { MN_RAM_SBLOCCO,      "SBLOCCO",       "",       "b1" },
-        { MN_RAM_BULBO,        "BULBO",         "",       "b1 sonde" },
-        { MN_RAM_T_PUFFER_SUP, "T_PUFFER_SUP",  "°C",     "b1 puffer haut" },
-        { MN_RAM_T_CAMERA,     "T_CAMERA",      "°C",     "b1 chambre" },
+        { MN_RAM_STOVE_STATE,   "STOVE_STATE",  "",       "0=OFF 1=Start 4=WORK 7=Standby 8=Alarm..." },
+        { MN_RAM_TAMB,          "TAMB",         "°C",     "ambient ×2 (divide by 2 for °C)" },
+        { MN_RAM_TH20,          "TH20",         "°C",     "eau (N/A sur I_VENT ventilé)" },
+        { MN_RAM_FUMES_TEMP,    "FUMES_TEMP",   "°C",     "fumées raw" },
+        { MN_RAM_FLAME_POWER,   "FLAME_POWER",  "%",      "puissance flamme instantanée" },
+        { MN_RAM_TEMP_SET,      "TEMP_SET",     "°C",     "consigne temp writing" },
+        { MN_RAM_TEMP_GET,      "TEMP_GET",     "°C",     "consigne temp active" },
+        { MN_RAM_POWER_SET,     "POWER_SET",    "step",   "puissance 1..5 réglée" },
+        { MN_RAM_POWER_GET,     "POWER_GET",    "step",   "puissance 1..5 courante" },
+        { MN_RAM_WATER_PRESSURE,"WATER_PRES",   "bar",    "pression eau (N/A I_VENT)" },
     };
     const int N = (int)(sizeof(LABELS) / sizeof(LABELS[0]));
 
