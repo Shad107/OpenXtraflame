@@ -226,28 +226,35 @@ async function stoveCmd(cmd) {
     }
 }
 
-/* OTA upload */
+/* OTA upload direct (=browser -> module -> flash) */
 async function otaUpload(file) {
     const progress = $('ota-progress');
     const bar = $('ota-bar');
     const text = $('ota-text');
     progress.style.display = 'block';
+    toast('⚠️ Ne coupe surtout PAS l\'alim du module pendant le flash', 'warn', 8000);
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/ota/upload');
     xhr.upload.addEventListener('progress', e => {
         if (e.lengthComputable) {
             const pct = (e.loaded / e.total * 100).toFixed(0);
             bar.style.width = pct + '%';
-            text.textContent = `Envoi ${pct}%`;
+            text.textContent = `📥 Envoi vers module : ${pct}%`;
         }
     });
     xhr.onload = () => {
         if (xhr.status === 200) {
-            text.textContent = 'Applying... Reboot dans 5s';
-            setTimeout(() => location.reload(), 8000);
+            bar.style.width = '100%';
+            text.textContent = '🔒 Vérification + application + reboot... NE PAS COUPER L\'ALIM';
+            setTimeout(() => location.reload(), 10000);
         } else {
-            text.textContent = 'Erreur ' + xhr.status;
+            text.textContent = `❌ Erreur HTTP ${xhr.status}`;
+            toast(`Upload rejeté : HTTP ${xhr.status}`, 'error', 6000);
         }
+    };
+    xhr.onerror = () => {
+        text.textContent = '❌ Connexion perdue pendant l\'upload';
+        toast('Connexion perdue pendant l\'upload — retente', 'error', 6000);
     };
     xhr.send(file);
 }
@@ -286,21 +293,73 @@ async function otaCheck() {
     }
 }
 
+/* OTA state enum from firmware ota.h — kept aligned by convention. */
+const OTA_STATE_LABEL = {
+    0: 'Prêt',
+    1: '📥 Téléchargement du firmware...',
+    2: '🔒 Vérification signature SHA256...',
+    3: '🔄 Application + reboot dans quelques secondes',
+    4: '❌ Échec OTA',
+};
+
 async function otaPull() {
     const url = $('ota-url').value.trim();
     if (!url) { toast('Renseigne une URL avant de cliquer Pull', 'warn'); return; }
     const btn = $('ota-pull');
-    btn.textContent = '⏳ Téléchargement en cours...';
+    const progress = $('ota-progress');
+    const bar = $('ota-bar');
+    const text = $('ota-text');
+    btn.textContent = '⏳ En cours...';
     btn.disabled = true;
-    try {
-        const r = await fetch('/ota/pull', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({url}),
-        });
-        if (!r.ok) { btn.textContent = '❌ Erreur'; return; }
-    } catch (e) { btn.textContent = '❌ Erreur'; return; }
-    setTimeout(() => location.reload(), 30000);
+    progress.style.display = 'block';
+    bar.style.width = '2%';
+    text.textContent = '📥 Démarrage...';
+    toast('⚠️ Ne coupe surtout PAS l\'alim du module pendant le flash', 'warn', 8000);
+
+    /* Fire and forget: /ota/pull blocks until reboot. We poll /ota/status
+     * in parallel to reflect the real state to the user. */
+    fetch('/ota/pull', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({url}),
+    }).catch(() => {});
+
+    let done = false;
+    const start = performance.now();
+    const poll = setInterval(async () => {
+        try {
+            const s = await fetch('/ota/status').then(r => r.json());
+            const label = OTA_STATE_LABEL[s.state] || `État ${s.state}`;
+            const pct = s.total > 0
+                ? Math.min(99, Math.floor(100 * s.written / s.total))
+                : 5;
+            bar.style.width = pct + '%';
+            text.textContent = `${label} (${pct}%)`;
+            if (s.state === 3) {          /* REBOOTING */
+                text.textContent = '🔄 Reboot en cours, patiente ~10 s...';
+                bar.style.width = '100%';
+                done = true;
+                clearInterval(poll);
+                setTimeout(() => location.reload(), 12000);
+            } else if (s.state === 4) {   /* FAILED */
+                done = true;
+                clearInterval(poll);
+                toast(`❌ Échec OTA : ${s.message || 'raison inconnue'}`, 'error', 8000);
+                btn.textContent = '⬇️ Pull';
+                btn.disabled = false;
+                progress.style.display = 'none';
+            }
+        } catch (e) {
+            /* Wi-Fi flap right after reboot: assume success and reload. */
+            const elapsed = (performance.now() - start) / 1000;
+            if (elapsed > 15 && !done) {
+                done = true;
+                clearInterval(poll);
+                text.textContent = '🔄 Module en reboot, page rechargée bientôt';
+                setTimeout(() => location.reload(), 8000);
+            }
+        }
+    }, 800);
 }
 
 /* --- Debug Micronova bus --- */
