@@ -30,14 +30,14 @@ typedef struct {
     bool     provisioned;
 
     /* Wi-Fi STA credentials */
-    char     wifi_ssid[64];
-    char     wifi_password[64];
+    char     wifi_ssid[64];        // 802.11 SSID max is 32, 64 is plenty
+    char     wifi_password[128];   // WPA2 PSK can be 63-char passphrase or 64 hex, allow overhead
 
     /* MQTT broker config */
     char     mqtt_host[128];        // e.g. 192.168.1.10
     uint16_t mqtt_port;             // e.g. 1883
-    char     mqtt_username[64];     // optional
-    char     mqtt_password[64];     // optional
+    char     mqtt_username[128];    // some brokers use long JWT-style tokens
+    char     mqtt_password[256];    // HA-generated broker passwords can hit 64+, keep headroom
     char     mqtt_topic_prefix[64]; // e.g. "extraflame"
     bool     mqtt_use_tls;
 
