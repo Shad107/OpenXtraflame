@@ -348,6 +348,36 @@ static esp_err_t handle_ota_rollback(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* GET /mqtt/debug : quick introspection of what's actually stored in NVS
+ * for MQTT credentials. Returns the username in clear + lengths for the
+ * password fields (=never the value). Lets users diagnose 'save didn't
+ * really persist my mdp' without having to reboot + read miniterm.  */
+static esp_err_t handle_mqtt_debug(httpd_req_t *req)
+{
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "host",       g_cfg->mqtt_host);
+    cJSON_AddNumberToObject(o, "port",       g_cfg->mqtt_port);
+    cJSON_AddStringToObject(o, "user",       g_cfg->mqtt_username);
+    cJSON_AddNumberToObject(o, "user_len",   (int)strlen(g_cfg->mqtt_username));
+    cJSON_AddNumberToObject(o, "pwd_len",    (int)strlen(g_cfg->mqtt_password));
+    cJSON_AddStringToObject(o, "prefix",     g_cfg->mqtt_topic_prefix);
+    cJSON_AddBoolToObject(o,   "tls",        g_cfg->mqtt_use_tls);
+    /* Live connection state (=MQTT_CONNECTED_BIT flag maintained by
+     * mqtt_bridge event handler). */
+    extern EventGroupHandle_t app_event_group;
+    extern const int MQTT_CONNECTED_BIT;
+    EventBits_t bits = xEventGroupGetBits(app_event_group);
+    cJSON_AddBoolToObject(o, "connected", (bits & MQTT_CONNECTED_BIT) != 0);
+
+    char *out = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return ESP_OK;
+}
+
 /* POST /mqtt/test : quick broker connectivity test with the params in the
  * JSON body. Empty user/pwd -> anonymous or use stored (=if provided as
  * empty via UI intent). Returns {ok, message}. */
@@ -566,6 +596,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/debug/logs",           .method = HTTP_GET,  .handler = handle_debug_logs,   },
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
+        { .uri = "/mqtt/debug",           .method = HTTP_GET,  .handler = handle_mqtt_debug,   },
         { .uri = "/mqtt/test",            .method = HTTP_POST, .handler = handle_mqtt_test,    },
     };
     for (size_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++) {
