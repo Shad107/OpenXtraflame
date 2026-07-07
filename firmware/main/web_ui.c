@@ -19,6 +19,7 @@
 #include <sys/param.h>   /* for MIN() macro */
 #include "web_ui.h"
 #include "wifi_bridge.h"
+#include "mqtt_bridge.h"
 #include "micronova.h"
 #include "ota.h"
 #include "esp_log.h"
