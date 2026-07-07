@@ -196,7 +196,10 @@ static esp_err_t handle_config_post(httpd_req_t *req)
 
 #define GET_STR(k, dst) do { \
     cJSON *v = cJSON_GetObjectItem(o, k); \
-    if (cJSON_IsString(v)) strncpy(dst, v->valuestring, sizeof(dst) - 1); \
+    if (cJSON_IsString(v)) { \
+        strncpy(dst, v->valuestring, sizeof(dst) - 1); \
+        dst[sizeof(dst) - 1] = '\0';  /* strncpy leaves no \0 if src full-width */ \
+    } \
 } while(0)
 /* Password fields: browsers do not autofill password inputs on POST
  * so a form submitted from any other tab (=Stove, MQTT, Advanced)
@@ -204,8 +207,10 @@ static esp_err_t handle_config_post(httpd_req_t *req)
  * / MQTT credentials. Skip empty strings for password fields. */
 #define GET_STR_KEEP_EMPTY(k, dst) do { \
     cJSON *v = cJSON_GetObjectItem(o, k); \
-    if (cJSON_IsString(v) && v->valuestring[0] != '\0') \
+    if (cJSON_IsString(v) && v->valuestring[0] != '\0') { \
         strncpy(dst, v->valuestring, sizeof(dst) - 1); \
+        dst[sizeof(dst) - 1] = '\0'; \
+    } \
 } while(0)
 #define GET_NUM(k, dst, cast) do { \
     cJSON *v = cJSON_GetObjectItem(o, k); \

@@ -137,7 +137,14 @@ esp_err_t mqtt_bridge_start(const app_config_t *cfg)
     esp_mqtt_client_start(client);
 
     xTaskCreate(publish_task, "mqtt_pub", 4096, NULL, 4, NULL);
-    ESP_LOGI(TAG, "MQTT bridge started, URI=%s prefix=%s", uri, sub_topic_prefix);
+    /* Diagnostic: prints the exact username the client will send to the
+     * broker (=so users can catch cases where NVS is silently empty even
+     * though the UI form had something in it) and the length of the
+     * stored password (=NOT its value). No secret in the log. */
+    ESP_LOGI(TAG, "MQTT bridge started, URI=%s prefix=%s user='%s' pwd_len=%d",
+             uri, sub_topic_prefix,
+             cfg->mqtt_username[0] ? cfg->mqtt_username : "(=empty, sending NULL)",
+             (int)strlen(cfg->mqtt_password));
     return ESP_OK;
 }
 
