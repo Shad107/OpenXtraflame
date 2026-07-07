@@ -349,6 +349,26 @@ async function otaPull() {
 
     let done = false;
     const start = performance.now();
+
+    const finish_failed = (msg) => {
+        if (done) return;
+        done = true;
+        clearInterval(poll);
+        toast(`❌ Échec OTA : ${msg || 'raison inconnue'}`, 'error', 8000);
+        btn.textContent = '⬇️ Pull';
+        btn.disabled = false;
+        progress.style.display = 'none';
+        text.textContent = '';
+        bar.style.width = '0%';
+    };
+
+    /* Hard timeout so the UI never stays locked forever: if after 90 s
+     * we haven't seen state=3 or state=4, we surface a generic failure
+     * and unlock. Downloads bigger than 90 s of a 1 MB firmware would
+     * mean the link is broken anyway. */
+    const hard_timeout = setTimeout(() => finish_failed(
+        'Timeout : pas de progression après 90 s. Vérifie l\'URL et la connectivité.'), 90000);
+
     const poll = setInterval(async () => {
         try {
             const s = await fetch('/ota/status').then(r => r.json());
@@ -363,21 +383,21 @@ async function otaPull() {
                 bar.style.width = '100%';
                 done = true;
                 clearInterval(poll);
+                clearTimeout(hard_timeout);
                 setTimeout(() => location.reload(), 12000);
             } else if (s.state === 4) {   /* FAILED */
-                done = true;
-                clearInterval(poll);
-                toast(`❌ Échec OTA : ${s.message || 'raison inconnue'}`, 'error', 8000);
-                btn.textContent = '⬇️ Pull';
-                btn.disabled = false;
-                progress.style.display = 'none';
+                clearTimeout(hard_timeout);
+                finish_failed(s.message);
             }
         } catch (e) {
-            /* Wi-Fi flap right after reboot: assume success and reload. */
+            /* Wi-Fi flap right after reboot: only assume success if we
+             * saw at least some progress (=written > 0). Otherwise it
+             * was probably a real failure before the OTA ever started. */
             const elapsed = (performance.now() - start) / 1000;
             if (elapsed > 15 && !done) {
                 done = true;
                 clearInterval(poll);
+                clearTimeout(hard_timeout);
                 text.textContent = '🔄 Module en reboot, page rechargée bientôt';
                 setTimeout(() => location.reload(), 8000);
             }

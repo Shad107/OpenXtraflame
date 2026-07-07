@@ -468,6 +468,20 @@ static void ota_pull_bg_task(void *arg)
     vTaskDelete(NULL);
 }
 
+/* Trim stray trailing punctuation that users often paste along with a URL
+ * (=closing parens, brackets, dots, commas). Keeps schemes intact. */
+static void sanitize_url(char *s)
+{
+    size_t n = strlen(s);
+    while (n > 0) {
+        char c = s[n - 1];
+        if (c == ')' || c == ']' || c == '}' || c == ',' || c == '.' ||
+            c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '"' || c == '\'') {
+            s[--n] = '\0';
+        } else break;
+    }
+}
+
 static esp_err_t handle_ota_pull(httpd_req_t *req)
 {
     char buf[512];
@@ -482,6 +496,7 @@ static esp_err_t handle_ota_pull(httpd_req_t *req)
     }
     char *url_copy = strdup(u->valuestring);
     cJSON_Delete(o);
+    if (url_copy) sanitize_url(url_copy);
     if (!url_copy) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no mem");
     if (xTaskCreate(ota_pull_bg_task, "ota_pull", 8192, url_copy, 5, NULL) != pdPASS) {
         free(url_copy);
