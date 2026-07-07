@@ -481,6 +481,32 @@ static esp_err_t handle_ota_status(httpd_req_t *req)
 
 /* --- Debug : dump Micronova ring buffer to the browser --- */
 
+/* GET /debug/ram : dump the Micronova RAM shadow (=all known registers
+ * with their current shadow value) so users can audit exactly what the
+ * module thinks the stove reported / what will be replayed to it. */
+static esp_err_t handle_debug_ram(httpd_req_t *req)
+{
+    char *json = mn_ram_dump_json();
+    if (!json) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return ESP_OK;
+}
+
+/* GET /debug/mnstats : Micronova UART runtime stats for audit. */
+static esp_err_t handle_debug_mnstats(httpd_req_t *req)
+{
+    char *json = mn_stats_json();
+    if (!json) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return ESP_OK;
+}
+
 /* GET /debug/logs : dump the ESP_LOG ring buffer as a plain text stream. */
 static esp_err_t handle_debug_logs(httpd_req_t *req)
 {
@@ -597,6 +623,8 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/ota/pull",             .method = HTTP_POST, .handler = handle_ota_pull,     },
         { .uri = "/debug/uart",           .method = HTTP_GET,  .handler = handle_debug_uart,   },
         { .uri = "/debug/logs",           .method = HTTP_GET,  .handler = handle_debug_logs,   },
+        { .uri = "/debug/ram",            .method = HTTP_GET,  .handler = handle_debug_ram,    },
+        { .uri = "/debug/mnstats",        .method = HTTP_GET,  .handler = handle_debug_mnstats,},
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
         { .uri = "/mqtt/debug",           .method = HTTP_GET,  .handler = handle_mqtt_debug,   },

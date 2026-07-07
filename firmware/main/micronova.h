@@ -115,3 +115,10 @@ esp_err_t mn_set_ram(mn_ram_addr_t addr, uint8_t value);
 
 /* Get current RAM shadow value */
 uint8_t mn_get_ram(mn_ram_addr_t addr);
+
+/* Return the whole RAM shadow as heap-allocated JSON (=caller frees).
+ * Shape: {"registers": [{"addr":48,"hex":"0x30","value":21}, ...]} */
+char *mn_ram_dump_json(void);
+
+/* Return runtime stats (=frames counts, last activity ms). */
+char *mn_stats_json(void);

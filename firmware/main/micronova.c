@@ -24,6 +24,7 @@
 #include "freertos/semphr.h"
 #include "esp_timer.h"
 #include "cJSON.h"
+#include "esp_timer.h"
 
 static const char *TAG = "MICRONOVA";
 
@@ -263,6 +264,70 @@ void mn_debug_push(uint8_t dir, uint8_t addr, uint8_t data)
 uint32_t mn_debug_seq(void)
 {
     return mn_dbg_seq;
+}
+
+/* Dump the whole 256-byte RAM shadow as a JSON array. Register names
+ * are attached where we have symbols so the reader knows what each
+ * address is without opening the source. */
+char *mn_ram_dump_json(void)
+{
+    static const struct { uint8_t addr; const char *name; } LABELS[] = {
+        {MN_RAM_STOVE_STATUS,     "STOVE_STATUS"},
+        {MN_RAM_STATO_GESTITO,    "STATO_GESTITO"},
+        {MN_RAM_MOD,              "MOD"},
+        {MN_RAM_POT_REALE,        "POT_REALE"},
+        {MN_RAM_ALLARM,           "ALLARM"},
+        {MN_RAM_CAUSA_STATO7,     "CAUSA_STATO7"},
+        {MN_RAM_SERBATOIO_VUOTO,  "SERBATOIO_VUOTO"},
+        {MN_RAM_BULBO,            "BULBO"},
+        {MN_RAM_TAMB,             "TAMB"},
+        {MN_RAM_TH20,             "TH20"},
+        {MN_RAM_T_FUMI,           "T_FUMI"},
+        {MN_RAM_T_CAMERA,         "T_CAMERA"},
+        {MN_RAM_T_BOILER,         "T_BOILER"},
+        {MN_RAM_ACCENDI,          "ACCENDI"},
+        {MN_RAM_SPEGNI,           "SPEGNI"},
+        {MN_RAM_SBLOCCO,          "SBLOCCO"},
+    };
+
+    cJSON *arr = cJSON_CreateArray();
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        for (size_t i = 0; i < sizeof(LABELS)/sizeof(LABELS[0]); i++) {
+            cJSON *r = cJSON_CreateObject();
+            uint8_t a = LABELS[i].addr;
+            char hex[8]; snprintf(hex, sizeof(hex), "0x%02X", a);
+            cJSON_AddNumberToObject(r, "addr",  a);
+            cJSON_AddStringToObject(r, "hex",   hex);
+            cJSON_AddStringToObject(r, "name",  LABELS[i].name);
+            cJSON_AddNumberToObject(r, "value", mn_ram_shadow[a]);
+            cJSON_AddItemToArray(arr, r);
+        }
+        xSemaphoreGive(mn_mutex);
+    }
+    cJSON *out = cJSON_CreateObject();
+    cJSON_AddItemToObject(out, "registers", arr);
+    char *s = cJSON_PrintUnformatted(out);
+    cJSON_Delete(out);
+    return s;
+}
+
+/* Return runtime UART stats for audit: total frames RX + TX, ms since
+ * last stove read, checksum error count, uptime. */
+char *mn_stats_json(void)
+{
+    cJSON *o = cJSON_CreateObject();
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        cJSON_AddNumberToObject(o, "rx_frames_total", mn_snapshot.rx_frames_count);
+        cJSON_AddNumberToObject(o, "tx_frames_total", mn_snapshot.tx_frames_count);
+        cJSON_AddNumberToObject(o, "last_activity_ms", mn_snapshot.last_updated_ms);
+        cJSON_AddBoolToObject(o,   "online",          mn_snapshot.online);
+        xSemaphoreGive(mn_mutex);
+    }
+    cJSON_AddNumberToObject(o, "now_ms",   (double)(esp_timer_get_time() / 1000));
+    cJSON_AddNumberToObject(o, "debug_seq", mn_debug_seq);
+    char *s = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    return s;
 }
 
 char *mn_debug_dump_json(void)
