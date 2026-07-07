@@ -495,6 +495,74 @@ static esp_err_t handle_debug_ram(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* GET /api/registers : live register table with names and decoded hints. */
+static esp_err_t handle_registers_live(httpd_req_t *req)
+{
+    char *json = mn_registers_live_json();
+    if (!json) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return ESP_OK;
+}
+
+/* GET/POST /debug/poll-list :
+ *   GET  → current poll list (=list of uint16 addresses).
+ *   POST body {"list":[209,208,...]} → replace poll list. */
+static esp_err_t handle_poll_list(httpd_req_t *req)
+{
+    if (req->method == HTTP_POST) {
+        char body[512] = {0};
+        int rd = httpd_req_recv(req, body, sizeof(body) - 1);
+        if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+        cJSON *root = cJSON_Parse(body);
+        if (!root) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+        cJSON *list = cJSON_GetObjectItem(root, "list");
+        if (!cJSON_IsArray(list)) { cJSON_Delete(root); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no list array"); }
+        int n = cJSON_GetArraySize(list);
+        uint16_t addrs[32]; int nn = 0;
+        for (int i = 0; i < n && nn < 32; i++) {
+            cJSON *e = cJSON_GetArrayItem(list, i);
+            if (cJSON_IsNumber(e)) addrs[nn++] = (uint16_t)e->valueint;
+        }
+        cJSON_Delete(root);
+        esp_err_t err = mn_poll_list_set(addrs, nn);
+        if (err != ESP_OK) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "set failed");
+    }
+    char *json = mn_poll_list_get_json();
+    if (!json) return httpd_resp_send_500(req);
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return ESP_OK;
+}
+
+/* GET/POST /debug/poll-interval :
+ *   GET → {"ms":N}
+ *   POST body {"ms":N} → set (=20..5000). */
+static esp_err_t handle_poll_interval(httpd_req_t *req)
+{
+    if (req->method == HTTP_POST) {
+        char body[64] = {0};
+        int rd = httpd_req_recv(req, body, sizeof(body) - 1);
+        if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+        cJSON *root = cJSON_Parse(body);
+        if (!root) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+        cJSON *ms = cJSON_GetObjectItem(root, "ms");
+        int m = cJSON_IsNumber(ms) ? ms->valueint : 0;
+        cJSON_Delete(root);
+        if (mn_poll_interval_set(m) != ESP_OK)
+            return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid ms");
+    }
+    char resp[48];
+    snprintf(resp, sizeof(resp), "{\"ms\":%d}", mn_poll_interval_get());
+    httpd_resp_set_type(req, "application/json");
+    SET_NO_CACHE(req);
+    return httpd_resp_send(req, resp, strlen(resp));
+}
+
 /* GET /debug/mnstats : Micronova UART runtime stats for audit. */
 static esp_err_t handle_debug_mnstats(httpd_req_t *req)
 {
@@ -713,7 +781,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
     g_cfg = cfg;
 
     httpd_config_t hd = HTTPD_DEFAULT_CONFIG();
-    hd.max_uri_handlers   = 30;   /* room for the current 26 routes + margin;
+    hd.max_uri_handlers   = 40;   /* room for the current 34 routes + margin;
                                    * remember to grow this whenever a handler
                                    * is added, ESP-IDF silently drops the
                                    * overflow entries with only a W log line
@@ -762,6 +830,11 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/debug/uart-set",       .method = HTTP_POST, .handler = handle_debug_uart_set,    },
         { .uri = "/debug/rx-raw",         .method = HTTP_POST, .handler = handle_debug_rx_raw,      },
         { .uri = "/debug/tx-check",       .method = HTTP_POST, .handler = handle_debug_tx_check,    },
+        { .uri = "/api/registers",        .method = HTTP_GET,  .handler = handle_registers_live,   },
+        { .uri = "/debug/poll-list",      .method = HTTP_GET,  .handler = handle_poll_list,        },
+        { .uri = "/debug/poll-list",      .method = HTTP_POST, .handler = handle_poll_list,        },
+        { .uri = "/debug/poll-interval",  .method = HTTP_GET,  .handler = handle_poll_interval,    },
+        { .uri = "/debug/poll-interval",  .method = HTTP_POST, .handler = handle_poll_interval,    },
     };
     for (size_t i = 0; i < sizeof(routes) / sizeof(routes[0]); i++) {
         httpd_register_uri_handler(server, &routes[i]);

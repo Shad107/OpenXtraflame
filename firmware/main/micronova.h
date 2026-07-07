@@ -57,6 +57,8 @@ typedef enum {
     MN_RAM_STOVE_STATUS      = 0xD1,
     MN_RAM_ALLARM            = 0xD2,
     MN_RAM_TAMB              = 0xD3,   // temp ambiante
+    MN_RAM_RESET_UTENTE      = 0xD4,   // reset utilisateur
+    MN_RAM_STATO_GESTITO     = 0xD5,   // état géré
     MN_RAM_SPEGNI            = 0xD6,   // write: éteindre
     MN_RAM_ACCENDI           = 0xD7,   // write: allumer
     MN_RAM_POT_REALE         = 0xD8,   // puissance réelle
@@ -130,6 +132,16 @@ char *mn_ram_dump_json(void);
 
 /* Return runtime stats (=frames counts, last activity ms). */
 char *mn_stats_json(void);
+
+/* Return all polled registers with name/hex/decimal/decoded scaled value.
+ * Meant for a live web UI table (no reflash needed). Caller frees. */
+char *mn_registers_live_json(void);
+
+/* Dynamic poll-list control (=no reflash). */
+esp_err_t mn_poll_list_set(const uint16_t *addrs, int count);
+char     *mn_poll_list_get_json(void);
+esp_err_t mn_poll_interval_set(int ms);
+int       mn_poll_interval_get(void);
 
 /* Sniffer: pause the master task, capture raw UART bytes for duration_ms
  * (clamped 100..15000), fire one probe ping halfway through, return JSON.

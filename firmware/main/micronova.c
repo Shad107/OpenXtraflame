@@ -123,15 +123,21 @@ static void update_snapshot_from_shadow(void)
  * from the MQTT layer, and interleave them with cyclic polls of the
  * registers HA cares about.
  */
-/* Bank 0 uniquement (=adresses réelles extraites du binaire original). */
-static const uint8_t POLL_LIST[] = {
+/* Poll list is mutable at runtime via /debug/poll-list.
+ * Contains up to 32 register addresses (=uint16 to allow bank 1). */
+#define POLL_LIST_MAX 32
+static uint16_t poll_list[POLL_LIST_MAX] = {
     MN_RAM_STOVE_STATUS,   /* 0xD1 */
     MN_RAM_TAMB,           /* 0xD3 */
     MN_RAM_TH20,           /* 0xD0 */
     MN_RAM_T_FUMI,         /* 0xD9 */
     MN_RAM_POT_REALE,      /* 0xD8 */
     MN_RAM_ALLARM,         /* 0xD2 */
+    MN_RAM_STATO_GESTITO,  /* 0xD5 */
+    MN_RAM_RESET_UTENTE,   /* 0xD4 */
 };
+static int poll_list_count = 8;
+static int poll_interval_ms = 150;   /* delay between two polls */
 
 /* Pending write queue - mn_set_ram() enqueues, master task drains. */
 typedef struct { uint16_t addr; uint8_t value; } mn_write_cmd_t;
@@ -284,11 +290,13 @@ static void mn_slave_task(void *arg)
         }
 
         /* Then one cyclic read */
-        uint8_t addr = POLL_LIST[poll_idx];
-        mn_do_transaction(0x00, addr, 0);
-        poll_idx = (poll_idx + 1) % (sizeof(POLL_LIST) / sizeof(POLL_LIST[0]));
+        if (poll_list_count > 0) {
+            uint16_t addr = poll_list[poll_idx % poll_list_count];
+            mn_do_transaction(0x00, addr, 0);
+            poll_idx = (poll_idx + 1) % poll_list_count;
+        }
 
-        vTaskDelay(pdMS_TO_TICKS(150));  /* ~1.2 s full cycle for the 8 regs */
+        vTaskDelay(pdMS_TO_TICKS(poll_interval_ms));
     }
 }
 
@@ -955,6 +963,102 @@ char *mn_stats_json(void)
     cJSON_Delete(o);
     return s;
 }
+
+/* Live poll-list values with decoded scaling. Meant for the web UI table so
+ * users can iterate on register semantics without reflashing. */
+char *mn_registers_live_json(void)
+{
+    /* Static table mapping addr -> {name, unit, scale_hint} */
+    struct { uint16_t a; const char *name; const char *unit; const char *hint; } LABELS[] = {
+        { MN_RAM_STOVE_STATUS, "STOVE_STATUS",  "",       "0..9 enum" },
+        { MN_RAM_TH20,         "TH20 (eau)",    "°C",     "raw" },
+        { MN_RAM_ALLARM,       "ALLARM",        "code",   "0 si pas d'alarme" },
+        { MN_RAM_TAMB,         "TAMB (ambiant)","°C",     "raw" },
+        { MN_RAM_STATO_GESTITO,"STATO_GESTITO", "",       "état géré" },
+        { MN_RAM_RESET_UTENTE, "RESET_UTENTE",  "",       "" },
+        { MN_RAM_ACCENDI,      "ACCENDI",       "",       "1=allumer" },
+        { MN_RAM_SPEGNI,       "SPEGNI",        "",       "1=éteindre" },
+        { MN_RAM_POT_REALE,    "POT_REALE",     "%",      "0..100 pot instant" },
+        { MN_RAM_T_FUMI,       "T_FUMI",        "°C",     "raw (=peut nécessiter table)" },
+        /* Bank 1 (=extended, not polled by default) */
+        { MN_RAM_SBLOCCO,      "SBLOCCO",       "",       "b1" },
+        { MN_RAM_BULBO,        "BULBO",         "",       "b1 sonde" },
+        { MN_RAM_T_PUFFER_SUP, "T_PUFFER_SUP",  "°C",     "b1 puffer haut" },
+        { MN_RAM_T_CAMERA,     "T_CAMERA",      "°C",     "b1 chambre" },
+    };
+    const int N = (int)(sizeof(LABELS) / sizeof(LABELS[0]));
+
+    cJSON *arr = cJSON_CreateArray();
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        for (int i = 0; i < N; i++) {
+            uint16_t a = LABELS[i].a;
+            if (a >= MN_RAM_MAX) continue;
+            cJSON *r = cJSON_CreateObject();
+            char hex[8]; snprintf(hex, sizeof(hex), "0x%03X", a);
+            cJSON_AddNumberToObject(r, "addr",   a);
+            cJSON_AddStringToObject(r, "hex",    hex);
+            cJSON_AddNumberToObject(r, "bank",   (a >> 8) & 0xFF);
+            cJSON_AddStringToObject(r, "name",   LABELS[i].name);
+            cJSON_AddStringToObject(r, "unit",   LABELS[i].unit);
+            cJSON_AddStringToObject(r, "hint",   LABELS[i].hint);
+            uint8_t v = mn_ram_shadow[a];
+            cJSON_AddNumberToObject(r, "raw",    v);
+            char raw_hex[6]; snprintf(raw_hex, sizeof(raw_hex), "0x%02X", v);
+            cJSON_AddStringToObject(r, "raw_hex", raw_hex);
+            /* is this address currently polled? */
+            bool polled = false;
+            for (int j = 0; j < poll_list_count; j++) if (poll_list[j] == a) { polled = true; break; }
+            cJSON_AddBoolToObject(r, "polled", polled);
+            cJSON_AddItemToArray(arr, r);
+        }
+        xSemaphoreGive(mn_mutex);
+    }
+    cJSON *out = cJSON_CreateObject();
+    cJSON_AddItemToObject   (out, "registers", arr);
+    cJSON_AddNumberToObject (out, "poll_interval_ms", poll_interval_ms);
+    cJSON_AddNumberToObject (out, "poll_list_count",  poll_list_count);
+    char *s = cJSON_PrintUnformatted(out);
+    cJSON_Delete(out);
+    return s;
+}
+
+esp_err_t mn_poll_list_set(const uint16_t *addrs, int count)
+{
+    if (count < 0 || count > POLL_LIST_MAX) return ESP_ERR_INVALID_ARG;
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(100)) != pdTRUE) return ESP_ERR_TIMEOUT;
+    for (int i = 0; i < count; i++) poll_list[i] = addrs[i];
+    poll_list_count = count;
+    xSemaphoreGive(mn_mutex);
+    return ESP_OK;
+}
+
+char *mn_poll_list_get_json(void)
+{
+    cJSON *arr = cJSON_CreateArray();
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        for (int i = 0; i < poll_list_count; i++) {
+            cJSON_AddItemToArray(arr, cJSON_CreateNumber(poll_list[i]));
+        }
+        xSemaphoreGive(mn_mutex);
+    }
+    cJSON *out = cJSON_CreateObject();
+    cJSON_AddItemToObject   (out, "list", arr);
+    cJSON_AddNumberToObject (out, "count", poll_list_count);
+    cJSON_AddNumberToObject (out, "max",   POLL_LIST_MAX);
+    char *s = cJSON_PrintUnformatted(out);
+    cJSON_Delete(out);
+    return s;
+}
+
+esp_err_t mn_poll_interval_set(int ms)
+{
+    if (ms < 20 || ms > 5000) return ESP_ERR_INVALID_ARG;
+    poll_interval_ms = ms;
+    return ESP_OK;
+}
+
+int mn_poll_interval_get(void) { return poll_interval_ms; }
+
 
 char *mn_debug_dump_json(void)
 {
