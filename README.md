@@ -92,10 +92,10 @@ Le firmware original du module Extraflame Black Label a été dumpé et analysé
 - Cert TLS CA Omnyvore
 
 Voir :
-- [docs/PROTOCOLE-MICRONOVA.md](docs/PROTOCOLE-MICRONOVA.md) — bus série + registres
-- [docs/CLOUD_REVERSE_NOTES.md](docs/CLOUD_REVERSE_NOTES.md) — cloud MQTT + REST API
-- [docs/STOVE-TYPES.md](docs/STOVE-TYPES.md) — 60 modèles supportés
-- [analysis/firmware-cartography.md](analysis/firmware-cartography.md) — dump analysis
+- [docs/PROTOCOLE-MICRONOVA.md](docs/PROTOCOLE-MICRONOVA.md) - bus série + registres
+- [docs/CLOUD_REVERSE_NOTES.md](docs/CLOUD_REVERSE_NOTES.md) - cloud MQTT + REST API
+- [docs/STOVE-TYPES.md](docs/STOVE-TYPES.md) - 60 modèles supportés
+- [analysis/firmware-cartography.md](analysis/firmware-cartography.md) - dump analysis
 
 ## Build
 

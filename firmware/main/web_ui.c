@@ -300,7 +300,7 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     GET_NUM("publish_interval_ms", g_cfg->publish_interval_ms, uint16_t);
     GET_BOOL("cloud_enabled", g_cfg->cloud_enabled);
 #ifndef TARGET_BLACKLABEL
-    /* Cloud non supporté sur TARGET_EXTERNAL — force off quel que soit le POST */
+    /* Cloud non supporté sur TARGET_EXTERNAL - force off quel que soit le POST */
     g_cfg->cloud_enabled = false;
 #endif
 #ifdef TARGET_BLACKLABEL

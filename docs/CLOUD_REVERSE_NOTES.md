@@ -23,7 +23,7 @@ notAfter  = 2027-10-03
 sha256 fp = 17:57:43:A6:AB:91:66:D3:7A:7F:63:D3:25:67:EC:E4:83:08:7B:29:01:DB:D0:8C:39:D4:6E:D1:99:8D:BF:BF
 ```
 
-**Vendeur cloud** : Omnyvore srl (Vicenza, IT) — plateforme IoT sous licence utilisée par Extraflame.  
+**Vendeur cloud** : Omnyvore srl (Vicenza, IT) - plateforme IoT sous licence utilisée par Extraflame.  
 Le firmware original tag les topics d'un préfixe `omv` (=abréviation Omnyvore).
 
 Le cert **expire 2027-10-03** : il faudra soit se procurer le prochain cert soit implémenter `SNI + hostname_verification=false` pour le mode cloud dans les 15 mois.
@@ -96,7 +96,7 @@ Ces topics sont sauvegardés dans les variables C (=strings du dump) :
 `can1FanSpeed`, `can2FanSpeed`, `can1FanMode`, `can2FanMode`,
 `workingMode`, `airZoneControl`, `airZoneControlAvail`
 
-Toutes ces clés sont déjà mappées dans notre `mqtt_bridge.c` local — la seule
+Toutes ces clés sont déjà mappées dans notre `mqtt_bridge.c` local - la seule
 différence est que le cloud utilise ces mêmes noms **avec des payloads JSON**
 alors que nous utilisons chaque clé comme un topic séparé.
 
@@ -204,14 +204,14 @@ Reverse plus profond du firmware ELF via analyse literal-pool Xtensa :
 - **"prod"** @ 0x3f40ff11 = environnement production
 
 Firmware LIT depuis CONNACK properties :
-- `"replyto"` @ 0x3f407cfc — key du Response Topic MQTT 5.0
-- `"correlationid"` @ 0x3f407d5e — key du Correlation Data MQTT 5.0
+- `"replyto"` @ 0x3f407cfc - key du Response Topic MQTT 5.0
+- `"correlationid"` @ 0x3f407d5e - key du Correlation Data MQTT 5.0
 
 Log messages révélateurs :
-- `"Saved topic for later use: %s"` — client stocke topics reçus
-- `"Resuming topic %s"` — client réutilise topic stocké
-- `"got OMNYVORE_SETTINGS_TOPIC successful, msg_id=%d"` — après SUBSCRIBE réussi
-- `"OMNYVORE_SETTINGS_STATE = %i"` — state machine après CONNECT
+- `"Saved topic for later use: %s"` - client stocke topics reçus
+- `"Resuming topic %s"` - client réutilise topic stocké
+- `"got OMNYVORE_SETTINGS_TOPIC successful, msg_id=%d"` - après SUBSCRIBE réussi
+- `"OMNYVORE_SETTINGS_STATE = %i"` - state machine après CONNECT
 
 **Confirmation modèle** : le broker Omnyvore **assigne les topics au client via
 CONNACK properties MQTT 5.0**. Le client ne connait PAS les topics à priori, il
@@ -223,7 +223,7 @@ probablement une `AuthenticationMethod` string custom (=peut-être "OMNYVORE"
 ou similaire) + `AuthenticationData` payload spécifique.
 
 Sans capture SSL bump du firmware original tournant, cette dernière info reste
-inaccessible via strings du dump — elle est construite dynamiquement dans le
+inaccessible via strings du dump - elle est construite dynamiquement dans le
 code Xtensa.
 
 ## 10. Découvertes finales session 2026-07-08
@@ -339,7 +339,7 @@ Session 2026-07-08 n'a pas eu le temps de la reverser en Xtensa.
 **`api.extraflame.it` = Spring Boot avec JWT auth** (=93.46.203.43).
 
 Response headers révèlent :
-- `X-Application-Context: application` — Spring Boot classique
+- `X-Application-Context: application` - Spring Boot classique
 - Body 500 sur `X-Auth-Token: <invalide>` :
 ```json
 {
@@ -361,7 +361,7 @@ Endpoints login testés (=tous 401, mais ça signifie "accès refusé", pas "n'e
 
 Endpoint `/auth/login` = 404 (=celui-là n'existe pas).
 
-**Le firmware du poêle n'utilise PAS cette API** — c'est l'app mobile
+**Le firmware du poêle n'utilise PAS cette API** - c'est l'app mobile
 TotalControl 2 qui l'utilise. Cependant l'API est le chemin le plus direct
 vers les 3 IDs manquants (=network, thing_family_ver, thing_name).
 
