@@ -184,15 +184,13 @@
                 <input id="stove-name" type="text" value="poele">
             </div>
             <div class="form-group">
-                <label>Type d'appareil Micronova</label>
-                <select id="stove-type">
-                    <option value="0">Inconnu / autodétection</option>
-                    <option value="1">I_CALD - Chaudière</option>
-                    <option value="2">I_CANAL - Canalisé (=air chaud sur plusieurs pièces)</option>
-                    <option value="6">I_IDRO - Poêle hydro (=chauffe l'eau du chauffage central)</option>
-                    <option value="8">I_VENT - Poêle à air (=ventilateur, ex. Teodora Evo)</option>
-                </select>
-                <p class="hint">Le protocole Micronova est partagé par Extraflame, EdilKamin, LAMINOX, Freepoint, Karmek One et d'autres OEM italiens. Choisis la famille qui correspond à ton appareil.</p>
+                <label>Type d'appareil Micronova (=détecté auto)</label>
+                <div id="stove-type-info" style="font-family:monospace;background:#f5f5f5;padding:8px;border-radius:4px;font-size:13px">
+                    <div><strong>stove_type</strong> : <span id="info-stove-type">-</span></div>
+                    <div><strong>stove_model</strong> : <span id="info-stove-model">-</span></div>
+                    <div><strong>matricola</strong> : <span id="info-matricola">-</span></div>
+                </div>
+                <p class="hint">Détection auto depuis la partition secret1 (=préservée à la fabrication Extraflame). Si le type ne correspond pas à ton poêle, ouvre une <a href="https://github.com/Shad107/OpenXtraflame/issues" target="_blank" rel="noopener">issue GitHub</a> avec matricola + modèle commercial pour enrichir la table communautaire.</p>
             </div>
             <div class="form-group toggle-group">
                 <label class="toggle">

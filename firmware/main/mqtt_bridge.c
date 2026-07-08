@@ -164,9 +164,11 @@ esp_err_t mqtt_bridge_publish_state(void)
     /* t_water only if stove is a hydro model (=I_CALD/I_IDRO). On the
      * ventilated I_VENT models the register 0x03 is absent and returns 0,
      * so publishing it produces a confusing constant 0 in HA. */
-    if (local_cfg.stove_type == STOVE_TYPE_I_CALD ||
-        local_cfg.stove_type == STOVE_TYPE_I_IDRO ||
-        local_cfg.stove_type == STOVE_TYPE_I_IDRO_2) {
+    /* Use auto-detected type (=Phase 3) — s.stove_type reflects real hardware */
+    stove_type_t st = s.stove_type;
+    if (st == STOVE_TYPE_I_CALD ||
+        st == STOVE_TYPE_I_IDRO ||
+        st == STOVE_TYPE_I_IDRO_2) {
         cJSON_AddNumberToObject(o, "t_water", s.t_water);
     }
     cJSON_AddNumberToObject(o, "t_smoke",   s.t_smoke);
@@ -301,8 +303,9 @@ static void publish_disco(const char *component, const char *obj_id, cJSON *payl
     cJSON *ids = cJSON_CreateArray();
     cJSON_AddItemToArray(ids, cJSON_CreateString(device_id));
     cJSON_AddItemToObject(dev, "identifiers",  ids);
-    cJSON_AddStringToObject(dev, "manufacturer", "Extraflame");
+    cJSON_AddStringToObject(dev, "manufacturer", "isno.fr");
     cJSON_AddStringToObject(dev, "model",        "OpenXtraflame Black Label");
+    cJSON_AddStringToObject(dev, "configuration_url", "https://www.isno.fr/projets/openxtraflame");
     cJSON_AddStringToObject(dev, "name",         local_cfg.stove_name);
     const esp_app_desc_t *desc = esp_app_get_description();
     cJSON_AddStringToObject(dev, "sw_version", desc ? desc->version : "unknown");
@@ -351,11 +354,20 @@ esp_err_t mqtt_bridge_publish_discovery(void)
                   sensor("Température ambiante", "t_ambient", "°C", "temperature"));
     publish_disco("sensor", "t_smoke",
                   sensor("Température fumées",   "t_smoke",   "°C", "temperature"));
-    if (local_cfg.stove_type == STOVE_TYPE_I_CALD ||
-        local_cfg.stove_type == STOVE_TYPE_I_IDRO ||
-        local_cfg.stove_type == STOVE_TYPE_I_IDRO_2) {
+    /* Use auto-detected type (=Phase 3) — reflects real hardware, not user config.
+     * Si non-hydro : publish EMPTY retained message pour supprimer la sensor t_water
+     * précédemment retained côté HA (=nettoyage discovery). */
+    stove_type_t st_disco = mn_detected_stove_type();
+    if (st_disco == STOVE_TYPE_I_CALD ||
+        st_disco == STOVE_TYPE_I_IDRO ||
+        st_disco == STOVE_TYPE_I_IDRO_2) {
         publish_disco("sensor", "t_water",
                       sensor("Température eau",  "t_water",   "°C", "temperature"));
+    } else {
+        /* Delete retained discovery for t_water on non-hydro stoves */
+        char t[192];
+        snprintf(t, sizeof(t), "homeassistant/sensor/%s/t_water/config", device_id);
+        esp_mqtt_client_publish(client, t, "", 0, 1, 1);  /* retained empty = delete */
     }
     publish_disco("sensor", "power_level",
                   sensor("Puissance",            "power",     NULL, NULL));

@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include "micronova.h"
+#include "config_nvs.h"
 #include "hardware_config.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
@@ -85,6 +86,7 @@ stove_type_t mn_detected_stove_type(void)
 {
     if (cached_stove_type != STOVE_TYPE_UNKNOWN) return cached_stove_type;
 
+#ifdef TARGET_BLACKLABEL
     char secure_code[16] = "";
     if (config_nvs_read_stove_secrets(secure_code, sizeof(secure_code),
                                        cached_stove_model, sizeof(cached_stove_model),
@@ -97,6 +99,11 @@ stove_type_t mn_detected_stove_type(void)
         cached_stove_type = STOVE_TYPE_I_VENT;
         ESP_LOGW(TAG, "Stove detection: secret1 unavailable -> fallback I_VENT");
     }
+#else
+    /* TARGET_EXTERNAL : pas de partition secret1 (=spare ESP32),
+     * fallback safe sur I_VENT. */
+    cached_stove_type = STOVE_TYPE_I_VENT;
+#endif
     return cached_stove_type;
 }
 
@@ -179,6 +186,10 @@ static void update_snapshot_from_shadow(void)
     mn_snapshot.t_water         = (float)mn_ram_shadow[MN_RAM_TH20] / 2.0f;
     mn_snapshot.t_smoke         = mn_ram_shadow[MN_RAM_FUMES_TEMP];
     mn_snapshot.t_chamber       = mn_ram_shadow[MN_RAM_FLAME_POWER];
+    /* Consigne ambiance: EEPROM 0x7D I_VENT (=source persistante fiable, raw °C).
+     * Fallback sur RAM 0x54 ×2 si EEPROM=0. */
+    uint8_t eep_tset = mn_ram_shadow[MN_EEP_TEMP_SET_IVENT];
+    mn_snapshot.set_temperature = eep_tset ? eep_tset : (mn_ram_shadow[MN_RAM_TEMP_SET] / 2);
     mn_snapshot.last_updated_ms = (uint32_t)(esp_timer_get_time() / 1000);
     xSemaphoreGive(mn_mutex);
 }

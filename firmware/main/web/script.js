@@ -87,6 +87,10 @@ async function loadStatus() {
             const st = s.stove?.state ?? null;
             $('m-state').textContent = st == null ? '-' : (STATES[st] || 'état ' + st);
         }
+        /* Stove identity info (=Phase 3 auto-detection) */
+        if ($('info-stove-type'))  $('info-stove-type').textContent  = s.stove?.stove_type  || '-';
+        if ($('info-stove-model')) $('info-stove-model').textContent = s.stove?.stove_model || '(vide)';
+        if ($('info-matricola'))   $('info-matricola').textContent   = s.stove?.matricola   || '-';
 
         const dot = $('status-dot');
         dot.className = 'status-dot';
@@ -109,7 +113,7 @@ async function loadConfig() {
         $('mqtt-prefix').value = c.mqtt_prefix || 'extraflame';
         $('mqtt-tls').checked = !!c.mqtt_tls;
         $('stove-name').value = c.stove_name || 'poele';
-        $('stove-type').value = c.stove_type || 0;
+        /* stove-type est maintenant en info readonly, alimenté par loadStatus */
         $('ha-discovery').checked = !!c.ha_discovery;
         $('publish-interval').value = c.publish_interval_ms || 5000;
 
@@ -201,7 +205,7 @@ async function save() {
         mqtt_prefix: $('mqtt-prefix').value,
         mqtt_tls: $('mqtt-tls').checked,
         stove_name: $('stove-name').value,
-        stove_type: parseInt($('stove-type').value, 10),
+        /* stove_type est auto-détecté (Phase 3), plus envoyé depuis le UI */
         ha_discovery: $('ha-discovery').checked,
         publish_interval_ms: parseInt($('publish-interval').value, 10),
     };
