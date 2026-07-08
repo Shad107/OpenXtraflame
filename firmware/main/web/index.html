@@ -68,9 +68,21 @@
             </div>
 
             <div class="card metric-card">
-                <div class="metric-label">Puissance</div>
+                <div class="metric-label">État</div>
+                <div class="metric-value" id="m-state">-</div>
+                <div class="metric-unit">stove state</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Puissance demandée</div>
                 <div class="metric-value" id="m-power">-</div>
-                <div class="metric-unit">/ 5</div>
+                <div class="metric-unit">P.set /5</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Puissance réelle</div>
+                <div class="metric-value" id="m-power-real">-</div>
+                <div class="metric-unit">P.real /5</div>
             </div>
 
             <div class="card metric-card">
@@ -87,6 +99,11 @@
                     <button class="btn btn-warning" id="stove-reset">🔄 Reset alarme</button>
                 </div>
             </div>
+        </div>
+
+        <div class="card" style="margin-top:1em">
+            <h3>Registres live (=shadow)</h3>
+            <div id="regs-live" style="font-family:monospace;font-size:13px;line-height:1.6"></div>
         </div>
     </section>
 

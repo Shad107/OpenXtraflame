@@ -53,17 +53,33 @@ uint32_t mn_debug_seq(void);
  * registres du contrôleur poêle.
  */
 typedef enum {
-    /* Températures - encodage temp×2 (=diviser par 2 pour °C) */
+    /* Températures Micronova standard - encodage temp×2 pour °C */
     MN_RAM_TAMB              = 0x01,   // ambient
     MN_RAM_TH20              = 0x03,   // eau (=absent sur I_VENT, ignoré)
     MN_RAM_STOVE_STATE       = 0x21,   // 0=OFF 1=Starting 2=PelletLoading 3=Ignition 4=Work 5=Cleaning 6=FinalCleaning 7=Standby 8=PelletAlarm 9=IgnitionFailAlarm
-    MN_RAM_FLAME_POWER       = 0x34,
     MN_RAM_WATER_PRESSURE    = 0x3C,
-    MN_RAM_FUMES_TEMP        = 0x3E,
-    MN_RAM_TEMP_SET          = 0x7D,   // écrire consigne (=0x80|0x7D)
-    MN_RAM_POWER_SET         = 0x7F,
-    MN_RAM_TEMP_GET          = 0x9D,
-    MN_RAM_POWER_GET         = 0x9F,
+    MN_RAM_FLAME_POWER_STD   = 0x34,   // fallback philibertc, souvent 0 sur Extraflame
+    MN_RAM_FUMES_TEMP_STD    = 0x3E,   // fallback philibertc, souvent 0 sur Extraflame
+
+    /* Adresses spécifiques Extraflame Teodora Evo I_VENT - découvertes empiriques
+     * 2026-07-07 en live: la convention philibertc 0x7F/0x9F donne 0, les vraies
+     * adresses sur Teodora sont dans la plage 0x40-0x77.
+     */
+    MN_RAM_POWER_SET         = 0x4F,   // P.set puissance affichée (=fluctue, mirror du EEPROM)
+    MN_RAM_POWER_REAL        = 0x34,   // POT_REALE = P.real (=firmware reverse table RAM @ 0x64f74)
+    MN_RAM_TEMP_SET          = 0x54,   // consigne ambient RAM (=×2)
+    /* EEPROM SET_* pour I_VENT (=Teodora Evo). Bank 1 → prefix 0x100.
+     * Adresses extraites de la Addrs_dyn table 42-47 (=I_VENT family).
+     * Validé 2026-07-08: EEPROM 0x7F=P.set (=4 quand écran affiche 4),
+     * EEPROM 0x7D=consigne (=27 quand écran affiche 27). */
+    MN_EEP_POWER_SET_IVENT   = 0x17F,  // EEPROM_SET_POWER_ADDR pour I_VENT (=source persistente P.set)
+    MN_EEP_TEMP_SET_IVENT    = 0x17D,  // EEPROM_SET_AMB_ADDR pour I_VENT (=source persistante consigne)
+    MN_RAM_FUMES_TEMP        = 0x5A,   // temp fumées °C raw (validé 2026-07-07 20:24: 44 quand écran affiche 44)
+    MN_RAM_FLAME_POWER       = 0x42,   // puissance flamme instantanée (empirique)
+
+    /* Alias pour compat legacy */
+    MN_RAM_TEMP_GET          = MN_RAM_TEMP_SET,
+    MN_RAM_POWER_GET         = MN_RAM_POWER_SET,
 
     /* Alias legacy pour compat (=à supprimer plus tard) */
     MN_RAM_STOVE_STATUS      = MN_RAM_STOVE_STATE,
@@ -75,7 +91,7 @@ typedef enum {
     MN_RAM_SBLOCCO           = 0x41,               /* WARN: guess */
     MN_RAM_T_CAMERA          = MN_RAM_FUMES_TEMP,  /* alias approx */
 
-    MN_RAM_MAX               = 0x100,
+    MN_RAM_MAX               = 0x200,
 } mn_ram_addr_t;
 
 /* Etats poele (=STATO_PUL_ORD_* constants d'Extraflame) */
@@ -92,11 +108,20 @@ typedef enum {
     MN_STATE_MEMORY_ALARM           = 9,
 } mn_stove_state_t;
 
+/* Type de poêle (=enum stove_type_t défini dans config_nvs.h,
+ * partagé avec firmware reverse Black Label v1.8). */
+#include "config_nvs.h"
+
+const char *mn_stove_type_name(stove_type_t t);
+stove_type_t mn_detected_stove_type(void);
+
 /* Snapshot state (=publié via MQTT) */
 typedef struct {
     bool             online;
+    stove_type_t     stove_type;      /* Modèle détecté (=Addrs_dyn selection) */
     mn_stove_state_t state;
-    uint8_t          power_level;
+    uint8_t          power_level;    /* P.set displayed */
+    uint8_t          power_real;     /* P.real = POT_REALE (0x34) */
     uint8_t          set_power;
     uint8_t          alarm_code;
     float            t_ambient;

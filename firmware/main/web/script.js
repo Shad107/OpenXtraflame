@@ -76,8 +76,17 @@ async function loadStatus() {
         $('s-stove').textContent = stoveOk ? 'En ligne' : 'Hors ligne';
 
         $('m-tamb').textContent = s.stove?.t_ambient?.toFixed?.(1) ?? '-';
-        $('m-power').textContent = s.stove?.power ?? '-';
+        const p = s.stove?.power ?? null;
+        $('m-power').textContent = p == null ? '-' : String(p);
+        const pr = s.stove?.power_real ?? null;
+        if ($('m-power-real')) $('m-power-real').textContent = pr == null ? '-' : String(pr);
         $('m-fumi').textContent = s.stove?.t_smoke?.toFixed?.(0) ?? '-';
+        /* Enum Extraflame TotalControl (0x21 machineState) */
+        const STATES = ['Off','Check up','Ignition','Préparation','Préchargement','Modulation','En marche','Nettoyage','Refroidissement','Veille','Nettoyage final','Recovery','Allumage final'];
+        if ($('m-state')) {
+            const st = s.stove?.state ?? null;
+            $('m-state').textContent = st == null ? '-' : (STATES[st] || 'état ' + st);
+        }
 
         const dot = $('status-dot');
         dot.className = 'status-dot';
@@ -588,4 +597,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadStatus();
     setInterval(loadStatus, 5000);
+    /* Live register table */
+    async function loadRegs() {
+        try {
+            const d = await j('/api/registers');
+            const el = document.getElementById('regs-live');
+            if (!el) return;
+            const rows = d.registers
+                .filter(r => r.polled)
+                .map(r => `  0x${r.addr.toString(16).toUpperCase().padStart(2,'0')} ${r.name.padEnd(14)} = ${String(r.raw).padStart(4)}  <span style="color:#888">${r.hint||''}</span>`)
+                .join('<br>');
+            el.innerHTML = rows;
+        } catch (e) {}
+    }
+    loadRegs();
+    setInterval(loadRegs, 2000);
 });

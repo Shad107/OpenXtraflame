@@ -158,6 +158,7 @@ esp_err_t mqtt_bridge_publish_state(void)
     cJSON_AddBoolToObject(o,   "online",    s.online);
     cJSON_AddNumberToObject(o, "state",     s.state);
     cJSON_AddNumberToObject(o, "power",     s.power_level);
+    cJSON_AddNumberToObject(o, "power_real", s.power_real);
     cJSON_AddNumberToObject(o, "alarm",     s.alarm_code);
     cJSON_AddNumberToObject(o, "t_ambient", s.t_ambient);
     /* t_water only if stove is a hydro model (=I_CALD/I_IDRO). On the
@@ -358,6 +359,8 @@ esp_err_t mqtt_bridge_publish_discovery(void)
     }
     publish_disco("sensor", "power_level",
                   sensor("Puissance",            "power",     NULL, NULL));
+    publish_disco("sensor", "power_real",
+                  sensor("Puissance réelle",     "power_real", NULL, NULL));
     publish_disco("sensor", "alarm_code",
                   sensor("Code alarme",          "alarm",     NULL, NULL));
 

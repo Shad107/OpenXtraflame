@@ -29,6 +29,26 @@ Le poêle à granulés Extraflame Teodora Evo (et cousins Micronova : EdilKamin,
 - 🔍 **Live log Micronova** dans l'onglet Debug (=64 dernières trames RX/TX, refresh 1 s)
 - 💡 **Mapping des 4 LEDs** conservé (=POWER / WI-FI / SERVER / BLE), sémantique identique à l'usine
 
+## 🔥 Modèles de poêle compatibles
+
+Le firmware Extraflame Black Label v1.8 supporte **12 types de poêle** (=`stove_type` interne). Chaque type a sa propre table d'adresses EEPROM (`Addrs_dyn`) reverse-engineered depuis le firmware d'origine.
+
+| Type (`stove_type`) | Famille | Description | Support OpenXtraflame |
+|---|---|---|---|
+| `I_VENT` | Air | **Teodora Evo**, Ilaria, Anastasia, autres ventilés 1-shot | ✅ **Validé** (=Teodora Evo I_VENT en prod) |
+| `I_VENT_2` .. `I_VENT_5` | Air | Variantes ventilé (5 sous-modèles) | 🟡 Adresses extraites, détection auto à venir |
+| `I_IDRO`, `I_IDRO_2` | Hydro | Poêles chaudière compact (=eau chaude) | 🟡 Adresses extraites |
+| `I_CANAL` .. `I_CANAL_4` | Canalisé | Poêles canalisés (4 sous-modèles) | 🟡 Adresses extraites |
+| `I_CALD` | Chaudière | Caldaia pleine | 🟡 Adresses extraites |
+
+**Détection** : Actuellement hardcodée `I_VENT`. Phase 3 (=matricola parsing + auto-select Addrs_dyn) prévue.
+
+**Adresses EEPROM I_VENT validées** :
+- `EEPROM_SET_POWER_ADDR = 0x7F` (=P.set puissance persistante)
+- `EEPROM_SET_AMB_ADDR = 0x7D` (=consigne ambiance persistante)
+
+Source du reverse : `docs/PROTOCOLE-MICRONOVA.md` et `docs/STOVE-TYPES.md`.
+
 ## 🎯 Cibles supportées
 
 Une même codebase, deux cibles via `-DOPENXFLAME_TARGET=...` :

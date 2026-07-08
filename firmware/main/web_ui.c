@@ -120,6 +120,8 @@ static esp_err_t handle_status_json(httpd_req_t *req)
     cJSON_AddBoolToObject(stove, "online", s.online);
     cJSON_AddNumberToObject(stove, "state", s.state);
     cJSON_AddNumberToObject(stove, "power", s.power_level);
+    cJSON_AddNumberToObject(stove, "power_real", s.power_real);
+    cJSON_AddStringToObject(stove, "stove_type", mn_stove_type_name(s.stove_type));
     cJSON_AddNumberToObject(stove, "t_ambient", s.t_ambient);
     cJSON_AddNumberToObject(stove, "t_smoke", s.t_smoke);
     cJSON_AddItemToObject(o, "stove", stove);
@@ -517,7 +519,7 @@ static esp_err_t handle_registers_live(httpd_req_t *req)
 static esp_err_t handle_poll_list(httpd_req_t *req)
 {
     if (req->method == HTTP_POST) {
-        char body[512] = {0};
+        char body[2048] = {0};
         int rd = httpd_req_recv(req, body, sizeof(body) - 1);
         if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
         cJSON *root = cJSON_Parse(body);
@@ -525,8 +527,8 @@ static esp_err_t handle_poll_list(httpd_req_t *req)
         cJSON *list = cJSON_GetObjectItem(root, "list");
         if (!cJSON_IsArray(list)) { cJSON_Delete(root); return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no list array"); }
         int n = cJSON_GetArraySize(list);
-        uint16_t addrs[32]; int nn = 0;
-        for (int i = 0; i < n && nn < 32; i++) {
+        uint16_t addrs[256]; int nn = 0;
+        for (int i = 0; i < n && nn < 256; i++) {
             cJSON *e = cJSON_GetArrayItem(list, i);
             if (cJSON_IsNumber(e)) addrs[nn++] = (uint16_t)e->valueint;
         }

@@ -54,6 +54,33 @@ static volatile bool mn_sniffer_pause = false;
  */
 static uint8_t mn_ram_shadow[MN_RAM_MAX];
 
+/* Détection modèle stove : pour l'instant hardcodée I_VENT (=Teodora Evo).
+ * TODO Phase 3 : lire matricola depuis secret1 partition + regex sur préfixe
+ * pour distinguer I_VENT/I_IDRO/I_CANAL. Actuellement Teodora Evo confirmé
+ * empiriquement par match EEPROM 0x7F=P.set et 0x7D=consigne. */
+stove_type_t mn_detected_stove_type(void)
+{
+    return STOVE_TYPE_I_VENT;
+}
+
+const char *mn_stove_type_name(stove_type_t t)
+{
+    switch (t) {
+        case STOVE_TYPE_I_IDRO:    return "I_IDRO";
+        case STOVE_TYPE_I_IDRO_2:  return "I_IDRO_2";
+        case STOVE_TYPE_I_VENT:    return "I_VENT";
+        case STOVE_TYPE_I_VENT_2:  return "I_VENT_2";
+        case STOVE_TYPE_I_VENT_3:  return "I_VENT_3";
+        case STOVE_TYPE_I_VENT_4:  return "I_VENT_4";
+        case STOVE_TYPE_I_VENT_5:  return "I_VENT_5";
+        case STOVE_TYPE_I_CANAL:   return "I_CANAL";
+        case STOVE_TYPE_I_CANAL_2: return "I_CANAL_2";
+        case STOVE_TYPE_I_CANAL_3: return "I_CANAL_3";
+        case STOVE_TYPE_I_CANAL_4: return "I_CANAL_4";
+        default:                   return "UNDEFINED";
+    }
+}
+
 esp_err_t mn_set_ram(mn_ram_addr_t addr, uint8_t value)
 {
     if (addr >= MN_RAM_MAX) return ESP_ERR_INVALID_ARG;
@@ -102,7 +129,11 @@ static void update_snapshot_from_shadow(void)
     if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(200)) != pdTRUE) return;
     /* Micronova standard encoding: température × 2 pour ambient. */
     mn_snapshot.state           = (mn_stove_state_t)mn_ram_shadow[MN_RAM_STOVE_STATE];
-    mn_snapshot.power_level     = mn_ram_shadow[MN_RAM_POWER_GET];
+    /* Priorité: EEPROM_SET_POWER (=source persistante). Fallback RAM 0x4F si EEPROM=0 */
+    uint8_t eep_pset = mn_ram_shadow[MN_EEP_POWER_SET_IVENT];
+    mn_snapshot.power_level     = eep_pset ? eep_pset : mn_ram_shadow[MN_RAM_POWER_GET];
+    mn_snapshot.power_real      = mn_ram_shadow[MN_RAM_POWER_REAL];
+    mn_snapshot.stove_type      = mn_detected_stove_type();
     mn_snapshot.alarm_code      = mn_ram_shadow[MN_RAM_ALLARM];
     mn_snapshot.t_ambient       = (float)mn_ram_shadow[MN_RAM_TAMB] / 2.0f;
     mn_snapshot.t_water         = (float)mn_ram_shadow[MN_RAM_TH20] / 2.0f;
@@ -126,21 +157,30 @@ static void update_snapshot_from_shadow(void)
  */
 /* Poll list is mutable at runtime via /debug/poll-list.
  * Contains up to 32 register addresses (=uint16 to allow bank 1). */
-#define POLL_LIST_MAX 32
-/* Poll list = adresses Micronova STANDARD validées empiriquement 2026-07-07 sur
- * Teodora Evo I_VENT. Encodage : °C via /2 (=philibertc convention).
- * (=Les adresses 0xD0-0xEF de la doc navel donnaient des placeholders 0x20 bidon.) */
-static uint16_t poll_list[POLL_LIST_MAX] = {
-    MN_RAM_STOVE_STATE,    /* 0x21 : 0=OFF, 4=WORK, ... */
-    MN_RAM_TAMB,           /* 0x01 : ambient °C×2 */
-    MN_RAM_FUMES_TEMP,     /* 0x3E : fumées °C */
-    MN_RAM_FLAME_POWER,    /* 0x34 : flame % */
-    MN_RAM_POWER_GET,      /* 0x9F : puissance courante 1..5 */
-    MN_RAM_TEMP_GET,       /* 0x9D : consigne actuelle */
-    MN_RAM_POWER_SET,      /* 0x7F : puissance settée */
-    MN_RAM_TEMP_SET,       /* 0x7D : consigne settée */
-};
-static int poll_list_count = 8;
+#define POLL_LIST_MAX 256
+/* Poll list = adresses validées empiriquement 2026-07-07 sur Teodora Evo I_VENT.
+ * Mix Micronova standard (Ambient/State) + adresses Extraflame-specific
+ * découvertes en live pour la puissance et les fumées.
+ */
+static uint16_t poll_list[POLL_LIST_MAX];
+static int poll_list_count = 0;
+
+static void init_poll_list(void) {
+    /* Adresses I_VENT (=Teodora Evo) validées empiriquement 2026-07-08.
+     * EEPROM SET_POWER=0x7F, SET_AMB=0x7D confirmé via firmware reverse
+     * (Addrs_dyn tables 42-47) et test wire. */
+    uint16_t list[] = {
+        /* RAM confirmés */
+        MN_RAM_STOVE_STATE, MN_RAM_TAMB, MN_RAM_FUMES_TEMP, MN_RAM_POWER_SET,
+        MN_RAM_POWER_REAL, MN_RAM_TEMP_SET, MN_RAM_FLAME_POWER,
+        /* EEPROM I_VENT confirmés */
+        MN_EEP_POWER_SET_IVENT,   /* 0x17F = EEPROM 0x7F */
+        MN_EEP_TEMP_SET_IVENT,    /* 0x17D = EEPROM 0x7D */
+    };
+    int n = sizeof(list)/sizeof(list[0]);
+    for (int i = 0; i < n; i++) poll_list[i] = list[i];
+    poll_list_count = n;
+}
 static int poll_interval_ms = 150;   /* delay between two polls */
 
 /* Pending write queue - mn_set_ram() enqueues, master task drains. */
@@ -192,7 +232,13 @@ static bool mn_do_transaction(uint8_t cmd, uint16_t reg_addr, uint8_t value_to_w
     bool is_write = (cmd & 0x80) != 0;
     uint8_t bank  = (reg_addr >> 8) & 0x1F;
     uint8_t addr  = reg_addr & 0xFF;
-    uint8_t loc   = bank;                    /* source=0 (RAM), source_bit_5=0 */
+    /* Micronova standard opcodes:
+     *   bank 0 (RAM)    : read=0x00, write=0x80
+     *   bank 1 (EEPROM) : read=0x20, write=0xA0
+     * D'autres banks possibles selon modèles (=à valider). */
+    uint8_t loc = 0x00;
+    if (bank == 1) loc = 0x20;
+    else if (bank >= 2) loc = (uint8_t)(bank << 4);  /* fallback banks 2+ */
     if (is_write) loc |= 0x80;
 
     /* WRITE = 4 octets [loc addr value checksum_additif]
@@ -797,6 +843,7 @@ static void mn_watchdog_task(void *arg)
 
 esp_err_t micronova_start(void)
 {
+    init_poll_list();
     /* Config série RWMS Micronova (=doc reverse v3 2026-07-07) :
      * UART1 @ 1200 baud, 8 data, 2 stop, no parity, no flow control.
      * PAS 38400 8N1 (=c'est la config initiale SOTA2/OTA, différent canal). */
@@ -977,26 +1024,31 @@ char *mn_stats_json(void)
  * users can iterate on register semantics without reflashing. */
 char *mn_registers_live_json(void)
 {
-    /* Micronova standard registers (validées empiriquement 2026-07-07) */
+    /* Adresses validées 2026-07-07 sur Teodora Evo I_VENT */
     struct { uint16_t a; const char *name; const char *unit; const char *hint; } LABELS[] = {
-        { MN_RAM_STOVE_STATE,   "STOVE_STATE",  "",       "0=OFF 1=Start 4=WORK 7=Standby 8=Alarm..." },
-        { MN_RAM_TAMB,          "TAMB",         "°C",     "ambient ×2 (divide by 2 for °C)" },
-        { MN_RAM_TH20,          "TH20",         "°C",     "eau (N/A sur I_VENT ventilé)" },
-        { MN_RAM_FUMES_TEMP,    "FUMES_TEMP",   "°C",     "fumées raw" },
-        { MN_RAM_FLAME_POWER,   "FLAME_POWER",  "%",      "puissance flamme instantanée" },
-        { MN_RAM_TEMP_SET,      "TEMP_SET",     "°C",     "consigne temp writing" },
-        { MN_RAM_TEMP_GET,      "TEMP_GET",     "°C",     "consigne temp active" },
-        { MN_RAM_POWER_SET,     "POWER_SET",    "step",   "puissance 1..5 réglée" },
-        { MN_RAM_POWER_GET,     "POWER_GET",    "step",   "puissance 1..5 courante" },
+        { MN_RAM_STOVE_STATE,   "MACHINE_STATE","enum",   "0x21 Extraflame 0=Off 1=CheckUp 2=Ignition 3=Prep 4=Precharge 5=Modulation 6=Work 7=Cleaning 8=Cooling 9=Standby 10=FinalClean 11=Recovery 12=IgnitionFinal (validé transition 6→7→8→9→0)" },
+        { MN_RAM_TAMB,          "TAMB",         "°C",     "ambient ×2 (÷2 pour °C)" },
+        { MN_RAM_TH20,          "TH20",         "°C",     "eau (N/A sur I_VENT)" },
+        { MN_RAM_FUMES_TEMP,    "FUMES_TEMP",   "°C",     "0x5A fumées (validé display=44)" },
+        { MN_RAM_POWER_SET,     "POWER_SET",    "step",   "0x4F P.set display (fluctue mais matche steady-state)" },
+        { MN_RAM_POWER_REAL,    "POWER_REAL",   "step",   "0x34 P.real POT_REALE (=firmware reverse)" },
+        { MN_RAM_TEMP_SET,      "TEMP_SET",     "raw",    "0x54 consigne (à confirmer scaling)" },
+        { MN_RAM_FLAME_POWER,   "FLAME_POWER",  "%",      "0x42 flamme instantanée empirique" },
         { MN_RAM_WATER_PRESSURE,"WATER_PRES",   "bar",    "pression eau (N/A I_VENT)" },
+        /* EEPROM (bank 1) candidates */
+        { MN_EEP_POWER_SET_IVENT, "EEP_SET_POWER", "step", "EEPROM 0x7F = EEPROM_SET_POWER_ADDR I_VENT (=P.set persistant)" },
+        { MN_EEP_TEMP_SET_IVENT,  "EEP_SET_AMB",   "°C",   "EEPROM 0x7D = EEPROM_SET_AMB_ADDR I_VENT (=consigne persistante)" },
     };
     const int N = (int)(sizeof(LABELS) / sizeof(LABELS[0]));
 
     cJSON *arr = cJSON_CreateArray();
     if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        /* First: labeled entries */
+        bool emitted[MN_RAM_MAX] = {0};
         for (int i = 0; i < N; i++) {
             uint16_t a = LABELS[i].a;
             if (a >= MN_RAM_MAX) continue;
+            emitted[a] = true;
             cJSON *r = cJSON_CreateObject();
             char hex[8]; snprintf(hex, sizeof(hex), "0x%03X", a);
             cJSON_AddNumberToObject(r, "addr",   a);
@@ -1009,10 +1061,30 @@ char *mn_registers_live_json(void)
             cJSON_AddNumberToObject(r, "raw",    v);
             char raw_hex[6]; snprintf(raw_hex, sizeof(raw_hex), "0x%02X", v);
             cJSON_AddStringToObject(r, "raw_hex", raw_hex);
-            /* is this address currently polled? */
             bool polled = false;
             for (int j = 0; j < poll_list_count; j++) if (poll_list[j] == a) { polled = true; break; }
             cJSON_AddBoolToObject(r, "polled", polled);
+            cJSON_AddItemToArray(arr, r);
+        }
+        /* Second: unlabeled polled entries — auto-name them "RAW_<hex>" */
+        for (int j = 0; j < poll_list_count; j++) {
+            uint16_t a = poll_list[j];
+            if (a >= MN_RAM_MAX || emitted[a]) continue;
+            emitted[a] = true;
+            cJSON *r = cJSON_CreateObject();
+            char hex[8]; snprintf(hex, sizeof(hex), "0x%03X", a);
+            char name[16]; snprintf(name, sizeof(name), "RAW_%03X", a);
+            cJSON_AddNumberToObject(r, "addr",   a);
+            cJSON_AddStringToObject(r, "hex",    hex);
+            cJSON_AddNumberToObject(r, "bank",   (a >> 8) & 0xFF);
+            cJSON_AddStringToObject(r, "name",   name);
+            cJSON_AddStringToObject(r, "unit",   "?");
+            cJSON_AddStringToObject(r, "hint",   "");
+            uint8_t v = mn_ram_shadow[a];
+            cJSON_AddNumberToObject(r, "raw",    v);
+            char raw_hex[6]; snprintf(raw_hex, sizeof(raw_hex), "0x%02X", v);
+            cJSON_AddStringToObject(r, "raw_hex", raw_hex);
+            cJSON_AddBoolToObject(r, "polled", true);
             cJSON_AddItemToArray(arr, r);
         }
         xSemaphoreGive(mn_mutex);
