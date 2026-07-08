@@ -160,6 +160,12 @@ async function loadConfig() {
         if (c.target && c.target !== 'blacklabel') {
             document.querySelectorAll('.bl-only').forEach(el => el.style.display = 'none');
         }
+        /* Onglet À propos : badge target + version */
+        if ($('about-target')) {
+            $('about-target').textContent = c.target === 'blacklabel' ? '🔥 Black Label' : '📟 External';
+            $('about-target').className = 'badge ' + (c.target === 'blacklabel' ? 'badge-success' : 'badge-info');
+        }
+        if ($('about-version') && c.version) $('about-version').textContent = c.version;
         $('wifi-ssid').value = c.wifi_ssid || '';
         $('mqtt-host').value = c.mqtt_host || '';
         $('mqtt-port').value = c.mqtt_port || 1883;

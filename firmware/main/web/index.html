@@ -475,7 +475,11 @@
     <!-- About -->
     <section id="tab-about" class="tab-content">
         <div class="card">
-            <h3>OpenXtraflame</h3>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+                <h3 style="margin:0">OpenXtraflame</h3>
+                <span id="about-version" class="badge">v?</span>
+                <span id="about-target" class="badge badge-warning">?</span>
+            </div>
             <p>Firmware ESP32 open-source qui remplace la dépendance cloud du module Wi-Fi Extraflame Black Label par un contrôle 100% local via MQTT / Home Assistant.</p>
             <ul style="line-height:1.8">
                 <li>🌐 <a href="https://www.isno.fr/projets/openxtraflame" target="_blank" rel="noopener">Article complet + guide reverse engineering</a></li>

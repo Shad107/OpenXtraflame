@@ -1,6 +1,31 @@
 # Related projects - Micronova / Extraflame / Pellet Stove
 
-État du paysage open-source vérifié le 3 juillet 2026.
+État du paysage open-source vérifié le 3 juillet 2026, mis à jour 8 juillet 2026.
+
+## Remerciements / crédits communauté
+
+**openextraflame s'appuie explicitement sur le travail de reverse engineering
+communautaire suivant** :
+
+- **[philibertc/micronova_controller](https://github.com/philibertc/micronova_controller)** —
+  référence historique du protocole série Micronova. Décryptage frames 8N1 + shadow RAM.
+- **[Jorre05/micronova](https://github.com/Jorre05/micronova)** — composant ESPHome
+  officiel Micronova, source pour opcodes + adresses standards.
+- **[edenhaus/esphome-extraflame](https://github.com/edenhaus/esphome-extraflame)** —
+  archivé 2026-01-08 mais premier à identifier les registres EEPROM I_VENT.
+- **[vincentwolsink/home_assistant_micronova](https://github.com/vincentwolsink/home_assistant_micronova)** —
+  intégration HA python, référence pour les commandes state (=ACCENDI/SPEGNI).
+- **[Legobas/micronova2mqtt](https://github.com/Legobas/micronova2mqtt)** — bridge Go
+  MQTT, valide philosophiquement l'approche "MQTT-first".
+- **[morettigiorgio/micronova-C6](https://github.com/morettigiorgio/micronova-C6)** —
+  PCB one-wire pour ESP32-C6, référence pour signal conditioning.
+
+**openextraflame ajoute la couche manquante** : reflash direct du module Extraflame
+Black Label T009_3 + reverse engineering du cloud MQTT Omnyvore. Aucun de ces projets
+ne remplace le firmware d'origine du module Wi-Fi.
+
+Si tu ne veux pas reflasher, **utilise plutôt un des projets ci-dessus** avec un
+ESP32 externe cablé sur le bus série de ton poêle — c'est plus simple et safe.
 
 ## Approches existantes
 
