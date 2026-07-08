@@ -48,3 +48,6 @@ CONFIG_HTTPD_MAX_URI_LEN=256
 # 8192 keeps headroom now that app_config_t alone consumes ~1 KB with
 # the wide password buffers (=wifi_pwd 128 + mqtt_user 128 + mqtt_pwd 256).
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# MQTT 5.0 (=cloud Extraflame Omnyvore utilise MQTT 5.0 avec correlationId/replyTo)
+CONFIG_MQTT_PROTOCOL_5=y

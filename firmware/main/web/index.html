@@ -381,6 +381,49 @@
             </div>
         </div>
 
+        <div class="card bl-only" id="cloud-card">
+            <div class="card-header">
+                <span class="badge badge-warning">BETA</span>
+                <h3>Cloud Extraflame (=TotalControl 2)</h3>
+            </div>
+            <p class="hint">Active la connexion sortante vers <code>mqtt.extraflame.it:8883</code> en parallèle du bridge HA local. Permet à l'app <strong>TotalControl 2</strong> officielle de continuer à voir le poêle. <br>Nécessite un compte TotalControl 2 (=même credentials que l'app mobile) car le firmware récupère l'ID interne du poêle via REST <code>appapi.extraflame.it/auth</code>.</p>
+            <div class="form-group toggle-group">
+                <label class="toggle">
+                    <input id="cloud-enabled" type="checkbox">
+                    <span class="toggle-slider"></span>
+                    <span>Activer connexion cloud Extraflame</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="tc2-username">Email TotalControl 2</label>
+                <input id="tc2-username" type="email" placeholder="ex : tonmail@exemple.com" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="tc2-password">Mot de passe TotalControl 2</label>
+                <input id="tc2-password" type="password" placeholder="(laisse vide pour ne pas changer)" autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label>Poêle détecté</label>
+                <input id="tc2-stove-id" readonly placeholder="rempli après 1er fetch réussi">
+            </div>
+            <div class="form-group">
+                <label>Modèle Omnyvore</label>
+                <input id="tc2-stove-model" readonly placeholder="rempli après 1er fetch réussi">
+            </div>
+        </div>
+
+        <!-- Safe mode boot : disponible sur tous les targets, sauvetage OTA -->
+        <div class="card">
+            <div class="card-header">
+                <span class="badge badge-warning">RECOVERY</span>
+                <h3>Safe mode (=prochain boot)</h3>
+            </div>
+            <p class="hint">Force le prochain reboot en mode minimal : <strong>WiFi + web UI + OTA seulement</strong>. Aucun Micronova, MQTT, ni cloud. À utiliser si un firmware buggué crashe en boucle et empêche l'OTA de passer. Le flag est consommé au boot (=un 2e reboot ramène en normal).</p>
+            <div class="form-group">
+                <button id="safe-mode-btn" class="btn btn-warn">🛟 Activer safe mode + reboot</button>
+            </div>
+        </div>
+
         <!-- Guardian Mode (=only visible on Target Blacklabel) -->
         <div class="card danger-zone" id="guardian-card">
             <div class="card-header">

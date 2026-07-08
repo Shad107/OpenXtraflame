@@ -56,7 +56,7 @@ OpenXtraflame lit au boot les champs `stove_model` + `matricola` depuis la parti
 "stove": {
   "stove_type": "I_VENT",
   "stove_model": "",
-  "matricola": "A700051764"
+  "matricola": "A700xxxxxx"
 }
 ```
 

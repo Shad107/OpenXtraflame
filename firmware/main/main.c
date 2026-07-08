@@ -29,6 +29,7 @@
 #include "config_nvs.h"
 #include "wifi_bridge.h"
 #include "mqtt_bridge.h"
+#include "cloud_bridge.h"
 #include "micronova.h"
 #include "web_ui.h"
 #include "leds.h"
@@ -160,9 +161,42 @@ void app_main(void)
     /* 4c. Init OTA subsystem (=mutex, marks running app valid) */
     ota_init();
 
-    /* 5. Start Micronova UART task FIRST (=independent of Wi-Fi, works in QEMU) */
-    mn_set_config_ref(&cfg);
-    micronova_start();
+    /* 4d. Boot loop detector : compte les boots "unhealthy" (=<60s uptime).
+     * Après 3 crashes consécutifs, on bascule en safe mode auto pour
+     * permettre à l'user de OTA une version safe sans intervention manuelle.
+     * Le compteur est reset à 0 après 60s d'uptime sain (main loop). */
+    uint8_t crash_count = 0;
+    {
+        nvs_handle_t hb;
+        if (nvs_open("bootcheck", NVS_READWRITE, &hb) == ESP_OK) {
+            nvs_get_u8(hb, "crash_cnt", &crash_count);
+            /* Increment avant de valider le boot : si on crash avant les 60s,
+             * ce nouveau count reste et le prochain boot le lira. */
+            nvs_set_u8(hb, "crash_cnt", crash_count + 1);
+            nvs_commit(hb);
+            nvs_close(hb);
+        }
+    }
+    ESP_LOGI(TAG, "Boot health : crash_count=%u (avant increment)", crash_count);
+
+    /* 4e. Safe mode boot : si le flag est set OU crash_count >= 3, on saute
+     * Micronova + MQTT + cloud pour donner à l'OTA endpoint toutes les
+     * ressources CPU/UART. Le flag manuel est consommé immédiatement. */
+    bool safe_boot = cfg.safe_mode_next_boot || (crash_count >= 3);
+    if (cfg.safe_mode_next_boot) {
+        ESP_LOGW(TAG, "SAFE MODE boot : flag manuel activé (consommé)");
+        cfg.safe_mode_next_boot = false;
+        config_nvs_save(&cfg);
+    }
+    if (crash_count >= 3) {
+        ESP_LOGE(TAG, "SAFE MODE boot AUTO : %u crashes consécutifs détectés", crash_count);
+    }
+
+    /* 5. Start Micronova UART task (skip en safe mode) */
+    if (!safe_boot) {
+        mn_set_config_ref(&cfg);
+        micronova_start();
+    }
 
     /* 6. Start Wi-Fi bridge (=STA if provisioned, else SoftAP)
      * Skipped in QEMU where Wi-Fi isn't supported - Micronova bus still works.
@@ -181,8 +215,8 @@ void app_main(void)
     /* 7. Start web UI (=always, works in AP and STA modes) */
     web_ui_start(&cfg);
 
-    /* 8. Start MQTT bridge (=only if provisioned) */
-    if (cfg.provisioned && strlen(cfg.mqtt_host) > 0) {
+    /* 8. Start MQTT bridge (=only if provisioned + pas en safe mode) */
+    if (!safe_boot && cfg.provisioned && strlen(cfg.mqtt_host) > 0) {
         /* Wait for Wi-Fi STA connect before MQTT */
         ESP_LOGI(TAG, "Waiting for Wi-Fi STA connect...");
         EventBits_t bits = xEventGroupWaitBits(
@@ -194,6 +228,7 @@ void app_main(void)
         if (bits & WIFI_STA_CONNECTED_BIT) {
             ESP_LOGI(TAG, "Wi-Fi connected, starting MQTT bridge");
             mqtt_bridge_start(&cfg);
+            cloud_bridge_start(&cfg);  /* no-op si cfg.cloud_enabled=false */
         } else {
             ESP_LOGW(TAG, "Wi-Fi timeout, MQTT bridge not started");
         }
@@ -229,6 +264,15 @@ void app_main(void)
                     ESP_LOGI(TAG, "60 s healthy uptime + Wi-Fi up => marking firmware valid");
                     ota_mark_valid();
                     app_marked_valid = true;
+                    /* Reset boot loop counter : ce boot est sain, les crashes
+                     * précédents ne comptent plus pour le safe mode auto. */
+                    nvs_handle_t hb;
+                    if (nvs_open("bootcheck", NVS_READWRITE, &hb) == ESP_OK) {
+                        nvs_set_u8(hb, "crash_cnt", 0);
+                        nvs_commit(hb);
+                        nvs_close(hb);
+                        ESP_LOGI(TAG, "boot loop crash_count reset à 0");
+                    }
                 }
             } else {
                 /* reset on Wi-Fi drop so a flapping STA doesn't count */

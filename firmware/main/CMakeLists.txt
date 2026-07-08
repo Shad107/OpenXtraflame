@@ -4,6 +4,8 @@ idf_component_register(
         "config_nvs.c"
         "wifi_bridge.c"
         "mqtt_bridge.c"
+        "cloud_bridge.c"
+        "cloud_rest.c"
         "micronova.c"
         "web_ui.c"
         "leds.c"
@@ -15,6 +17,7 @@ idf_component_register(
         "web/index.html"
         "web/style.css"
         "web/script.js"
+        "certs/extraflame_ca.pem"
     REQUIRES
         nvs_flash
         esp_wifi

@@ -15,7 +15,11 @@
 #include <stdio.h>
 #include "mqtt_bridge.h"
 #include "micronova.h"
+#include "cloud_bridge.h"
+#include "config_nvs.h"
 #include "mqtt_client.h"
+#include "esp_system.h"
+#include "esp_timer.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_app_desc.h"
@@ -43,6 +47,28 @@ static void handle_command(const char *topic, size_t tlen,
     if (strstr(topic, "/cmd/on"))          { mn_write_register(MN_RAM_STOVE_STATE, 0x01); return; }
     if (strstr(topic, "/cmd/off"))         { mn_write_register(MN_RAM_STOVE_STATE, 0x06); return; }
     if (strstr(topic, "/cmd/reset_alarm")) { mn_write_register(MN_RAM_STOVE_STATE, 0x00); return; }
+#ifdef TARGET_BLACKLABEL
+    if (strstr(topic, "/cmd/cloud_toggle")) {
+        char buf[8] = {0};
+        if (dlen >= sizeof(buf)) return;
+        memcpy(buf, data, dlen);
+        bool on = (buf[0] == '1' || strstr(buf, "ON") || strstr(buf, "on") || strstr(buf, "true"));
+        /* Toggle uniquement si login/mdp TC2 configurés (=sinon cloud n'a rien
+         * pour se connecter). Le switch HA discovery est aussi conditionnel
+         * dessus, donc en théorie on est déjà safe côté client. */
+        if (on && !(local_cfg.tc2_username[0] && local_cfg.tc2_password[0])) {
+            ESP_LOGW(TAG, "cloud_toggle=ON ignoré : login/mdp TC2 non configurés");
+            return;
+        }
+        if (local_cfg.cloud_enabled == on) return;
+        local_cfg.cloud_enabled = on;
+        config_nvs_save(&local_cfg);
+        ESP_LOGI(TAG, "cloud_enabled = %s → reboot pour appliquer", on ? "ON" : "OFF");
+        vTaskDelay(pdMS_TO_TICKS(200));
+        esp_restart();
+        return;
+    }
+#endif
     if (strstr(topic, "/cmd/setpoint")) {
         char buf[8] = {0};
         if (dlen < sizeof(buf)) {
@@ -227,6 +253,21 @@ esp_err_t mqtt_bridge_publish_state(void)
     cJSON_AddNumberToObject(o, "pellets_since_refill_kg",  s.pellets_since_refill_kg);
     cJSON_AddNumberToObject(o, "pellets_remaining_kg",     s.pellets_remaining_kg);
     cJSON_AddNumberToObject(o, "pellets_cost_lifetime_eur", s.pellets_cost_lifetime_eur);
+#ifdef TARGET_BLACKLABEL
+    /* Cloud state pour HA discovery / debug (=blacklabel only) */
+    {
+        cloud_bridge_stats_t cs;
+        cloud_bridge_get_stats(&cs);
+        cJSON_AddBoolToObject(o, "cloud_enabled",   cs.enabled);
+        cJSON_AddBoolToObject(o, "cloud_connected", cs.connected);
+    }
+#endif
+    /* Uptime en secondes. HA peut dériver last_boot via template
+     * "{{ (now() - timedelta(seconds=value)).isoformat() }}". */
+    cJSON_AddNumberToObject(o, "uptime_s",
+        (double)(esp_timer_get_time() / 1000000LL));
+    /* Safe mode next boot flag (=visible HA pour info) */
+    cJSON_AddBoolToObject(o, "safe_mode_next", local_cfg.safe_mode_next_boot);
     char *json = cJSON_PrintUnformatted(o);
     cJSON_Delete(o);
 
@@ -631,6 +672,47 @@ esp_err_t mqtt_bridge_publish_discovery(void)
         publish_disco("sensor", "state", p);
     }
 
+    /* --- Binary sensor Safe mode next boot --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Safe mode prochain boot");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.safe_mode_next else 'OFF' }}");
+        cJSON_AddStringToObject(p, "payload_on",  "ON");
+        cJSON_AddStringToObject(p, "payload_off", "OFF");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        cJSON_AddStringToObject(p, "icon", "mdi:lifebuoy");
+        publish_disco("binary_sensor", "safe_mode_next", p);
+    }
+
+    /* --- Sensor Uptime (=durée depuis boot en secondes) --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Uptime");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.uptime_s }}");
+        cJSON_AddStringToObject(p, "device_class", "duration");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "s");
+        cJSON_AddStringToObject(p, "state_class", "total_increasing");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        cJSON_AddStringToObject(p, "icon", "mdi:timer-play-outline");
+        publish_disco("sensor", "uptime", p);
+    }
+
+    /* --- Sensor Last boot (=timestamp dernier démarrage) --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Dernier démarrage");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ (now() - timedelta(seconds=value_json.uptime_s | int(0))).isoformat() }}");
+        cJSON_AddStringToObject(p, "device_class", "timestamp");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        cJSON_AddStringToObject(p, "icon", "mdi:restart");
+        publish_disco("sensor", "last_boot", p);
+    }
+
     /* --- Binary sensor Online --- */
     {
         cJSON *p = cJSON_CreateObject();
@@ -643,6 +725,56 @@ esp_err_t mqtt_bridge_publish_discovery(void)
         cJSON_AddStringToObject(p, "device_class", "connectivity");
         publish_disco("binary_sensor", "online", p);
     }
+
+#ifdef TARGET_BLACKLABEL
+    /* Switch Cloud on/off publié uniquement si TC2 login/mdp configurés
+     * (=sinon ON n'a aucun effet, on cache le switch pour éviter confusion).
+     * Le user configure d'abord dans le web UI, PUIS le switch apparaît HA. */
+    if (local_cfg.tc2_username[0] && local_cfg.tc2_password[0]) {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Cloud Extraflame");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.cloud_enabled else 'OFF' }}");
+        char cmd_cloud[160];
+        snprintf(cmd_cloud, sizeof(cmd_cloud), "%s/cmd/cloud_toggle", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd_cloud);
+        cJSON_AddStringToObject(p, "payload_on",  "1");
+        cJSON_AddStringToObject(p, "payload_off", "0");
+        cJSON_AddStringToObject(p, "state_on",  "ON");
+        cJSON_AddStringToObject(p, "state_off", "OFF");
+        /* Pas de entity_category = apparaît dans les contrôles principaux
+         * de la carte poêle HA (=pas dans Configuration cachée). */
+        cJSON_AddStringToObject(p, "icon", "mdi:cloud");
+        publish_disco("switch", "cloud", p);
+    } else {
+        /* Nettoie retained si l'user vient de vider les creds via UI. */
+        char t[192];
+        snprintf(t, sizeof(t), "homeassistant/switch/%s/cloud/config", device_id);
+        esp_mqtt_client_publish(client, t, "", 0, 0, 1);
+    }
+
+    /* Binary sensor Cloud connecté (=état live info, toujours publié) */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Cloud Extraflame connecté");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.cloud_connected else 'OFF' }}");
+        cJSON_AddStringToObject(p, "payload_on",  "ON");
+        cJSON_AddStringToObject(p, "payload_off", "OFF");
+        cJSON_AddStringToObject(p, "device_class", "connectivity");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("binary_sensor", "cloud_connected", p);
+    }
+
+    /* Nettoie le vieux binary_sensor cloud_enabled (=retained legacy) */
+    {
+        char t[192];
+        snprintf(t, sizeof(t), "homeassistant/binary_sensor/%s/cloud_enabled/config", device_id);
+        esp_mqtt_client_publish(client, t, "", 0, 0, 1);
+    }
+#endif
 
     /* --- Switch on/off --- */
     {

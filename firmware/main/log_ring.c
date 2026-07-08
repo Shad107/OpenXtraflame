@@ -9,7 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-#define LOG_RING_SIZE 6144  /* ~6 KB of scrollback, ~80 lines */
+#define LOG_RING_SIZE 32768  /* ~32 KB, ~400 lignes, capte le boot complet cloud_bridge */
 
 static char             s_buf[LOG_RING_SIZE];
 static size_t           s_head;      /* next write index */

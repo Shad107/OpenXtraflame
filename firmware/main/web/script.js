@@ -155,6 +155,11 @@ async function loadStatus() {
 async function loadConfig() {
     try {
         const c = await j('/config.json');
+        /* Cache la carte cloud si build != TARGET_BLACKLABEL.
+         * Cf. web_ui.c handle_config_get qui expose "target". */
+        if (c.target && c.target !== 'blacklabel') {
+            document.querySelectorAll('.bl-only').forEach(el => el.style.display = 'none');
+        }
         $('wifi-ssid').value = c.wifi_ssid || '';
         $('mqtt-host').value = c.mqtt_host || '';
         $('mqtt-port').value = c.mqtt_port || 1883;
@@ -165,6 +170,11 @@ async function loadConfig() {
         /* stove-type est maintenant en info readonly, alimenté par loadStatus */
         $('ha-discovery').checked = !!c.ha_discovery;
         $('publish-interval').value = c.publish_interval_ms || 5000;
+        if ($('cloud-enabled')) $('cloud-enabled').checked = !!c.cloud_enabled;
+        if ($('tc2-username'))    $('tc2-username').value    = c.tc2_username || '';
+        if ($('tc2-password'))    $('tc2-password').placeholder = c.tc2_password_set ? '(mot de passe déjà enregistré)' : '(laisse vide pour ne pas changer)';
+        if ($('tc2-stove-id'))    $('tc2-stove-id').value    = c.tc2_stove_id || '';
+        if ($('tc2-stove-model')) $('tc2-stove-model').value = c.tc2_stove_model || '';
         /* Pellet config */
         const pl = c.pellet || {};
         if ($('pl-tank'))   $('pl-tank').value   = pl.tank_capacity_kg ?? 14;
@@ -287,6 +297,9 @@ async function save() {
         /* stove_type est auto-détecté (Phase 3), plus envoyé depuis le UI */
         ha_discovery: $('ha-discovery').checked,
         publish_interval_ms: parseInt($('publish-interval').value, 10),
+        cloud_enabled: $('cloud-enabled') ? $('cloud-enabled').checked : false,
+        tc2_username: $('tc2-username') ? $('tc2-username').value : '',
+        tc2_password: $('tc2-password') ? $('tc2-password').value : '',
         pellet: {
             tank_capacity_kg: parseFloat($('pl-tank').value)  || 14,
             sack_size_kg:     parseFloat($('pl-sack').value)  || 15,
@@ -597,6 +610,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
 
     $('scan').addEventListener('click', scan);
+
+    /* Safe mode : bouton d'urgence pour boot minimal (=juste OTA) */
+    const safeBtn = $('safe-mode-btn');
+    if (safeBtn) safeBtn.addEventListener('click', async () => {
+        if (!await confirm('Activer safe mode et rebooter ?\nAu prochain boot, Micronova/MQTT/Cloud seront désactivés.\nUn 2e reboot ramène en mode normal.')) return;
+        try {
+            await fetch('/api/safe_mode', {method: 'POST'});
+            safeBtn.textContent = '🔄 Reboot en cours...';
+            safeBtn.disabled = true;
+        } catch (e) { alert('Erreur : ' + e); }
+    });
 
     /* Test MQTT connection against the values currently in the form */
     $('mqtt-test').addEventListener('click', async () => {

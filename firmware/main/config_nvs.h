@@ -79,6 +79,33 @@ typedef struct {
     uint16_t pellet_service_h_tot;      // total au moment du dernier service annuel
     uint32_t pellet_service_epoch;      // timestamp Unix
 
+    /* Cloud Extraflame (=mode compatibilité TotalControl 2). BETA, désactivé
+     * par défaut. Active la connexion MQTT sortante vers mqtt.extraflame.it:8883
+     * en parallèle du broker HA local, permet à l'app TotalControl 2 officielle
+     * de continuer à fonctionner. Requiert matricola + secure_code (=lus auto
+     * depuis la partition secret1 sur TARGET_BLACKLABEL). */
+    bool     cloud_enabled;
+
+    /* Safe mode one-shot : au prochain boot, saute Micronova+cloud+MQTT,
+     * démarre juste WiFi STA + web UI + OTA. Flag consommé immédiatement
+     * pour éviter les boucles. Utile pour recover d'un firmware bugué :
+     * activer + reboot → OTA safe possible sans crash. */
+    bool     safe_mode_next_boot;
+
+#ifdef TARGET_BLACKLABEL
+    /* TotalControl 2 REST API credentials (=email + password du compte
+     * user sur appapi.extraflame.it). Requis pour récupérer stove_id
+     * interne + stove_model Omnyvore + assembler les topics MQTT cloud.
+     * Renseigner via Web UI onglet Avancé. */
+    char     tc2_username[64];        // email TotalControl 2
+    char     tc2_password[64];        // mdp TotalControl 2
+
+    /* Auto-remplis après un fetch REST réussi (=cache pour reboot) */
+    char     tc2_stove_id[40];        // ex "2c94809186ffb14e018756e94c52047a"
+    char     tc2_stove_model[16];     // model Omnyvore (=ex "001275002000",
+                                       // ≠ celui de secret1)
+#endif
+
 #ifdef TARGET_BLACKLABEL
     /* Guardian Mode - OPT-IN, disabled by default
      * ONLY available on TARGET_BLACKLABEL because it requires the

@@ -66,6 +66,7 @@ void mn_set_config_ref(const void *cfg) { mn_cfg_ref = (const app_config_t *)cfg
 static stove_type_t cached_stove_type = STOVE_TYPE_UNKNOWN;
 static char cached_stove_model[16] = "";
 static char cached_matricola[16]   = "";
+static char cached_secure_code[16] = "";
 
 static stove_type_t detect_type_from_model(const char *stove_model, const char *matricola)
 {
@@ -91,8 +92,7 @@ stove_type_t mn_detected_stove_type(void)
     if (cached_stove_type != STOVE_TYPE_UNKNOWN) return cached_stove_type;
 
 #ifdef TARGET_BLACKLABEL
-    char secure_code[16] = "";
-    if (config_nvs_read_stove_secrets(secure_code, sizeof(secure_code),
+    if (config_nvs_read_stove_secrets(cached_secure_code, sizeof(cached_secure_code),
                                        cached_stove_model, sizeof(cached_stove_model),
                                        cached_matricola,   sizeof(cached_matricola)) == ESP_OK) {
         cached_stove_type = detect_type_from_model(cached_stove_model, cached_matricola);
@@ -113,6 +113,7 @@ stove_type_t mn_detected_stove_type(void)
 
 const char *mn_get_stove_model(void)     { return cached_stove_model; }
 const char *mn_get_stove_matricola(void) { return cached_matricola; }
+const char *mn_get_stove_secure_code(void) { return cached_secure_code; }
 
 const char *mn_stove_type_name(stove_type_t t)
 {

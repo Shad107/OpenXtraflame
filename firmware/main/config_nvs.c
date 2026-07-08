@@ -35,9 +35,17 @@ void config_nvs_defaults(app_config_t *cfg)
     cfg->mqtt_use_tls         = false;
     cfg->stove_type           = STOVE_TYPE_UNKNOWN;
     cfg->ha_discovery_enabled = true;
-    cfg->publish_interval_ms  = 5000;
+    cfg->publish_interval_ms  = 2000;
     cfg->mn_baud_rate         = 38400;   // QEMU capture, some stoves need 1200
     cfg->mn_stop_bits         = 1;       // 1 or 2 (=Micronova legacy is 8N2)
+    cfg->cloud_enabled        = false;   // Cloud TotalControl 2 OFF par défaut
+    cfg->safe_mode_next_boot  = false;
+#ifdef TARGET_BLACKLABEL
+    cfg->tc2_username[0] = '\0';
+    cfg->tc2_password[0] = '\0';
+    cfg->tc2_stove_id[0] = '\0';
+    cfg->tc2_stove_model[0] = '\0';
+#endif
 
     /* Pellet defaults Teodora Evo I_VENT */
     cfg->pellet_tank_capacity_kg   = 14.0f;
@@ -140,6 +148,21 @@ esp_err_t config_nvs_load(app_config_t *cfg)
     nvs_get_u16(h, "pl_rh5", &cfg->pellet_refill_h_p5);
     nvs_get_u16(h, "pl_sht", &cfg->pellet_service_h_tot);
     nvs_get_u32(h, "pl_sep", &cfg->pellet_service_epoch);
+    if (nvs_get_u8(h, "cloud_en", &u8) == ESP_OK) cfg->cloud_enabled = (u8 != 0);
+    if (nvs_get_u8(h, "safe_next", &u8) == ESP_OK) cfg->safe_mode_next_boot = (u8 != 0);
+#ifdef TARGET_BLACKLABEL
+    {
+        size_t sz;
+        sz = sizeof(cfg->tc2_username);
+        nvs_get_str(h, "tc2_user", cfg->tc2_username, &sz);
+        sz = sizeof(cfg->tc2_password);
+        nvs_get_str(h, "tc2_pwd",  cfg->tc2_password, &sz);
+        sz = sizeof(cfg->tc2_stove_id);
+        nvs_get_str(h, "tc2_sid",  cfg->tc2_stove_id, &sz);
+        sz = sizeof(cfg->tc2_stove_model);
+        nvs_get_str(h, "tc2_smod", cfg->tc2_stove_model, &sz);
+    }
+#endif
     /* Read stove specs */
     #define GET_FLOAT(key, dst) do { \
         uint32_t v; if (nvs_get_u32(h, key, &v) == ESP_OK) memcpy(&(dst), &v, 4); \
@@ -211,6 +234,14 @@ esp_err_t config_nvs_save(const app_config_t *cfg)
     nvs_set_u16(h, "pl_rh5", cfg->pellet_refill_h_p5);
     nvs_set_u16(h, "pl_sht", cfg->pellet_service_h_tot);
     nvs_set_u32(h, "pl_sep", cfg->pellet_service_epoch);
+    nvs_set_u8 (h, "cloud_en", cfg->cloud_enabled ? 1 : 0);
+    nvs_set_u8 (h, "safe_next", cfg->safe_mode_next_boot ? 1 : 0);
+#ifdef TARGET_BLACKLABEL
+    nvs_set_str(h, "tc2_user", cfg->tc2_username);
+    nvs_set_str(h, "tc2_pwd",  cfg->tc2_password);
+    nvs_set_str(h, "tc2_sid",  cfg->tc2_stove_id);
+    nvs_set_str(h, "tc2_smod", cfg->tc2_stove_model);
+#endif
     /* Stove specs */
     #define SETF(k, val) do { uint32_t v; memcpy(&v, &(val), 4); nvs_set_u32(h, k, v); } while(0)
     SETF("st_nom", cfg->stove_nominal_power_kw);

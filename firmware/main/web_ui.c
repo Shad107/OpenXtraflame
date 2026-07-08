@@ -20,6 +20,7 @@
 #include "web_ui.h"
 #include "wifi_bridge.h"
 #include "mqtt_bridge.h"
+#include "cloud_bridge.h"
 #include "micronova.h"
 #include "ota.h"
 #include "log_ring.h"
@@ -176,6 +177,14 @@ static esp_err_t handle_config_get(httpd_req_t *req)
     cJSON_AddStringToObject(o, "stove_name",   g_cfg->stove_name);
     cJSON_AddBoolToObject(o,   "ha_discovery", g_cfg->ha_discovery_enabled);
     cJSON_AddNumberToObject(o, "publish_interval_ms", g_cfg->publish_interval_ms);
+    cJSON_AddBoolToObject(o,   "cloud_enabled", g_cfg->cloud_enabled);
+#ifdef TARGET_BLACKLABEL
+    cJSON_AddStringToObject(o, "tc2_username",   g_cfg->tc2_username);
+    /* password non renvoyé (=indicateur si présent) */
+    cJSON_AddBoolToObject(o,   "tc2_password_set", g_cfg->tc2_password[0] != '\0');
+    cJSON_AddStringToObject(o, "tc2_stove_id",   g_cfg->tc2_stove_id);
+    cJSON_AddStringToObject(o, "tc2_stove_model", g_cfg->tc2_stove_model);
+#endif
 
     /* Pellet config */
     cJSON *pl = cJSON_CreateObject();
@@ -207,6 +216,12 @@ static esp_err_t handle_config_get(httpd_req_t *req)
     /* Firmware version from app descriptor */
     const esp_app_desc_t *desc = esp_app_get_description();
     cJSON_AddStringToObject(o, "version", desc ? desc->version : "unknown");
+    /* Target : détermine ce que l'UI affiche (=cloud only sur blacklabel) */
+#ifdef TARGET_BLACKLABEL
+    cJSON_AddStringToObject(o, "target", "blacklabel");
+#else
+    cJSON_AddStringToObject(o, "target", "external");
+#endif
     char *out = cJSON_PrintUnformatted(o);
     cJSON_Delete(o);
     httpd_resp_set_type(req, "application/json");
@@ -283,6 +298,29 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     GET_STR_KEEP_EMPTY("stove_name",   g_cfg->stove_name);
     GET_BOOL("ha_discovery", g_cfg->ha_discovery_enabled);
     GET_NUM("publish_interval_ms", g_cfg->publish_interval_ms, uint16_t);
+    GET_BOOL("cloud_enabled", g_cfg->cloud_enabled);
+#ifndef TARGET_BLACKLABEL
+    /* Cloud non supporté sur TARGET_EXTERNAL — force off quel que soit le POST */
+    g_cfg->cloud_enabled = false;
+#endif
+#ifdef TARGET_BLACKLABEL
+    /* Skip empty strings pour TC2 aussi. Même problème que WiFi/MQTT :
+     * si on POSTe depuis un autre onglet, ces champs arrivent vides et
+     * effaceraient les creds stockés. */
+    GET_STR_KEEP_EMPTY("tc2_username", g_cfg->tc2_username);
+    GET_STR_KEEP_EMPTY("tc2_password", g_cfg->tc2_password);
+    /* Invalider le cache seulement si un champ non-vide arrive
+     * (=un vrai changement de creds, pas une soumission autre onglet). */
+    {
+        cJSON *vu = cJSON_GetObjectItem(o, "tc2_username");
+        cJSON *vp = cJSON_GetObjectItem(o, "tc2_password");
+        if ((cJSON_IsString(vu) && vu->valuestring[0]) ||
+            (cJSON_IsString(vp) && vp->valuestring[0])) {
+            g_cfg->tc2_stove_id[0]    = '\0';
+            g_cfg->tc2_stove_model[0] = '\0';
+        }
+    }
+#endif
 
     /* Pellet config (=nested object "pellet" pour clean UI) */
     cJSON *pl_in = cJSON_GetObjectItem(o, "pellet");
@@ -918,6 +956,40 @@ static void sanitize_url(char *s)
     }
 }
 
+static esp_err_t handle_cloud_status(httpd_req_t *req)
+{
+    cloud_bridge_stats_t s;
+    cloud_bridge_get_stats(&s);
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddBoolToObject(o, "enabled",       s.enabled);
+    cJSON_AddBoolToObject(o, "started",       s.started);
+    cJSON_AddBoolToObject(o, "connected",     s.connected);
+    cJSON_AddNumberToObject(o, "connect_count", s.connect_count);
+    cJSON_AddNumberToObject(o, "error_count",  s.error_count);
+    cJSON_AddNumberToObject(o, "last_error",   s.last_error);
+    cJSON_AddStringToObject(o, "last_error_str", s.last_error_str);
+    cJSON_AddStringToObject(o, "broker_uri",   s.broker_uri);
+    cJSON_AddStringToObject(o, "matricola",    s.matricola);
+    char *js = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_sendstr(req, js ? js : "{}");
+    free(js);
+    return r;
+}
+
+static esp_err_t handle_safe_mode(httpd_req_t *req)
+{
+    if (!g_cfg) return httpd_resp_send_500(req);
+    g_cfg->safe_mode_next_boot = true;
+    config_nvs_save(g_cfg);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, "{\"ok\":true,\"rebooting\":true}", 27);
+    vTaskDelay(pdMS_TO_TICKS(400));
+    esp_restart();
+    return ESP_OK;
+}
+
 static esp_err_t handle_ota_pull(httpd_req_t *req)
 {
     char buf[512];
@@ -974,6 +1046,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/config.json",          .method = HTTP_POST, .handler = handle_config_post,  },
         { .uri = "/reboot",               .method = HTTP_POST, .handler = handle_reboot,       },
         { .uri = "/factory",              .method = HTTP_POST, .handler = handle_factory,      },
+        { .uri = "/api/safe_mode",        .method = HTTP_POST, .handler = handle_safe_mode,    },
         /* stove commands (were defined but not registered -> 404) */
         { .uri = "/api/stove/on",         .method = HTTP_POST, .handler = handle_stove_cmd,    },
         { .uri = "/api/stove/off",        .method = HTTP_POST, .handler = handle_stove_cmd,    },
@@ -989,6 +1062,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/debug/ram",            .method = HTTP_GET,  .handler = handle_debug_ram,    },
         { .uri = "/debug/mnstats",        .method = HTTP_GET,  .handler = handle_debug_mnstats,},
         { .uri = "/ota/status",           .method = HTTP_GET,  .handler = handle_ota_status,   },
+        { .uri = "/cloud/status",         .method = HTTP_GET,  .handler = handle_cloud_status, },
         { .uri = "/mqtt/discover",        .method = HTTP_GET,  .handler = handle_mqtt_discover,},
         { .uri = "/mqtt/debug",           .method = HTTP_GET,  .handler = handle_mqtt_debug,   },
         { .uri = "/mqtt/test",            .method = HTTP_POST, .handler = handle_mqtt_test,    },
