@@ -114,6 +114,8 @@ typedef enum {
 
 const char *mn_stove_type_name(stove_type_t t);
 stove_type_t mn_detected_stove_type(void);
+const char *mn_get_stove_model(void);       /* stove_model brut depuis secret1 (=fabrication) */
+const char *mn_get_stove_matricola(void);   /* matricola brut depuis secret1 */
 
 /* Snapshot state (=publié via MQTT) */
 typedef struct {

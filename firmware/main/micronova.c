@@ -54,14 +54,54 @@ static volatile bool mn_sniffer_pause = false;
  */
 static uint8_t mn_ram_shadow[MN_RAM_MAX];
 
-/* Détection modèle stove : pour l'instant hardcodée I_VENT (=Teodora Evo).
- * TODO Phase 3 : lire matricola depuis secret1 partition + regex sur préfixe
- * pour distinguer I_VENT/I_IDRO/I_CANAL. Actuellement Teodora Evo confirmé
- * empiriquement par match EEPROM 0x7F=P.set et 0x7D=consigne. */
-stove_type_t mn_detected_stove_type(void)
+/* Détection modèle stove — Phase 3.
+ * Lit stove_model + matricola depuis partition secret1 (=préservée fabrication
+ * Extraflame), applique heuristique préfixe → stove_type. Cached au premier appel.
+ * Fallback : I_VENT (=Teodora Evo, la plus courante). */
+static stove_type_t cached_stove_type = STOVE_TYPE_UNKNOWN;
+static char cached_stove_model[16] = "";
+static char cached_matricola[16]   = "";
+
+static stove_type_t detect_type_from_model(const char *stove_model, const char *matricola)
 {
+    (void)matricola;  /* pas utilisé pour l'instant, réservé pour affinage sub-type */
+    if (!stove_model || !stove_model[0]) return STOVE_TYPE_I_VENT;
+    /* Heuristique large en attendant retours communauté :
+     *  V*, TE*  → I_VENT   (Teodora, Vento, Ilaria "V...", etc.)
+     *  I*, H*   → I_IDRO   (Idro, Hydro)
+     *  CA*      → I_CALD   (Caldaia)
+     *  C*, D*   → I_CANAL  (Canale, Diadema)
+     *  autre    → I_VENT (défaut safe) */
+    char c0 = stove_model[0];
+    char c1 = stove_model[1] ? stove_model[1] : ' ';
+    if (c0 == 'V' || (c0 == 'T' && c1 == 'E')) return STOVE_TYPE_I_VENT;
+    if (c0 == 'I' || c0 == 'H')                 return STOVE_TYPE_I_IDRO;
+    if (c0 == 'C' && c1 == 'A')                 return STOVE_TYPE_I_CALD;
+    if (c0 == 'C' || c0 == 'D')                 return STOVE_TYPE_I_CANAL;
     return STOVE_TYPE_I_VENT;
 }
+
+stove_type_t mn_detected_stove_type(void)
+{
+    if (cached_stove_type != STOVE_TYPE_UNKNOWN) return cached_stove_type;
+
+    char secure_code[16] = "";
+    if (config_nvs_read_stove_secrets(secure_code, sizeof(secure_code),
+                                       cached_stove_model, sizeof(cached_stove_model),
+                                       cached_matricola,   sizeof(cached_matricola)) == ESP_OK) {
+        cached_stove_type = detect_type_from_model(cached_stove_model, cached_matricola);
+        ESP_LOGI(TAG, "Stove detection: model='%s' matricola='%s' -> stove_type=%s",
+                 cached_stove_model, cached_matricola,
+                 mn_stove_type_name(cached_stove_type));
+    } else {
+        cached_stove_type = STOVE_TYPE_I_VENT;
+        ESP_LOGW(TAG, "Stove detection: secret1 unavailable -> fallback I_VENT");
+    }
+    return cached_stove_type;
+}
+
+const char *mn_get_stove_model(void)     { return cached_stove_model; }
+const char *mn_get_stove_matricola(void) { return cached_matricola; }
 
 const char *mn_stove_type_name(stove_type_t t)
 {
@@ -77,7 +117,7 @@ const char *mn_stove_type_name(stove_type_t t)
         case STOVE_TYPE_I_CANAL_2: return "I_CANAL_2";
         case STOVE_TYPE_I_CANAL_3: return "I_CANAL_3";
         case STOVE_TYPE_I_CANAL_4: return "I_CANAL_4";
-        default:                   return "UNDEFINED";
+        default:                   return "UNKNOWN";
     }
 }
 

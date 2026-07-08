@@ -48,14 +48,38 @@ Le firmware original stocke 60 `Addrs_dyn` tables (=une par type × plusieurs so
 
 Adresses extraites du firmware mais **non-validées empiriquement** faute de poêle physique de ce type. Contributions bienvenues !
 
-## Détection automatique (=Phase 3, à venir)
+## Détection automatique (=Phase 3, implémentée 2026-07-08)
 
-Le firmware original détecte le type via :
-1. Lecture du champ `matricola` depuis la partition `secret1` (=stockée à la fabrication)
-2. Regex sur le préfixe matricola pour identifier le sous-type
-3. Sélection de la bonne table `Addrs_dyn`
+OpenXtraflame lit au boot les champs `stove_model` + `matricola` depuis la partition `secret1` (=préservée à la fabrication Extraflame) et applique une heuristique préfixe → stove_type. Les valeurs brutes sont exposées dans `/api/status.json` :
 
-Actuellement OpenXtraflame **hardcode `STOVE_TYPE_I_VENT`** (=validé sur Teodora Evo). Une PR pour ajouter la détection auto est bienvenue.
+```json
+"stove": {
+  "stove_type": "I_VENT",
+  "stove_model": "",
+  "matricola": "A700051764"
+}
+```
+
+**Observation empirique 2026-07-08 (Teodora Evo)** : le champ `stove_model` est **vide** sur au moins certaines versions Black Label. Seule la `matricola` (=serial number 10 chars) est présente. Le mapping matricola → stove_type reste à établir communautairement.
+
+### Comment contribuer à la table matricola → stove_type
+
+Si votre poêle n'est pas Teodora Evo I_VENT et si OpenXtraflame le détecte mal :
+1. Notez la valeur de `matricola` et `stove_model` renvoyée par `/api/status.json`
+2. Notez le vrai modèle commercial de votre poêle (Anastasia, Diadema, ...)
+3. Ouvrez un issue [GitHub](https://github.com/Shad107/OpenXtraflame/issues) avec titre `[stove-detection] matricola=XXXXXXXXXX modèle=YYYY`
+
+À terme, la table communautaire permettra de sélectionner automatiquement la bonne `Addrs_dyn`.
+
+### Heuristique de fallback (=si stove_model présent)
+
+| Préfixe `stove_model` | stove_type détecté | Raison |
+|---|---|---|
+| `V*`, `TE*` | I_VENT | Teodora, Vento, Ilaria... |
+| `I*`, `H*` | I_IDRO | Idro, Hydro |
+| `CA*` | I_CALD | Caldaia |
+| `C*`, `D*` | I_CANAL | Canale, Diadema |
+| autre / vide | I_VENT | Fallback safe |
 
 ## Comment valider votre poêle
 

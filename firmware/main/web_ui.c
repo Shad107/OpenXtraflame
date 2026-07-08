@@ -122,6 +122,8 @@ static esp_err_t handle_status_json(httpd_req_t *req)
     cJSON_AddNumberToObject(stove, "power", s.power_level);
     cJSON_AddNumberToObject(stove, "power_real", s.power_real);
     cJSON_AddStringToObject(stove, "stove_type", mn_stove_type_name(s.stove_type));
+    cJSON_AddStringToObject(stove, "stove_model", mn_get_stove_model());
+    cJSON_AddStringToObject(stove, "matricola",   mn_get_stove_matricola());
     cJSON_AddNumberToObject(stove, "t_ambient", s.t_ambient);
     cJSON_AddNumberToObject(stove, "t_smoke", s.t_smoke);
     cJSON_AddItemToObject(o, "stove", stove);
