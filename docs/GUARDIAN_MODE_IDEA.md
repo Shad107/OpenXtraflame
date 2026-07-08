@@ -1,6 +1,6 @@
 # Guardian Mode (=OTA Firmware Interceptor)
 
-Idée : firmware openextraflame qui coexiste avec le cloud Extraflame, intercepte les OTA firmwares officiels, les archive sans les appliquer.
+Idée : firmware OpenXtraflame qui coexiste avec le cloud Extraflame, intercepte les OTA firmwares officiels, les archive sans les appliquer.
 
 ## Statut : Target Blacklabel UNIQUEMENT, opt-in, désactivé par défaut
 
@@ -63,7 +63,7 @@ En mode Guardian, le module :
                              │ 8883
                              ▼
          ┌──────────────────────────────────┐
-         │  ESP32 openextraflame            │
+         │  ESP32 OpenXtraflame            │
          │  (Guardian mode enabled)         │
          │                                  │
          │  ├─ mqtt_local (=HA control)     │
@@ -91,7 +91,7 @@ En mode Guardian, le module :
 
 ## Requirements
 
-- Reflash Black Label avec openextraflame (=Target Blacklabel)
+- Reflash Black Label avec OpenXtraflame (=Target Blacklabel)
 - Config Wi-Fi + MQTT local + credentials Omnyvore (=hérités du dump)
 - 720KB file_sys partition pour buffer
 - HA MQTT + storage folder
@@ -103,7 +103,7 @@ Le dump du firmware original contient :
 - secure_code (=identité module vers cloud)
 - stove_model (=type poêle enregistré)
 
-Notre openextraflame en mode Guardian les réutilise pour maintenir la connexion cloud active. Extraflame ne voit pas de différence côté serveur.
+Notre OpenXtraflame en mode Guardian les réutilise pour maintenir la connexion cloud active. Extraflame ne voit pas de différence côté serveur.
 
 ## Implémentation code
 
@@ -171,7 +171,7 @@ Nouvel écran config Guardian :
 [✓] Guardian mode enabled
 [✓] Also connect to Omnyvore cloud
 [✓] Archive OTA firmwares
-    URL fallback : http://192.168.1.10/openextraflame/archive/
+    URL fallback : http://192.168.1.10/OpenXtraflame/archive/
 [✓] Notify HA when new firmware captured
 [✗] Auto-diff with current version
 ```
@@ -182,9 +182,9 @@ Nouvel écran config Guardian :
 mqtt:
   sensor:
     - name: "Poele firmware captured"
-      state_topic: "openextraflame/poele/guardian/captured"
+      state_topic: "OpenXtraflame/poele/guardian/captured"
       value_template: "{{ value_json.version }}"
-      json_attributes_topic: "openextraflame/poele/guardian/captured"
+      json_attributes_topic: "OpenXtraflame/poele/guardian/captured"
       json_attributes_template: "{{ value_json | tojson }}"
 
 notify:
@@ -196,7 +196,7 @@ automation:
   - alias: "Firmware Extraflame capturé"
     trigger:
       - platform: mqtt
-        topic: "openextraflame/poele/guardian/captured"
+        topic: "OpenXtraflame/poele/guardian/captured"
     action:
       - service: notify.mobile_app
         data:
@@ -274,7 +274,7 @@ Tout le reste (=archive, contrôle, notif, diff) = infra maison.
            │ pull firmware.bin
            ▼
 ┌──────────────────────┐
-│  ESP32 openextraflame│
+│  ESP32 OpenXtraflame│
 └──────────┬───────────┘
            │ push firmware capturé
            ▼

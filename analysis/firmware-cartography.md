@@ -4,7 +4,7 @@
 
 # Cartographie complète du firmware Extraflame Black Label T009_3
 
-Reverse engineering exhaustif du firmware original (v1, nov 28 2022) pour construction du firmware `openextraflame` custom.
+Reverse engineering exhaustif du firmware original (v1, nov 28 2022) pour construction du firmware `OpenXtraflame` custom.
 
 ## 1. Architecture globale
 
@@ -360,7 +360,7 @@ Comments/strings     : Italien ("Da inviare con MQTT: %s")
 - Extraflame n'a pas activé les protections ESP32 disponibles
 - Facilite le reverse mais expose leurs users à risque cloné/spoofed
 
-## 14. Roadmap firmware openextraflame
+## 14. Roadmap firmware OpenXtraflame
 
 ### Phase 1 - MVP (=Target External)
 - [ ] Setup ESP-IDF v5.x + toolchain Xtensa
@@ -480,7 +480,7 @@ Ce sont des `#define` C préprocessés à compile time. Leur valeur numérique e
 
 **Approche B - Testing empirique** (=recommandé, 30 min) :
 
-1. Flash openextraflame Target External sur ESP32 spare
+1. Flash OpenXtraflame Target External sur ESP32 spare
 2. Wire chaque GPIO ESP32 spare (INPUT_PULLUP) à chaque castellated pad du module Black Label
 3. Ouvrir un firmware original (=avant reflash) et regarder quelle LED s'allume quand
 4. Corréler GPIO ESP32 spare qui va HIGH ↔ LED Black Label allumée
@@ -631,6 +631,6 @@ GPIO_SET_LEVEL gpio=33 level=0/1 cycling
 
 Mapping exact à confirmer visuellement (=quel GPIO va HIGH quand quel LED s'allume).
 
-### Impact projet openextraflame
+### Impact projet OpenXtraflame
 
 `firmware/main/hardware_config.h` TARGET_BLACKLABEL section MISE À JOUR avec ces vraies valeurs. Target Blacklabel désormais **compilable et flashable** sans besoin de hardware.

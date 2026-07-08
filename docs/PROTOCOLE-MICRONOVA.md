@@ -1,7 +1,7 @@
 # Protocole série Extraflame / Micronova - reverse du firmware d'origine « navel »
 
 > ## ✅ VALIDÉ SUR LE VRAI POÊLE (2026-07-07)
-> openextraflame communique avec la carte réelle en appliquant ce protocole.
+> OpenXtraflame communique avec la carte réelle en appliquant ce protocole.
 > Tous les paramètres reversés confirmés corrects (1200 8N2, inversion 0x24,
 > master polling, checksum additif, adresses). **Prérequis build : `-DOPENXFLAME_TARGET=blacklabel`**
 > (sinon UART poêle sur GPIO17/16 = mauvais pins = carte muette). Vérifier le boot
@@ -172,7 +172,7 @@ uint8_t mn_write(uint8_t loc, uint8_t addr, uint8_t value) {
 > **0x00-0x9F**. Chaque registre a été **validé empiriquement** sur un
 > Teodora Evo I_VENT en juillet 2026.
 
-### RAM standard Micronova (=à utiliser pour openextraflame)
+### RAM standard Micronova (=à utiliser pour OpenXtraflame)
 
 | Registre | Adresse | Encodage | Description | Statut |
 |---|---|---|---|---|
@@ -311,7 +311,7 @@ checksum de l'en-tête. (Ce n'est **pas** un CRC.)
 
 ---
 
-## 8. Implications pour openextraflame (`micronova.c`)
+## 8. Implications pour OpenXtraflame (`micronova.c`)
 Pour que la lecture live fonctionne, il faut :
 1. **Débit = 1200 baud, 8N2** (⚠️ PAS 38400 - voir §2), sur UART1.
 2. **Inverser la ligne** : `uart_set_line_inverse(UART1, 0x24)` (= `RXD_INV | TXD_INV`, valeur prouvée).

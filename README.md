@@ -1,4 +1,4 @@
-# openextraflame
+# OpenXtraflame
 
 Custom firmware open-source pour les poêles à granulés Extraflame (et compatibles Micronova).
 
@@ -36,7 +36,7 @@ Firmware qui REMPLACE celui d'origine sur le module Extraflame Black Label. Néc
 ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
 │                 │  UART   │                 │  Wi-Fi  │                 │
 │  Poêle          │38400 8N1│  ESP32 avec     │  MQTT   │ Home Assistant  │
-│  Extraflame     ├─────────┤  openextraflame ├─────────┤ + Mosquitto     │
+│  Extraflame     ├─────────┤  OpenXtraflame ├─────────┤ + Mosquitto     │
 │  Teodora Evo    │Micronova│  firmware       │  local  │ (=local only)   │
 │                 │  proto  │                 │         │                 │
 └─────────────────┘         └─────────────────┘   │     └─────────────────┘
@@ -114,7 +114,7 @@ Voir [docs/BUILDING.md](docs/BUILDING.md).
 ## Structure du projet
 
 ```
-openextraflame/
+OpenXtraflame/
 ├── README.md                    # ce fichier
 ├── LICENSE                       # MIT
 ├── firmware/

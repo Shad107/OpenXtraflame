@@ -1,6 +1,6 @@
 # OTA Firmware Updates
 
-openextraflame supporte les mises à jour Over-The-Air (=OTA) via 3 mécanismes.
+OpenXtraflame supporte les mises à jour Over-The-Air (=OTA) via 3 mécanismes.
 
 ## Architecture
 
@@ -25,7 +25,7 @@ Le firmware utilise le mécanisme OTA standard ESP-IDF avec 2 slots :
 
 Sur la page config web, section OTA :
 
-1. Cliquer "Choisir fichier" et sélectionner `openextraflame.bin`
+1. Cliquer "Choisir fichier" et sélectionner `OpenXtraflame.bin`
 2. Cliquer "Upload"
 3. Barre de progression
 4. Module redémarre automatiquement
@@ -40,7 +40,7 @@ Publier sur MQTT :
 ```bash
 mosquitto_pub -h 192.168.1.10 -u olivier -P xxx \
     -t 'extraflame/poele/ota/pull' \
-    -m 'https://raw.githubusercontent.com/Shad107/openextraflame/main/releases/v1.1.0/openextraflame.bin'
+    -m 'https://raw.githubusercontent.com/Shad107/OpenXtraflame/main/releases/v1.1.0/OpenXtraflame.bin'
 ```
 
 Ou HTTP local :
@@ -55,7 +55,7 @@ Le module télécharge, vérifie signature (=si configurée), applique, reboot.
 
 Configurable dans Web UI :
 
-- URL manifest : `https://server.example/openextraflame/manifest.json`
+- URL manifest : `https://server.example/OpenXtraflame/manifest.json`
 - Check interval : 24h par défaut
 - Auto-apply : true / false
 
@@ -64,7 +64,7 @@ Format manifest :
 ```json
 {
     "version": "1.2.0",
-    "url": "https://server.example/openextraflame/v1.2.0.bin",
+    "url": "https://server.example/OpenXtraflame/v1.2.0.bin",
     "sha256": "abc123...",
     "size": 1234567,
     "release_notes": "Bugfix Micronova timing"
@@ -86,7 +86,7 @@ Signer un firmware :
 
 ```bash
 espsecure.py sign_data --version 2 --keyfile ota_signing_key.pem \
-    -o openextraflame_signed.bin openextraflame.bin
+    -o OpenXtraflame_signed.bin OpenXtraflame.bin
 ```
 
 Embed la clé publique dans le firmware via `sdkconfig` :
@@ -129,7 +129,7 @@ esp_ota_mark_app_valid_cancel_rollback();
 
 Extraflame supporte aussi l'OTA du firmware du POELE lui-même via UART Micronova (=SerialOTA2.c reversé).
 
-Notre openextraflame peut relayer cette fonctionnalité :
+Notre OpenXtraflame peut relayer cette fonctionnalité :
 
 ```bash
 # Push firmware poêle via MQTT
@@ -152,7 +152,7 @@ Chaque firmware embed sa version via `esp_app_desc_t` :
 static const esp_app_desc_t app_desc = {
     .magic_word = 0xABCD5432,
     .version    = "1.0.0",
-    .project_name = "openextraflame",
+    .project_name = "OpenXtraflame",
     ...
 };
 ```
@@ -167,7 +167,7 @@ Version visible via :
 1. Build v1.0.0 :
 ```bash
 docker compose run --rm esp-idf idf.py -DTARGET=external build
-cp build/openextraflame.bin releases/v1.0.0.bin
+cp build/OpenXtraflame.bin releases/v1.0.0.bin
 ```
 
 2. Flash initial via USB :
@@ -179,7 +179,7 @@ docker compose run --rm esp-idf idf.py -p /dev/ttyUSB0 flash
 ```bash
 # Édite CMakeLists.txt IDF_VER_APP="1.0.1"
 docker compose run --rm esp-idf idf.py -DTARGET=external build
-cp build/openextraflame.bin releases/v1.0.1.bin
+cp build/OpenXtraflame.bin releases/v1.0.1.bin
 ```
 
 4. OTA depuis v1.0.0 vers v1.0.1 :
@@ -225,8 +225,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            releases/openextraflame-external.bin
-            releases/openextraflame-blacklabel.bin
+            releases/OpenXtraflame-external.bin
+            releases/OpenXtraflame-blacklabel.bin
             releases/manifest.json
 ```
 

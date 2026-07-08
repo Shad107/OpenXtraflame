@@ -301,7 +301,7 @@ Ordre efficace :
 Plus rapide que reverse Ghidra pur pour identifier GPIOs :
 
 ```
-1. Flash openextraflame Target External sur ESP32 spare
+1. Flash OpenXtraflame Target External sur ESP32 spare
 2. Wire ESP32 spare GND à module Black Label GND
 3. Wire un GPIO ESP32 spare (=en INPUT_PULLUP) sur chaque GPIO
    du module Black Label un par un

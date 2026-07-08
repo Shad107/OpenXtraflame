@@ -1,4 +1,4 @@
-/* openextraflame - Web UI script */
+/* OpenXtraflame - Web UI script */
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 const j = (u, o = {}) => fetch(u, o).then(r => r.json());
@@ -437,7 +437,7 @@ async function otaCheck() {
         const j = await r.json();
         const latest = j.tag_name || j.name || '?';
         const current = $('version').textContent;
-        const url = (j.assets || []).map(a => a.browser_download_url).find(u => /openextraflame\.bin$/.test(u));
+        const url = (j.assets || []).map(a => a.browser_download_url).find(u => /OpenXtraflame\.bin$/.test(u));
         if (url) $('ota-url').value = url;
         span.textContent = current === latest
             ? `✅ ${current} = latest`

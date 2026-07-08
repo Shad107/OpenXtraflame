@@ -1,4 +1,4 @@
-# Build openextraflame
+# Build OpenXtraflame
 
 ## Prérequis
 
@@ -13,7 +13,7 @@ Le container `Dockerfile.esp-idf` contient déjà tout l'environnement Espressif
 ### 1. Setup
 
 ```bash
-cd ~/projects/openextraflame
+cd ~/projects/OpenXtraflame
 docker compose build
 ```
 
@@ -29,7 +29,7 @@ docker compose run --rm esp-idf idf.py set-target esp32
 docker compose run --rm esp-idf idf.py -DTARGET=external build
 ```
 
-Le firmware est produit dans `firmware/build/openextraflame.bin`.
+Le firmware est produit dans `firmware/build/OpenXtraflame.bin`.
 
 ### 4. Compiler pour Target Black Label (=reflash original)
 
@@ -62,7 +62,7 @@ Voir doc officielle Espressif : https://docs.espressif.com/projects/esp-idf/en/l
 ```bash
 cd ~/esp/esp-idf
 . ./export.sh
-cd ~/projects/openextraflame/firmware
+cd ~/projects/OpenXtraflame/firmware
 idf.py -DTARGET=external build
 ```
 
@@ -72,7 +72,7 @@ idf.py -DTARGET=external build
 firmware/build/
 ├── bootloader/bootloader.bin       # 0x1000
 ├── partition_table/partition-table.bin  # 0x8000
-└── openextraflame.bin              # 0x10000 (=ota_0)
+└── OpenXtraflame.bin              # 0x10000 (=ota_0)
 ```
 
 ## Flash offsets (=référence)
@@ -81,7 +81,7 @@ firmware/build/
 |-----------------------------------|-------------|--------------------------|
 | bootloader.bin                    | 0x1000      | ESP-IDF 2nd stage        |
 | partition-table.bin               | 0x8000      | Table 4KB                |
-| openextraflame.bin                | 0x10000     | ota_0                    |
+| OpenXtraflame.bin                | 0x10000     | ota_0                    |
 
 ## Flash rapide via esptool (=manuel)
 
@@ -89,7 +89,7 @@ firmware/build/
 esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash \
     0x1000 bootloader.bin \
     0x8000 partition-table.bin \
-    0x10000 openextraflame.bin
+    0x10000 OpenXtraflame.bin
 ```
 
 ## Restauration firmware Extraflame original (=si nécessaire)

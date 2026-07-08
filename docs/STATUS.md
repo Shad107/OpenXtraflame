@@ -1,4 +1,4 @@
-# État du projet openextraflame
+# État du projet OpenXtraflame
 
 ## Ce qui est fait (=session 2026-07-03)
 
@@ -115,7 +115,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 
 ## Décisions à confirmer avec Olivier
 
-- [ ] Nom projet : `openextraflame` (=proposé) vs alternatives
+- [ ] Nom projet : `OpenXtraflame` (=proposé) vs alternatives
 - [ ] License : MIT (=proposé) vs GPL v3
 - [ ] Timing publication : après validation firmware (=proposé)
 - [ ] Repo GitHub : sous quel compte ? Shad107 ?
@@ -124,11 +124,11 @@ Total : ~24h de travail réparti sur 4 weekends.
 
 ## Fichiers artefacts
 
-- Repo : `/home/user/projects/openextraflame/`
+- Repo : `/home/user/projects/OpenXtraflame/`
 - Dump : `/home/user/Downloads/extraflame_dump.bin`
 - Backup : `/home/user/Downloads/extraflame_dump_BACKUP.bin`
 - Partitions extraites : `/home/user/Downloads/partition_*.bin`
-- Session logs : `/home/user/projects/openextraflame/analysis/session_2026-07-03_logs.md`
+- Session logs : `/home/user/projects/OpenXtraflame/analysis/session_2026-07-03_logs.md`
 
 ## ⭐ MAJ 2026-07-03 SOIR - Architecture SLAVE + tests QEMU + build validé
 
@@ -152,7 +152,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 ```
 docker compose run esp-idf idf.py -DOPENXFLAME_TARGET=external build
 → Successfully created esp32 image
-→ Generated /project/build/openextraflame.bin
+→ Generated /project/build/OpenXtraflame.bin
 ```
 
 ### Tools ajoutés

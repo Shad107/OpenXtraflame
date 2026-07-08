@@ -4,7 +4,7 @@
 
 ## Remerciements / crédits communauté
 
-**openextraflame s'appuie explicitement sur le travail de reverse engineering
+**OpenXtraflame s'appuie explicitement sur le travail de reverse engineering
 communautaire suivant** :
 
 - **[philibertc/micronova_controller](https://github.com/philibertc/micronova_controller)** -
@@ -20,7 +20,7 @@ communautaire suivant** :
 - **[morettigiorgio/micronova-C6](https://github.com/morettigiorgio/micronova-C6)** -
   PCB one-wire pour ESP32-C6, référence pour signal conditioning.
 
-**openextraflame ajoute la couche manquante** : reflash direct du module Extraflame
+**OpenXtraflame ajoute la couche manquante** : reflash direct du module Extraflame
 Black Label T009_3 + reverse engineering du cloud MQTT Omnyvore. Aucun de ces projets
 ne remplace le firmware d'origine du module Wi-Fi.
 
@@ -35,7 +35,7 @@ Tous les projets publics tombent dans 3 catégories :
 2. **Intégration cloud Agua IOT / Total Control** (=passe par cloud tiers)
 3. **Polling HTTP local du module WiNET** (=1 seul projet, module différent)
 
-**Aucun projet public n'a reflashé le firmware du module Extraflame Black Label T009_3 avant openextraflame.**
+**Aucun projet public n'a reflashé le firmware du module Extraflame Black Label T009_3 avant OpenXtraflame.**
 
 ## Projets inventoriés (juillet 2026)
 
@@ -62,7 +62,7 @@ Tous les projets publics tombent dans 3 catégories :
 |--------|--------|--------|-------|
 | notarobot63/thermorossi-ha | Python | 2026-03-14 | Poll `/ajax/get-registers` sur module WiNET (=White Label, PAS Black Label) |
 
-## Positionnement openextraflame
+## Positionnement OpenXtraflame
 
 ```
 🎯 Deux niches vides occupées :
@@ -78,7 +78,7 @@ Tous les projets publics tombent dans 3 catégories :
 
 ## Différences architecturales notables
 
-- **Reflash direct** (=openextraflame) : ne dépend d'aucun cloud tiers, ni d'Extraflame, ni d'Agua IOT
+- **Reflash direct** (=OpenXtraflame) : ne dépend d'aucun cloud tiers, ni d'Extraflame, ni d'Agua IOT
 - **Approches Agua IOT** : dépendance cloud tiers (=peut disparaître)
 - **ESP externe** : dépend du bus série Micronova physiquement accessible
 

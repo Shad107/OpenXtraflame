@@ -49,7 +49,7 @@ Le certificat extrait du NVS est probablement le **CA racine Omnyvore privée** 
 ### Test à faire avant d'investir
 
 ```bash
-cd /home/user/projects/openextraflame
+cd /home/user/projects/OpenXtraflame
 openssl x509 -in analysis/omnyvore_ca.pem -text -noout | grep -E "Issuer|Subject"
 ```
 

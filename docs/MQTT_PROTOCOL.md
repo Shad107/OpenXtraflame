@@ -1,6 +1,6 @@
-# Protocole MQTT openextraflame
+# Protocole MQTT OpenXtraflame
 
-Le firmware openextraflame publie l'état du poêle sur MQTT et s'abonne aux commandes de contrôle. Compatible avec Home Assistant via MQTT Discovery (=optionnel).
+Le firmware OpenXtraflame publie l'état du poêle sur MQTT et s'abonne aux commandes de contrôle. Compatible avec Home Assistant via MQTT Discovery (=optionnel).
 
 ## Configuration topic prefix
 
@@ -108,7 +108,7 @@ Restart :
 systemctl restart mosquitto
 ```
 
-## Configuration openextraflame
+## Configuration OpenXtraflame
 
 Dans l'UI web :
 
@@ -143,7 +143,7 @@ Le protocole cloud original utilise :
 - Auth : HMAC signed
 - Topics : `%s/%s/%s/%s IN/... OUT/... REPLY/...` (=hiérarchie 4 niveaux)
 
-openextraflame **ne reproduit PAS** ce protocole cloud. Il est destiné à un usage 100% local avec ton propre broker MQTT.
+OpenXtraflame **ne reproduit PAS** ce protocole cloud. Il est destiné à un usage 100% local avec ton propre broker MQTT.
 
 Si tu veux garder l'accès Total Control 2.0, utilise Target External (=le module Black Label reste actif avec son firmware d'origine, l'ESP32 spare fait le bridge local en parallèle).
 

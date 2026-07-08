@@ -2,7 +2,7 @@
 
 ⚠️ **ATTENTION - opération irréversible sans backup.**
 
-Cette procédure remplace le firmware d'origine sur le module Extraflame Black Label T009_3 (=289€ TTC neuf) par openextraflame. Sans backup, tu perds la fonctionnalité cloud Total Control 2.0 pour toujours (=jusqu'à ce que Extraflame publie un moyen de flash).
+Cette procédure remplace le firmware d'origine sur le module Extraflame Black Label T009_3 (=289€ TTC neuf) par OpenXtraflame. Sans backup, tu perds la fonctionnalité cloud Total Control 2.0 pour toujours (=jusqu'à ce que Extraflame publie un moyen de flash).
 
 ## Prérequis critiques
 
@@ -77,7 +77,7 @@ docker compose run --rm esp-idf idf.py -p /dev/ttyUSB0 -DTARGET=blacklabel flash
 Monitor UART doit montrer :
 
 ```
-I (xxx) MAIN: openextraflame - build ...
+I (xxx) MAIN: OpenXtraflame - build ...
 I (xxx) MAIN: Board       : blacklabel-t009_3
 I (xxx) MAIN: Target      : BLACKLABEL (reflash original)
 I (xxx) MICRONOVA: Init UART1 TX=23 RX=5 @ 1200 baud 8N2 (inversé 0x24)

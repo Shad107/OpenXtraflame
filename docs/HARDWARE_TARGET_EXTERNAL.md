@@ -60,7 +60,7 @@ GND de l'ESP32 = GND du bus poêle = GND USB = potentiel commun.
 
 ## Test cablâge sans firmware
 
-Avant de flasher openextraflame :
+Avant de flasher OpenXtraflame :
 
 1. Alimente ESP32 seul (=sans le connecter au poêle)
 2. Vérifie que ça boot (=LED onboard s'allume, blink patterns)
@@ -72,7 +72,7 @@ Puis :
 2. Fais les connexions au poêle (=selon schéma ci-dessus)
 3. Vérifie polarité GND
 4. Rallume ESP32
-5. Flash openextraflame Target External
+5. Flash OpenXtraflame Target External
 
 ## Log de test
 
@@ -86,16 +86,16 @@ Tu devrais voir :
 
 ```
 I (xxx) MAIN: ===============================================
-I (xxx) MAIN:   openextraflame - build Jul  3 2026 18:00:00
+I (xxx) MAIN:   OpenXtraflame - build Jul  3 2026 18:00:00
 I (xxx) MAIN:   Board       : external-esp32
 I (xxx) MAIN:   Target      : EXTERNAL (spare ESP32)
 I (xxx) MICRONOVA: Init UART1 TX=17 RX=16 @ 1200 baud 8N2 (inversé 0x24)
 I (xxx) MICRONOVA: Micronova task started
-I (xxx) WIFI: SoftAP up : SSID='openextraflame_XXX'
+I (xxx) WIFI: SoftAP up : SSID='OpenXtraflame_XXX'
 I (xxx) WEB: Web UI listening on :80
 ```
 
-Connecte-toi au SoftAP "openextraflame_XXXXXX" et va sur http://192.168.4.1/
+Connecte-toi au SoftAP "OpenXtraflame_XXXXXX" et va sur http://192.168.4.1/
 pour configurer Wi-Fi + MQTT.
 
 ## Photos référence
