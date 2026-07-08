@@ -1,5 +1,12 @@
 # OpenXtraflame
 
+[![Release](https://img.shields.io/github/v/release/Shad107/OpenXtraflame?include_prereleases)](https://github.com/Shad107/OpenXtraflame/releases)
+[![License](https://img.shields.io/github/license/Shad107/OpenXtraflame)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Shad107/OpenXtraflame?style=social)](https://github.com/Shad107/OpenXtraflame)
+[![Issues](https://img.shields.io/github/issues/Shad107/OpenXtraflame)](https://github.com/Shad107/OpenXtraflame/issues)
+[![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2.3-red?logo=espressif)](https://github.com/espressif/esp-idf)
+[![HA](https://img.shields.io/badge/Home%20Assistant-integrated-blue?logo=home-assistant)](https://home-assistant.io)
+
 Custom firmware open-source pour les poêles à granulés Extraflame (et compatibles Micronova).
 
 **Statut** : v0.1.0-rc1 (=release candidate, usage perso validé sur Extraflame Teodora Evo)
