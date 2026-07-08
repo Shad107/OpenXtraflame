@@ -72,8 +72,43 @@ typedef enum {
      * Adresses extraites de la Addrs_dyn table 42-47 (=I_VENT family).
      * Validé 2026-07-08: EEPROM 0x7F=P.set (=4 quand écran affiche 4),
      * EEPROM 0x7D=consigne (=27 quand écran affiche 27). */
-    MN_EEP_POWER_SET_IVENT   = 0x17F,  // EEPROM_SET_POWER_ADDR pour I_VENT (=source persistente P.set)
-    MN_EEP_TEMP_SET_IVENT    = 0x17D,  // EEPROM_SET_AMB_ADDR pour I_VENT (=source persistante consigne)
+    MN_EEP_POWER_SET_IVENT   = 0x17F,  // EEPROM_SET_POWER_ADDR pour I_VENT
+    MN_EEP_TEMP_SET_IVENT    = 0x17D,  // EEPROM_SET_AMB_ADDR pour I_VENT
+    /* Compteurs maintenance (=firmware reverse, table I_VENT, 16-bit LSB+MSB).
+     * Heures par niveau P1..P5 + total + nombre de démarrages. */
+    MN_EEP_CTR_H_P1_LSB      = 0x1D0,  // COUNTERS_H_1_LSB
+    MN_EEP_CTR_H_P1_MSB      = 0x1D1,
+    MN_EEP_CTR_H_P2_LSB      = 0x1D2,
+    MN_EEP_CTR_H_P2_MSB      = 0x1D3,
+    MN_EEP_CTR_H_P3_LSB      = 0x1D4,
+    MN_EEP_CTR_H_P3_MSB      = 0x1D5,
+    MN_EEP_CTR_H_P4_LSB      = 0x1D6,
+    MN_EEP_CTR_H_P4_MSB      = 0x1D7,
+    MN_EEP_CTR_H_P5_LSB      = 0x1D8,
+    MN_EEP_CTR_H_P5_MSB      = 0x1D9,
+    MN_EEP_CTR_H_TOT_LSB     = 0x1EA,  // COUNTERS_H_TOT (=heures totales)
+    MN_EEP_CTR_H_TOT_MSB     = 0x1EB,
+    MN_EEP_CTR_STARTS_LSB    = 0x1EE,  // COUNTERS_STARTS (=nombre démarrages)
+    MN_EEP_CTR_STARTS_MSB    = 0x1EF,
+    /* Chrono I_VENT - master enable + 4 programmes hebdo (=firmware reverse) */
+    MN_EEP_CHRONO_ENABLE     = 0x1AE,  // master on/off (=global chrono)
+    MN_EEP_CHRONO_EN1        = 0x1AF,
+    MN_EEP_CHRONO_EN2        = 0x1B0,
+    MN_EEP_CHRONO_EN3        = 0x1B1,
+    MN_EEP_CHRONO_EN4        = 0x1B2,
+    /* CHRONO1 : START, STOP, DAY1..7, TEMP */
+    MN_EEP_CHRONO1_START     = 0x14D,
+    MN_EEP_CHRONO1_STOP      = 0x14E,
+    MN_EEP_CHRONO1_DAY1      = 0x14F,  /* lundi */
+    MN_EEP_CHRONO1_DAY7      = 0x155,  /* dimanche (=DAY1+6) */
+    MN_EEP_CHRONO1_TEMP      = 0x156,
+    /* CHRONO2 : START at DAY7+1 = 0x157, and so on ; contigu */
+    MN_EEP_CHRONO2_START     = 0x157,
+    MN_EEP_CHRONO2_TEMP      = 0x160,
+    MN_EEP_CHRONO3_START     = 0x161,
+    MN_EEP_CHRONO3_TEMP      = 0x16A,
+    MN_EEP_CHRONO4_START     = 0x16B,
+    MN_EEP_CHRONO4_TEMP      = 0x174,
     MN_RAM_FUMES_TEMP        = 0x5A,   // temp fumées °C raw (validé 2026-07-07 20:24: 44 quand écran affiche 44)
     MN_RAM_FLAME_POWER       = 0x42,   // puissance flamme instantanée (empirique)
 
@@ -134,10 +169,28 @@ typedef struct {
     uint32_t         last_updated_ms;
     uint32_t         rx_frames_count;
     uint32_t         tx_frames_count;
+    /* Compteurs maintenance (=16-bit reconstruits depuis LSB+MSB EEPROM) */
+    uint16_t         hours_total;
+    uint16_t         starts_total;
+    uint16_t         hours_p1;
+    uint16_t         hours_p2;
+    uint16_t         hours_p3;
+    uint16_t         hours_p4;
+    uint16_t         hours_p5;
+    /* Pellets kg calculés depuis compteurs + config */
+    float            pellets_total_kg;      /* Σ hours_pn × conso_n */
+    float            pellets_since_refill_kg;
+    float            pellets_remaining_kg;
+    float            pellets_cost_lifetime_eur;
+    float            pellets_days_left;     /* estimation avg 7d */
 } mn_stove_state_snapshot_t;
 
 /* Init UART + start slave listener task */
 esp_err_t micronova_start(void);
+
+/* Fournir la référence à la config app (=lue pour calcul pellet kg).
+ * Appelé une fois au boot après config_nvs_load(). */
+void mn_set_config_ref(const void *cfg);
 
 /* Thread-safe snapshot getter */
 void mn_get_snapshot(mn_stove_state_snapshot_t *out);
@@ -160,6 +213,11 @@ char *mn_ram_dump_json(void);
 
 /* Return runtime stats (=frames counts, last activity ms). */
 char *mn_stats_json(void);
+
+/* Lit les 4 programmes chrono depuis le shadow (=si polled). Renvoie JSON
+ * détaillé avec pour chaque programme: enabled, start_hhmm, stop_hhmm,
+ * days[7] (=lundi-dimanche), temp_c. Caller frees. */
+char *mn_chrono_json(void);
 
 /* Return all polled registers with name/hex/decimal/decoded scaled value.
  * Meant for a live web UI table (no reflash needed). Caller frees. */

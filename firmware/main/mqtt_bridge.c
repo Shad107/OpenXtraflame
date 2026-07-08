@@ -48,8 +48,9 @@ static void handle_command(const char *topic, size_t tlen,
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            /* Micronova standard: TEMP_SET register at 0x7D, encoding raw °C */
-            mn_write_register(MN_RAM_TEMP_SET, (uint8_t)v);
+            /* Écrit dans EEPROM_SET_AMB (=0x7D I_VENT) = source persistante.
+             * Bank 1 encoded dans reg_addr → opcode 0xA0 EEPROM write. */
+            mn_write_register(MN_EEP_TEMP_SET_IVENT, (uint8_t)v);
         }
         return;
     }
@@ -58,7 +59,49 @@ static void handle_command(const char *topic, size_t tlen,
         if (dlen < sizeof(buf)) {
             memcpy(buf, data, dlen);
             int v = atoi(buf);
-            mn_write_register(MN_RAM_POWER_SET, (uint8_t)v);
+            /* Écrit dans EEPROM_SET_POWER (=0x7F I_VENT). Cf setpoint ci-dessus. */
+            mn_write_register(MN_EEP_POWER_SET_IVENT, (uint8_t)v);
+        }
+        return;
+    }
+    /* Chrono commands */
+    if (strstr(topic, "/cmd/chrono_master")) {
+        char buf[8] = {0};
+        if (dlen < sizeof(buf)) {
+            memcpy(buf, data, dlen);
+            uint8_t v = (strstr(buf, "ON") || buf[0]=='1' || strstr(buf, "true")) ? 1 : 0;
+            mn_write_register(MN_EEP_CHRONO_ENABLE, v);
+        }
+        return;
+    }
+    /* /cmd/chrono_progN_field with N=1..4 and field=enable|start|stop|temp */
+    const char *cp = strstr(topic, "/cmd/chrono_prog");
+    if (cp) {
+        cp += strlen("/cmd/chrono_prog");
+        if (*cp < '1' || *cp > '4') { ESP_LOGW(TAG, "bad prog id"); return; }
+        int idx = *cp - '1';  /* 0..3 */
+        static const uint16_t base_addr[4] = {
+            MN_EEP_CHRONO1_START, MN_EEP_CHRONO2_START,
+            MN_EEP_CHRONO3_START, MN_EEP_CHRONO4_START
+        };
+        static const uint16_t en_addr[4] = {
+            MN_EEP_CHRONO_EN1, MN_EEP_CHRONO_EN2, MN_EEP_CHRONO_EN3, MN_EEP_CHRONO_EN4
+        };
+        char buf[16] = {0};
+        if (dlen >= sizeof(buf)) return;
+        memcpy(buf, data, dlen);
+        if (strstr(cp, "_enable")) {
+            uint8_t v = (strstr(buf, "ON") || buf[0]=='1' || strstr(buf, "true")) ? 1 : 0;
+            mn_write_register(en_addr[idx], v);
+        } else if (strstr(cp, "_start") || strstr(cp, "_stop")) {
+            int h = 0, m2 = 0;
+            if (sscanf(buf, "%d:%d", &h, &m2) == 2) {
+                uint8_t raw = (uint8_t)((h * 60 + m2) / 10);
+                uint16_t addr = base_addr[idx] + (strstr(cp, "_start") ? 0 : 1);
+                mn_write_register(addr, raw);
+            }
+        } else if (strstr(cp, "_temp")) {
+            mn_write_register(base_addr[idx] + 9, (uint8_t)atoi(buf));
         }
         return;
     }
@@ -164,7 +207,7 @@ esp_err_t mqtt_bridge_publish_state(void)
     /* t_water only if stove is a hydro model (=I_CALD/I_IDRO). On the
      * ventilated I_VENT models the register 0x03 is absent and returns 0,
      * so publishing it produces a confusing constant 0 in HA. */
-    /* Use auto-detected type (=Phase 3) — s.stove_type reflects real hardware */
+    /* Use auto-detected type (=Phase 3) - s.stove_type reflects real hardware */
     stove_type_t st = s.stove_type;
     if (st == STOVE_TYPE_I_CALD ||
         st == STOVE_TYPE_I_IDRO ||
@@ -173,6 +216,17 @@ esp_err_t mqtt_bridge_publish_state(void)
     }
     cJSON_AddNumberToObject(o, "t_smoke",   s.t_smoke);
     cJSON_AddNumberToObject(o, "setpoint",  s.set_temperature);
+    cJSON_AddNumberToObject(o, "hours_total",  s.hours_total);
+    cJSON_AddNumberToObject(o, "starts_total", s.starts_total);
+    cJSON_AddNumberToObject(o, "hours_p1", s.hours_p1);
+    cJSON_AddNumberToObject(o, "hours_p2", s.hours_p2);
+    cJSON_AddNumberToObject(o, "hours_p3", s.hours_p3);
+    cJSON_AddNumberToObject(o, "hours_p4", s.hours_p4);
+    cJSON_AddNumberToObject(o, "hours_p5", s.hours_p5);
+    cJSON_AddNumberToObject(o, "pellets_total_kg",         s.pellets_total_kg);
+    cJSON_AddNumberToObject(o, "pellets_since_refill_kg",  s.pellets_since_refill_kg);
+    cJSON_AddNumberToObject(o, "pellets_remaining_kg",     s.pellets_remaining_kg);
+    cJSON_AddNumberToObject(o, "pellets_cost_lifetime_eur", s.pellets_cost_lifetime_eur);
     char *json = cJSON_PrintUnformatted(o);
     cJSON_Delete(o);
 
@@ -180,6 +234,37 @@ esp_err_t mqtt_bridge_publish_state(void)
     snprintf(topic, sizeof(topic), "%s/state", sub_topic_prefix);
     esp_mqtt_client_publish(client, topic, json, 0, 0, 0);
     free(json);
+
+    /* Chrono : publie séparément sur <prefix>/chrono (=stable, changement rare) */
+    char *cjson = mn_chrono_json();
+    if (cjson) {
+        char chrono_topic[160];
+        snprintf(chrono_topic, sizeof(chrono_topic), "%s/chrono", sub_topic_prefix);
+        esp_mqtt_client_publish(client, chrono_topic, cjson, 0, 0, 1);  /* retained */
+        free(cjson);
+    }
+
+    /* Config pellet : publie sur <prefix>/pellet (=retained, changement rare) */
+    {
+        cJSON *pl = cJSON_CreateObject();
+        cJSON_AddNumberToObject(pl, "tank_capacity_kg", local_cfg.pellet_tank_capacity_kg);
+        cJSON_AddNumberToObject(pl, "sack_size_kg",     local_cfg.pellet_sack_size_kg);
+        cJSON_AddNumberToObject(pl, "price_per_sack",   local_cfg.pellet_price_per_sack_eur);
+        cJSON_AddNumberToObject(pl, "winter_days",      local_cfg.pellet_winter_days);
+        cJSON_AddNumberToObject(pl, "consumption_p1",   local_cfg.pellet_consumption_p1);
+        cJSON_AddNumberToObject(pl, "consumption_p2",   local_cfg.pellet_consumption_p2);
+        cJSON_AddNumberToObject(pl, "consumption_p3",   local_cfg.pellet_consumption_p3);
+        cJSON_AddNumberToObject(pl, "consumption_p4",   local_cfg.pellet_consumption_p4);
+        cJSON_AddNumberToObject(pl, "consumption_p5",   local_cfg.pellet_consumption_p5);
+        char *pjson = cJSON_PrintUnformatted(pl);
+        cJSON_Delete(pl);
+        if (pjson) {
+            char pt[160];
+            snprintf(pt, sizeof(pt), "%s/pellet", sub_topic_prefix);
+            esp_mqtt_client_publish(client, pt, pjson, 0, 0, 1);  /* retained */
+            free(pjson);
+        }
+    }
     return ESP_OK;
 }
 
@@ -354,7 +439,7 @@ esp_err_t mqtt_bridge_publish_discovery(void)
                   sensor("Température ambiante", "t_ambient", "°C", "temperature"));
     publish_disco("sensor", "t_smoke",
                   sensor("Température fumées",   "t_smoke",   "°C", "temperature"));
-    /* Use auto-detected type (=Phase 3) — reflects real hardware, not user config.
+    /* Use auto-detected type (=Phase 3) - reflects real hardware, not user config.
      * Si non-hydro : publish EMPTY retained message pour supprimer la sensor t_water
      * précédemment retained côté HA (=nettoyage discovery). */
     stove_type_t st_disco = mn_detected_stove_type();
@@ -375,6 +460,163 @@ esp_err_t mqtt_bridge_publish_discovery(void)
                   sensor("Puissance réelle",     "power_real", NULL, NULL));
     publish_disco("sensor", "alarm_code",
                   sensor("Code alarme",          "alarm",     NULL, NULL));
+    /* Compteurs maintenance */
+    #define DIAG(obj_id, name_str, key, unit_str) do { \
+        cJSON *p = sensor(name_str, key, unit_str, NULL); \
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic"); \
+        publish_disco("sensor", obj_id, p); \
+    } while(0)
+    DIAG("hours_total",  "Heures totales",     "hours_total",  "h");
+    DIAG("starts_total", "Nombre démarrages",  "starts_total", NULL);
+    DIAG("hours_p1",     "Heures P1",          "hours_p1",     "h");
+    DIAG("hours_p2",     "Heures P2",          "hours_p2",     "h");
+    DIAG("hours_p3",     "Heures P3",          "hours_p3",     "h");
+    DIAG("hours_p4",     "Heures P4",          "hours_p4",     "h");
+    DIAG("hours_p5",     "Heures P5",          "hours_p5",     "h");
+    #undef DIAG
+
+    /* Sensors pellets (=readonly, section Contrôles). Templates arrondissent
+     * les valeurs à afficher : kg à 0 décimales, € et kg restants à 2. */
+    {
+        cJSON *p = sensor("Pellets consommés", "pellets_total_kg", "kg", "weight");
+        cJSON_ReplaceItemInObject(p, "value_template",
+            cJSON_CreateString("{{ value_json.pellets_total_kg | round(0) }}"));
+        publish_disco("sensor", "pellets_total_kg", p);
+    }
+    {
+        cJSON *p = sensor("Coût pellets lifetime", "pellets_cost_lifetime_eur", "€", "monetary");
+        cJSON_ReplaceItemInObject(p, "value_template",
+            cJSON_CreateString("{{ value_json.pellets_cost_lifetime_eur | round(2) }}"));
+        publish_disco("sensor", "pellets_cost_lifetime", p);
+    }
+    {
+        cJSON *p = sensor("Pellets restants", "pellets_remaining_kg", "kg", "weight");
+        cJSON_ReplaceItemInObject(p, "value_template",
+            cJSON_CreateString("{{ value_json.pellets_remaining_kg | round(1) }}"));
+        publish_disco("sensor", "pellets_remaining_kg", p);
+    }
+
+    /* --- Chrono : master switch + 4 programmes (=switch enable + temp + times) --- */
+    char chrono_topic[160], cmd_topic[192];
+    snprintf(chrono_topic, sizeof(chrono_topic), "%s/chrono", sub_topic_prefix);
+
+    /* CLEANUP : supprimer TOUTES les anciennes retained discovery chrono qui
+     * avaient un composant type ou object_id différent des actuels. */
+    {
+        char t[192];
+        /* Anciens types réutilisés */
+        snprintf(t, sizeof(t), "homeassistant/binary_sensor/%s/chrono_master/config", device_id);
+        esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+        for (int i = 1; i <= 4; i++) {
+            /* Anciens obj_id "chrono_prog<N>" (=renommé, plusieurs itérations) */
+            snprintf(t, sizeof(t), "homeassistant/sensor/%s/chrono_prog%d/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+            snprintf(t, sizeof(t), "homeassistant/sensor/%s/chrono_prog%d_sum/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+            snprintf(t, sizeof(t), "homeassistant/sensor/%s/chrono_prog%d_sum_v2/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+            snprintf(t, sizeof(t), "homeassistant/text/%s/chrono_prog%d_sum_txt/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+            /* Anciens text (=maintenant time) */
+            snprintf(t, sizeof(t), "homeassistant/text/%s/chrono_prog%d_start/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+            snprintf(t, sizeof(t), "homeassistant/text/%s/chrono_prog%d_stop/config", device_id, i);
+            esp_mqtt_client_publish(client, t, "", 0, 1, 1);
+        }
+    }
+
+    /* Master switch */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Chrono master");
+        cJSON_AddStringToObject(p, "state_topic", chrono_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.master_enabled else 'OFF' }}");
+        cJSON_AddStringToObject(p, "payload_on",  "ON");
+        cJSON_AddStringToObject(p, "payload_off", "OFF");
+        snprintf(cmd_topic, sizeof(cmd_topic), "%s/cmd/chrono_master", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd_topic);
+        cJSON_AddStringToObject(p, "entity_category", "config");
+        publish_disco("switch", "chrono_master", p);
+    }
+    /* Summary sensor per program - reste dans section Contrôles/Capteurs faute
+     * de mieux (=sensor + entity_category "config" impossible en HA 2026,
+     * text sans command_topic invisible). */
+    for (int i = 0; i < 4; i++) {
+        cJSON *p = cJSON_CreateObject();
+        char name[32], obj[32], tpl[256];
+        snprintf(name, sizeof(name), "Chrono P%d résumé", i + 1);
+        snprintf(obj,  sizeof(obj),  "chrono_prog%d_sum_v3", i + 1);
+        snprintf(tpl, sizeof(tpl),
+            "{{ 'actif' if value_json.programs[%d].enabled else 'off' }} "
+            "{{ value_json.programs[%d].start }}-{{ value_json.programs[%d].stop }} "
+            "{{ value_json.programs[%d].temp_c }}°C", i, i, i, i);
+        cJSON_AddStringToObject(p, "name", name);
+        cJSON_AddStringToObject(p, "state_topic", chrono_topic);
+        cJSON_AddStringToObject(p, "value_template", tpl);
+        publish_disco("sensor", obj, p);
+    }
+    /* Enable switch + temp number + start/stop text per program */
+    for (int i = 0; i < 4; i++) {
+        int n = i + 1;
+        /* Enable switch */
+        {
+            cJSON *p = cJSON_CreateObject();
+            char name[32], obj[32], tpl[128];
+            snprintf(name, sizeof(name), "Chrono P%d actif", n);
+            snprintf(obj,  sizeof(obj),  "chrono_prog%d_enable", n);
+            snprintf(tpl, sizeof(tpl),
+                "{{ 'ON' if value_json.programs[%d].enabled else 'OFF' }}", i);
+            cJSON_AddStringToObject(p, "name", name);
+            cJSON_AddStringToObject(p, "state_topic", chrono_topic);
+            cJSON_AddStringToObject(p, "value_template", tpl);
+            cJSON_AddStringToObject(p, "payload_on",  "ON");
+            cJSON_AddStringToObject(p, "payload_off", "OFF");
+            snprintf(cmd_topic, sizeof(cmd_topic), "%s/cmd/chrono_prog%d_enable", sub_topic_prefix, n);
+            cJSON_AddStringToObject(p, "command_topic", cmd_topic);
+            cJSON_AddStringToObject(p, "entity_category", "config");
+            publish_disco("switch", obj, p);
+        }
+        /* Temp number 1..30°C */
+        {
+            cJSON *p = cJSON_CreateObject();
+            char name[32], obj[32], tpl[128];
+            snprintf(name, sizeof(name), "Chrono P%d consigne", n);
+            snprintf(obj,  sizeof(obj),  "chrono_prog%d_temp", n);
+            snprintf(tpl, sizeof(tpl), "{{ value_json.programs[%d].temp_c }}", i);
+            cJSON_AddStringToObject(p, "name", name);
+            cJSON_AddStringToObject(p, "state_topic", chrono_topic);
+            cJSON_AddStringToObject(p, "value_template", tpl);
+            cJSON_AddNumberToObject(p, "min", 1);
+            cJSON_AddNumberToObject(p, "max", 30);
+            cJSON_AddNumberToObject(p, "step", 1);
+            cJSON_AddStringToObject(p, "unit_of_measurement", "°C");
+            cJSON_AddStringToObject(p, "mode", "box");
+            snprintf(cmd_topic, sizeof(cmd_topic), "%s/cmd/chrono_prog%d_temp", sub_topic_prefix, n);
+            cJSON_AddStringToObject(p, "command_topic", cmd_topic);
+            cJSON_AddStringToObject(p, "entity_category", "config");
+            publish_disco("number", obj, p);
+        }
+        /* Start + Stop datetime (=HA time picker) */
+        for (int se = 0; se < 2; se++) {
+            const char *field = se ? "stop" : "start";
+            const char *field_fr = se ? "fin" : "début";
+            cJSON *p = cJSON_CreateObject();
+            char name[32], obj[32], tpl[128];
+            snprintf(name, sizeof(name), "Chrono P%d %s", n, field_fr);
+            snprintf(obj,  sizeof(obj),  "chrono_prog%d_%s", n, field);
+            /* Ajoute ":00" pour format HH:MM:SS attendu par datetime mode time */
+            snprintf(tpl, sizeof(tpl), "{{ value_json.programs[%d].%s ~ ':00' }}", i, field);
+            cJSON_AddStringToObject(p, "name", name);
+            cJSON_AddStringToObject(p, "state_topic", chrono_topic);
+            cJSON_AddStringToObject(p, "value_template", tpl);
+            cJSON_AddStringToObject(p, "format", "%H:%M:%S");
+            snprintf(cmd_topic, sizeof(cmd_topic), "%s/cmd/chrono_prog%d_%s", sub_topic_prefix, n, field);
+            cJSON_AddStringToObject(p, "command_topic", cmd_topic);
+            cJSON_AddStringToObject(p, "entity_category", "config");
+            publish_disco("time", obj, p);
+        }
+    }
 
     /* Stove state as text sensor with a mapping in value_template */
     {

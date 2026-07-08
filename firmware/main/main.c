@@ -161,6 +161,7 @@ void app_main(void)
     ota_init();
 
     /* 5. Start Micronova UART task FIRST (=independent of Wi-Fi, works in QEMU) */
+    mn_set_config_ref(&cfg);
     micronova_start();
 
     /* 6. Start Wi-Fi bridge (=STA if provisioned, else SoftAP)

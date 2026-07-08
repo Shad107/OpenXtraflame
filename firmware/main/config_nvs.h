@@ -55,6 +55,30 @@ typedef struct {
     uint32_t mn_baud_rate;          // 1200 / 2400 / 9600 / 19200 / 38400
     uint8_t  mn_stop_bits;          // 1 or 2
 
+    /* Pellet tank + consommation (=derivé de specs poêle) */
+    float    pellet_tank_capacity_kg;   // default 14 (Teodora Evo)
+    float    stove_nominal_power_kw;    // default 8.0 (Teodora Evo max)
+    float    stove_min_power_kw;        // default 2.5 (Teodora Evo min)
+    float    stove_efficiency_pct;      // default 90.8 (rendement %)
+    float    pellet_calorific_kwh_kg;   // default 4.7 (=pellet DIN+ moyen)
+    /* Consommations dérivées calc = kW / (eff × calorific), non stockées */
+    float    pellet_consumption_p1;     // calculé au load, jamais éditable direct
+    float    pellet_consumption_p2;
+    float    pellet_consumption_p3;
+    float    pellet_consumption_p4;
+    float    pellet_consumption_p5;
+    float    pellet_sack_size_kg;       // default 15
+    float    pellet_price_per_sack_eur; // default 6.0
+    uint16_t pellet_winter_days;        // default 180 (=oct→avril)
+    /* Refill + service snapshots (=incrémentés sur reset) */
+    uint16_t pellet_refill_h_p1;        // heures P1 au moment du dernier refill
+    uint16_t pellet_refill_h_p2;
+    uint16_t pellet_refill_h_p3;
+    uint16_t pellet_refill_h_p4;
+    uint16_t pellet_refill_h_p5;
+    uint16_t pellet_service_h_tot;      // total au moment du dernier service annuel
+    uint32_t pellet_service_epoch;      // timestamp Unix
+
 #ifdef TARGET_BLACKLABEL
     /* Guardian Mode - OPT-IN, disabled by default
      * ONLY available on TARGET_BLACKLABEL because it requires the

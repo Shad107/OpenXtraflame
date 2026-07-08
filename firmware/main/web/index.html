@@ -24,12 +24,13 @@
 
 <nav class="tabs">
     <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab" data-tab="stove">🔥 Poêle</button>
     <button class="tab" data-tab="wifi">📶 Wi-Fi</button>
     <button class="tab" data-tab="mqtt">📡 MQTT</button>
-    <button class="tab" data-tab="stove">🔥 Poêle</button>
     <button class="tab" data-tab="ota">⬆️ OTA</button>
-    <button class="tab" data-tab="debug">🔍 Debug</button>
     <button class="tab" data-tab="advanced">⚙️ Avancé</button>
+    <button class="tab" data-tab="debug">🔍 Debug</button>
+    <button class="tab" data-tab="about">ℹ️ À propos</button>
 </nav>
 
 <main>
@@ -39,32 +40,14 @@
             <div class="card status-card">
                 <div class="card-header">
                     <span class="status-dot" id="status-dot"></span>
-                    <h3>Statut</h3>
+                    <h3>Poêle</h3>
                 </div>
                 <div class="status-list">
                     <div class="status-item">
-                        <span class="status-label">Wi-Fi</span>
-                        <span class="status-value" id="s-wifi">-</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Adresse IP</span>
-                        <span class="status-value" id="s-ip">-</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">MQTT</span>
-                        <span class="status-value" id="s-mqtt">-</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Poêle</span>
+                        <span class="status-label">Connexion</span>
                         <span class="status-value" id="s-stove">-</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="card metric-card">
-                <div class="metric-label">Température ambiante</div>
-                <div class="metric-value" id="m-tamb">-</div>
-                <div class="metric-unit">°C</div>
             </div>
 
             <div class="card metric-card">
@@ -74,9 +57,24 @@
             </div>
 
             <div class="card metric-card">
+                <div class="metric-label">Consigne ambiance</div>
+                <div style="display:flex;gap:6px;align-items:center;justify-content:center">
+                    <input id="m-setpoint-edit" type="number" min="1" max="40" step="1" style="width:80px;text-align:center;font-size:1.3rem;padding:0.2rem 0.4rem">
+                    <button class="btn btn-primary" id="m-setpoint-save" style="padding:0.2rem 0.6rem">✔</button>
+                </div>
+                <div class="metric-unit">°C - actuel : <span id="m-setpoint">-</span></div>
+            </div>
+
+            <div class="card metric-card">
                 <div class="metric-label">Puissance demandée</div>
-                <div class="metric-value" id="m-power">-</div>
-                <div class="metric-unit">P.set /5</div>
+                <div style="display:flex;gap:6px;align-items:center;justify-content:center">
+                    <select id="m-power-edit" style="width:80px;text-align:center;font-size:1.3rem;padding:0.2rem 0.4rem">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                        <option value="4">4</option><option value="5">5</option>
+                    </select>
+                    <button class="btn btn-primary" id="m-power-save" style="padding:0.2rem 0.6rem">✔</button>
+                </div>
+                <div class="metric-unit">P.set - actuel : <span id="m-power">-</span></div>
             </div>
 
             <div class="card metric-card">
@@ -86,9 +84,27 @@
             </div>
 
             <div class="card metric-card">
+                <div class="metric-label">Température ambiante</div>
+                <div class="metric-value" id="m-tamb">-</div>
+                <div class="metric-unit">°C</div>
+            </div>
+
+            <div class="card metric-card">
                 <div class="metric-label">Température fumées</div>
                 <div class="metric-value" id="m-fumi">-</div>
                 <div class="metric-unit">°C</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Pellets consommés</div>
+                <div class="metric-value" id="m-pellets-total">-</div>
+                <div class="metric-unit">kg lifetime</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-label">Heures totales</div>
+                <div class="metric-value" id="m-hours-total">-</div>
+                <div class="metric-unit">h de fonctionnement</div>
             </div>
 
             <div class="card actions-card">
@@ -101,14 +117,17 @@
             </div>
         </div>
 
-        <div class="card" style="margin-top:1em">
-            <h3>Registres live (=shadow)</h3>
-            <div id="regs-live" style="font-family:monospace;font-size:13px;line-height:1.6"></div>
-        </div>
     </section>
 
     <!-- Wi-Fi -->
     <section id="tab-wifi" class="tab-content">
+        <div class="card">
+            <h3>Statut Wi-Fi</h3>
+            <div class="status-list">
+                <div class="status-item"><span class="status-label">Wi-Fi</span><span class="status-value" id="s-wifi">-</span></div>
+                <div class="status-item"><span class="status-label">Adresse IP</span><span class="status-value" id="s-ip">-</span></div>
+            </div>
+        </div>
         <div class="card">
             <h3>Configuration Wi-Fi</h3>
             <div class="form-group">
@@ -131,6 +150,12 @@
 
     <!-- MQTT -->
     <section id="tab-mqtt" class="tab-content">
+        <div class="card">
+            <h3>Statut MQTT</h3>
+            <div class="status-list">
+                <div class="status-item"><span class="status-label">Broker</span><span class="status-value" id="s-mqtt">-</span></div>
+            </div>
+        </div>
         <div class="card">
             <h3>Broker MQTT local</h3>
             <div class="form-row">
@@ -160,6 +185,17 @@
                 <label>Topic prefix <span class="hint">(=max 63)</span></label>
                 <input id="mqtt-prefix" type="text" value="extraflame" maxlength="63">
             </div>
+            <div class="form-group">
+                <label>Nom du poêle <span class="hint">(=friendly name pour HA)</span></label>
+                <input id="stove-name" type="text" value="poele" maxlength="31">
+            </div>
+            <div class="form-group toggle-group">
+                <label class="toggle">
+                    <input id="ha-discovery" type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                    <span>Home Assistant MQTT Discovery</span>
+                </label>
+            </div>
             <div class="form-group toggle-group">
                 <label class="toggle">
                     <input id="mqtt-tls" type="checkbox">
@@ -177,27 +213,90 @@
 
     <!-- Poêle -->
     <section id="tab-stove" class="tab-content">
-        <div class="card">
-            <h3>Configuration poêle</h3>
-            <div class="form-group">
-                <label>Nom (=friendly name pour HA)</label>
-                <input id="stove-name" type="text" value="poele">
-            </div>
-            <div class="form-group">
-                <label>Type d'appareil Micronova (=détecté auto)</label>
-                <div id="stove-type-info" style="font-family:monospace;background:#f5f5f5;padding:8px;border-radius:4px;font-size:13px">
-                    <div><strong>stove_type</strong> : <span id="info-stove-type">-</span></div>
-                    <div><strong>stove_model</strong> : <span id="info-stove-model">-</span></div>
-                    <div><strong>matricola</strong> : <span id="info-matricola">-</span></div>
+        <!-- Sous-onglets Poêle -->
+        <div style="display:flex;gap:4px;border-bottom:2px solid #e0e0e0;margin-bottom:1em">
+            <button class="subtab active" data-subtab="conso" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">📉 Consommation</button>
+            <button class="subtab" data-subtab="chrono" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">🕐 Chrono</button>
+            <button class="subtab" data-subtab="config" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">🌰 Configuration</button>
+        </div>
+
+        <!-- Sub-tab: Consommation -->
+        <div id="subtab-conso" class="subtab-content" style="display:block">
+            <div class="card">
+                <h3>Consommation pellets</h3>
+                <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+                    <div class="card metric-card"><div class="metric-label">Total consommé</div><div class="metric-value" id="c-total">-</div><div class="metric-unit">kg lifetime</div></div>
+                    <div class="card metric-card"><div class="metric-label">Sacs équivalents</div><div class="metric-value" id="c-sacs">-</div><div class="metric-unit">sacs</div></div>
+                    <div class="card metric-card"><div class="metric-label">≈ Coût cumulé</div><div class="metric-value" id="c-cost">-</div><div class="metric-unit">€ estimé au prix actuel</div></div>
+                    <div class="card metric-card"><div class="metric-label">Heures totales</div><div class="metric-value" id="c-hours">-</div><div class="metric-unit">h de fonctionnement</div></div>
                 </div>
-                <p class="hint">Détection auto depuis la partition secret1 (=préservée à la fabrication Extraflame). Si le type ne correspond pas à ton poêle, ouvre une <a href="https://github.com/Shad107/OpenXtraflame/issues" target="_blank" rel="noopener">issue GitHub</a> avec matricola + modèle commercial pour enrichir la table communautaire.</p>
+                <h4 style="margin:1.5em 0 0.5em">Répartition par niveau</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:monospace">
+                    <thead><tr style="background:#f0f0f0;text-align:left">
+                        <th style="padding:6px 8px">Niveau</th><th style="padding:6px 8px">Heures</th><th style="padding:6px 8px">kg/h</th><th style="padding:6px 8px">kg cumulés</th><th style="padding:6px 8px">%</th>
+                    </tr></thead>
+                    <tbody id="c-breakdown"><tr><td colspan="5" style="padding:8px;color:#888">Chargement...</td></tr></tbody>
+                </table>
             </div>
-            <div class="form-group toggle-group">
-                <label class="toggle">
-                    <input id="ha-discovery" type="checkbox" checked>
-                    <span class="toggle-slider"></span>
-                    <span>Home Assistant MQTT Discovery</span>
-                </label>
+        </div>
+
+        <!-- Sub-tab: Chrono -->
+        <div id="subtab-chrono" class="subtab-content" style="display:none">
+            <div class="card">
+                <h3>Chrono programmateur hebdo</h3>
+                <div class="form-group toggle-group">
+                    <label class="toggle">
+                        <input id="chrono-master-cb" type="checkbox">
+                        <span class="toggle-slider"></span>
+                        <span>Master (=global on/off du chrono)</span>
+                    </label>
+                </div>
+                <div id="chrono-programs" style="display:flex;flex-direction:column;gap:12px">
+                    <div style="color:#888">Chargement...</div>
+                </div>
+                <div class="button-row" style="margin-top:12px">
+                    <button class="btn btn-primary" id="chrono-save">💾 Enregistrer chrono</button>
+                    <button class="btn btn-secondary" id="chrono-reload">🔄 Recharger depuis poêle</button>
+                    <span id="chrono-save-result" class="hint" style="align-self:center"></span>
+                </div>
+                <p class="hint">Modifs sauvegardées écrivent dans EEPROM du poêle via <code>POST /api/chrono</code>.</p>
+            </div>
+        </div>
+
+        <!-- Sub-tab: Configuration -->
+        <div id="subtab-config" class="subtab-content" style="display:none">
+            <div class="card">
+                <h3>Consommation pellets</h3>
+                <p class="hint">La consommation par niveau se calcule automatiquement à partir des specs poêle : <code>kg/h = puissance / (rendement × pouvoir_calorifique)</code></p>
+
+                <h4 style="margin:1em 0 0.5em">Specs du poêle</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Puissance nominale (kW)</label><input id="pl-nom-kw" type="number" step="0.1" min="1" max="30"></div>
+                    <div class="form-group"><label>Puissance min. (kW)</label><input id="pl-min-kw" type="number" step="0.1" min="0.5" max="15"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Rendement (%)</label><input id="pl-eff" type="number" step="0.01" min="50" max="100" oninput="if(this.value.includes('.')&&this.value.split('.')[1].length>2)this.value=parseFloat(this.value).toFixed(2)"></div>
+                    <div class="form-group"><label>Pouvoir calorifique pellet (kWh/kg)</label><input id="pl-cal" type="number" step="0.01" min="3" max="6" oninput="if(this.value.includes('.')&&this.value.split('.')[1].length>2)this.value=parseFloat(this.value).toFixed(2)"></div>
+                </div>
+
+                <h4 style="margin:1em 0 0.5em">Réservoir & prix</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Capacité réservoir (kg)</label><input id="pl-tank" type="number" step="0.5" min="1" max="100"></div>
+                    <div class="form-group"><label>Taille sac (kg)</label><input id="pl-sack" type="number" step="0.5" min="1" max="30"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Prix par sac (€)</label><input id="pl-price" type="number" step="0.10" min="0" max="50"></div>
+                    <div class="form-group"><label>Durée hiver (jours)</label><input id="pl-winter" type="number" step="1" min="30" max="365"></div>
+                </div>
+
+                <h4 style="margin:1em 0 0.5em">Consommation calculée (kg/h)</h4>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-family:monospace">
+                    <div><small>P1</small><input id="pl-c1" type="number" step="0.01" readonly style="width:100%;background:#f5f5f5;color:#666"></div>
+                    <div><small>P2</small><input id="pl-c2" type="number" step="0.01" readonly style="width:100%;background:#f5f5f5;color:#666"></div>
+                    <div><small>P3</small><input id="pl-c3" type="number" step="0.01" readonly style="width:100%;background:#f5f5f5;color:#666"></div>
+                    <div><small>P4</small><input id="pl-c4" type="number" step="0.01" readonly style="width:100%;background:#f5f5f5;color:#666"></div>
+                    <div><small>P5</small><input id="pl-c5" type="number" step="0.01" readonly style="width:100%;background:#f5f5f5;color:#666"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -327,6 +426,37 @@
                 <button class="btn btn-warning" id="reboot">🔄 Redémarrer</button>
                 <button class="btn btn-danger" id="factory">💥 Reset usine</button>
             </div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section id="tab-about" class="tab-content">
+        <div class="card">
+            <h3>OpenXtraflame</h3>
+            <p>Firmware ESP32 open-source qui remplace la dépendance cloud du module Wi-Fi Extraflame Black Label par un contrôle 100% local via MQTT / Home Assistant.</p>
+            <ul style="line-height:1.8">
+                <li>🌐 <a href="https://www.isno.fr/projets/openxtraflame" target="_blank" rel="noopener">Article complet + guide reverse engineering</a></li>
+                <li>💻 <a href="https://github.com/Shad107/OpenXtraflame" target="_blank" rel="noopener">Code source GitHub</a></li>
+                <li>🐛 <a href="https://github.com/Shad107/OpenXtraflame/issues" target="_blank" rel="noopener">Signaler un bug / contribuer</a></li>
+                <li>📖 <a href="https://github.com/Shad107/OpenXtraflame/blob/main/docs/PROTOCOLE-MICRONOVA.md" target="_blank" rel="noopener">Doc protocole Micronova</a></li>
+                <li>📋 <a href="https://github.com/Shad107/OpenXtraflame/blob/main/docs/STOVE-TYPES.md" target="_blank" rel="noopener">Modèles de poêle compatibles</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Identité du poêle</h3>
+            <div id="stove-type-info" style="font-family:monospace;background:#f5f5f5;padding:12px;border-radius:4px;font-size:13px;line-height:2">
+                <div><strong>stove_type</strong> : <span id="info-stove-type">-</span></div>
+                <div><strong>stove_model</strong> : <span id="info-stove-model">-</span></div>
+                <div><strong>matricola</strong> : <span id="info-matricola">-</span></div>
+            </div>
+            <p class="hint">Détecté auto depuis la partition <code>secret1</code> préservée à la fabrication Extraflame. Si le type ne correspond pas → <a href="https://github.com/Shad107/OpenXtraflame/issues" target="_blank" rel="noopener">issue GitHub</a> avec matricola + modèle commercial pour enrichir la table.</p>
+        </div>
+
+        <div class="card">
+            <h3>Licence & crédits</h3>
+            <p>MIT License. Reverse engineering communautaire, non affilié à Extraflame ou La Nordica.</p>
+            <p class="hint">© 2026 <a href="https://www.isno.fr" target="_blank" rel="noopener">isno.fr</a> - Olivier (Shad107)</p>
         </div>
     </section>
 

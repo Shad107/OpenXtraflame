@@ -91,8 +91,16 @@ static esp_err_t handle_stove_cmd(httpd_req_t *req)
     if (strcmp(cmd, "on") == 0)          mn_write_register(MN_RAM_STOVE_STATE, 0x01);
     else if (strcmp(cmd, "off") == 0)    mn_write_register(MN_RAM_STOVE_STATE, 0x06);
     else if (strcmp(cmd, "reset_alarm") == 0) mn_write_register(MN_RAM_STOVE_STATE, 0x00);
-    /* TODO(beta50): temp/power setters - MQTT /cmd/setpoint et /cmd/power
-     * fonctionnent déjà, endpoints HTTP à finaliser sans wildcard next. */
+    else if (strncmp(cmd, "setpoint/", 9) == 0) {
+        int v = atoi(cmd + 9);
+        if (v < 1 || v > 40) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "range 1-40");
+        mn_write_register(MN_EEP_TEMP_SET_IVENT, (uint8_t)v);
+    }
+    else if (strncmp(cmd, "power/", 6) == 0) {
+        int v = atoi(cmd + 6);
+        if (v < 1 || v > 5) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "range 1-5");
+        mn_write_register(MN_EEP_POWER_SET_IVENT, (uint8_t)v);
+    }
     else return httpd_resp_send_404(req);
     return httpd_resp_send(req, "{\"ok\":true}", 11);
 }
@@ -120,6 +128,18 @@ static esp_err_t handle_status_json(httpd_req_t *req)
     cJSON_AddBoolToObject(stove, "online", s.online);
     cJSON_AddNumberToObject(stove, "state", s.state);
     cJSON_AddNumberToObject(stove, "power", s.power_level);
+    cJSON_AddNumberToObject(stove, "setpoint", s.set_temperature);
+    cJSON_AddNumberToObject(stove, "hours_total",  s.hours_total);
+    cJSON_AddNumberToObject(stove, "starts_total", s.starts_total);
+    cJSON_AddNumberToObject(stove, "hours_p1", s.hours_p1);
+    cJSON_AddNumberToObject(stove, "hours_p2", s.hours_p2);
+    cJSON_AddNumberToObject(stove, "hours_p3", s.hours_p3);
+    cJSON_AddNumberToObject(stove, "hours_p4", s.hours_p4);
+    cJSON_AddNumberToObject(stove, "hours_p5", s.hours_p5);
+    cJSON_AddNumberToObject(stove, "pellets_total_kg",      s.pellets_total_kg);
+    cJSON_AddNumberToObject(stove, "pellets_since_refill_kg", s.pellets_since_refill_kg);
+    cJSON_AddNumberToObject(stove, "pellets_remaining_kg",  s.pellets_remaining_kg);
+    cJSON_AddNumberToObject(stove, "pellets_cost_lifetime_eur", s.pellets_cost_lifetime_eur);
     cJSON_AddNumberToObject(stove, "power_real", s.power_real);
     cJSON_AddStringToObject(stove, "stove_type", mn_stove_type_name(s.stove_type));
     cJSON_AddStringToObject(stove, "stove_model", mn_get_stove_model());
@@ -156,6 +176,23 @@ static esp_err_t handle_config_get(httpd_req_t *req)
     cJSON_AddStringToObject(o, "stove_name",   g_cfg->stove_name);
     cJSON_AddBoolToObject(o,   "ha_discovery", g_cfg->ha_discovery_enabled);
     cJSON_AddNumberToObject(o, "publish_interval_ms", g_cfg->publish_interval_ms);
+
+    /* Pellet config */
+    cJSON *pl = cJSON_CreateObject();
+    cJSON_AddNumberToObject(pl, "tank_capacity_kg", g_cfg->pellet_tank_capacity_kg);
+    cJSON_AddNumberToObject(pl, "consumption_p1",   g_cfg->pellet_consumption_p1);
+    cJSON_AddNumberToObject(pl, "consumption_p2",   g_cfg->pellet_consumption_p2);
+    cJSON_AddNumberToObject(pl, "consumption_p3",   g_cfg->pellet_consumption_p3);
+    cJSON_AddNumberToObject(pl, "consumption_p4",   g_cfg->pellet_consumption_p4);
+    cJSON_AddNumberToObject(pl, "consumption_p5",   g_cfg->pellet_consumption_p5);
+    cJSON_AddNumberToObject(pl, "sack_size_kg",     g_cfg->pellet_sack_size_kg);
+    cJSON_AddNumberToObject(pl, "price_per_sack",   g_cfg->pellet_price_per_sack_eur);
+    cJSON_AddNumberToObject(pl, "winter_days",      g_cfg->pellet_winter_days);
+    cJSON_AddNumberToObject(pl, "stove_nominal_kw", g_cfg->stove_nominal_power_kw);
+    cJSON_AddNumberToObject(pl, "stove_min_kw",     g_cfg->stove_min_power_kw);
+    cJSON_AddNumberToObject(pl, "stove_efficiency", g_cfg->stove_efficiency_pct);
+    cJSON_AddNumberToObject(pl, "pellet_calorific", g_cfg->pellet_calorific_kwh_kg);
+    cJSON_AddItemToObject(o, "pellet", pl);
 
     /* Guardian mode (=only meaningful on Blacklabel target) */
 #ifdef TARGET_BLACKLABEL
@@ -246,6 +283,30 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     GET_STR_KEEP_EMPTY("stove_name",   g_cfg->stove_name);
     GET_BOOL("ha_discovery", g_cfg->ha_discovery_enabled);
     GET_NUM("publish_interval_ms", g_cfg->publish_interval_ms, uint16_t);
+
+    /* Pellet config (=nested object "pellet" pour clean UI) */
+    cJSON *pl_in = cJSON_GetObjectItem(o, "pellet");
+    if (cJSON_IsObject(pl_in)) {
+        #define GET_F(k, dst) do { \
+            cJSON *v = cJSON_GetObjectItem(pl_in, k); \
+            if (cJSON_IsNumber(v)) dst = (float)v->valuedouble; \
+        } while(0)
+        GET_F("tank_capacity_kg",  g_cfg->pellet_tank_capacity_kg);
+        GET_F("consumption_p1",    g_cfg->pellet_consumption_p1);
+        GET_F("consumption_p2",    g_cfg->pellet_consumption_p2);
+        GET_F("consumption_p3",    g_cfg->pellet_consumption_p3);
+        GET_F("consumption_p4",    g_cfg->pellet_consumption_p4);
+        GET_F("consumption_p5",    g_cfg->pellet_consumption_p5);
+        GET_F("sack_size_kg",      g_cfg->pellet_sack_size_kg);
+        GET_F("price_per_sack",    g_cfg->pellet_price_per_sack_eur);
+        GET_F("stove_nominal_kw",  g_cfg->stove_nominal_power_kw);
+        GET_F("stove_min_kw",      g_cfg->stove_min_power_kw);
+        GET_F("stove_efficiency",  g_cfg->stove_efficiency_pct);
+        GET_F("pellet_calorific",  g_cfg->pellet_calorific_kwh_kg);
+        #undef GET_F
+        cJSON *wd = cJSON_GetObjectItem(pl_in, "winter_days");
+        if (cJSON_IsNumber(wd)) g_cfg->pellet_winter_days = (uint16_t)wd->valueint;
+    }
 
     /* Provisioning done as soon as the user gave us a Wi-Fi SSID: MQTT can
      * be configured later from the same UI once the module is in STA mode.
@@ -512,6 +573,103 @@ static esp_err_t handle_registers_live(httpd_req_t *req)
     SET_NO_CACHE(req);
     httpd_resp_send(req, json, strlen(json));
     free(json);
+    return ESP_OK;
+}
+
+/* GET  /api/chrono → dump les 4 programmes.
+ * POST /api/chrono → applique modifs. Body :
+ *   { "master_enabled": bool,
+ *     "programs": [ { "id":1..4, "enabled":bool, "start":"HH:MM", "stop":"HH:MM",
+ *                     "temp_c": int, "days": [bool×7] } ] } */
+static esp_err_t handle_chrono(httpd_req_t *req)
+{
+    if (req->method == HTTP_GET) {
+        char *json = mn_chrono_json();
+        if (!json) return httpd_resp_send_500(req);
+        httpd_resp_set_type(req, "application/json");
+        SET_NO_CACHE(req);
+        httpd_resp_send(req, json, strlen(json));
+        free(json);
+        return ESP_OK;
+    }
+    /* POST */
+    char body[2048] = {0};
+    int rd = httpd_req_recv(req, body, sizeof(body) - 1);
+    if (rd <= 0) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+    cJSON *root = cJSON_Parse(body);
+    if (!root) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+
+    static const uint16_t prog_start_addr[4] = {
+        MN_EEP_CHRONO1_START, MN_EEP_CHRONO2_START,
+        MN_EEP_CHRONO3_START, MN_EEP_CHRONO4_START
+    };
+    static const uint16_t prog_en_addr[4] = {
+        MN_EEP_CHRONO_EN1, MN_EEP_CHRONO_EN2, MN_EEP_CHRONO_EN3, MN_EEP_CHRONO_EN4
+    };
+    int writes = 0;
+    cJSON *m = cJSON_GetObjectItem(root, "master_enabled");
+    if (cJSON_IsBool(m)) {
+        mn_write_register(MN_EEP_CHRONO_ENABLE, cJSON_IsTrue(m) ? 1 : 0);
+        writes++;
+    }
+    cJSON *progs = cJSON_GetObjectItem(root, "programs");
+    if (cJSON_IsArray(progs)) {
+        cJSON *pr;
+        cJSON_ArrayForEach(pr, progs) {
+            cJSON *id_j = cJSON_GetObjectItem(pr, "id");
+            if (!cJSON_IsNumber(id_j)) continue;
+            int idx = id_j->valueint - 1;
+            if (idx < 0 || idx > 3) continue;
+            uint16_t base = prog_start_addr[idx];
+            cJSON *en = cJSON_GetObjectItem(pr, "enabled");
+            if (cJSON_IsBool(en)) {
+                mn_write_register(prog_en_addr[idx], cJSON_IsTrue(en) ? 1 : 0);
+                writes++;
+            }
+            /* HH:MM → raw × 10min : (H*60 + M) / 10 */
+            cJSON *st = cJSON_GetObjectItem(pr, "start");
+            if (cJSON_IsString(st)) {
+                int h = 0, m2 = 0;
+                if (sscanf(st->valuestring, "%d:%d", &h, &m2) == 2) {
+                    mn_write_register(base + 0, (uint8_t)((h * 60 + m2) / 10));
+                    writes++;
+                }
+            }
+            cJSON *sp = cJSON_GetObjectItem(pr, "stop");
+            if (cJSON_IsString(sp)) {
+                int h = 0, m2 = 0;
+                if (sscanf(sp->valuestring, "%d:%d", &h, &m2) == 2) {
+                    mn_write_register(base + 1, (uint8_t)((h * 60 + m2) / 10));
+                    writes++;
+                }
+            }
+            cJSON *temp = cJSON_GetObjectItem(pr, "temp_c");
+            if (cJSON_IsNumber(temp)) {
+                mn_write_register(base + 9, (uint8_t)temp->valueint);
+                writes++;
+            }
+            cJSON *days = cJSON_GetObjectItem(pr, "days");
+            if (cJSON_IsArray(days)) {
+                int d = 0;
+                cJSON *day;
+                cJSON_ArrayForEach(day, days) {
+                    if (d >= 7) break;
+                    bool v = false;
+                    if (cJSON_IsBool(day))      v = cJSON_IsTrue(day);
+                    else if (cJSON_IsNumber(day)) v = day->valueint != 0;
+                    mn_write_register(base + 2 + d, v ? 1 : 0);
+                    writes++;
+                    d++;
+                }
+            }
+        }
+    }
+    cJSON_Delete(root);
+
+    char resp[64];
+    snprintf(resp, sizeof(resp), "{\"ok\":true,\"writes\":%d}", writes);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, resp, strlen(resp));
     return ESP_OK;
 }
 
@@ -820,6 +978,8 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/api/stove/on",         .method = HTTP_POST, .handler = handle_stove_cmd,    },
         { .uri = "/api/stove/off",        .method = HTTP_POST, .handler = handle_stove_cmd,    },
         { .uri = "/api/stove/reset_alarm",.method = HTTP_POST, .handler = handle_stove_cmd,    },
+        { .uri = "/api/stove/setpoint/*", .method = HTTP_POST, .handler = handle_stove_cmd,    },
+        { .uri = "/api/stove/power/*",    .method = HTTP_POST, .handler = handle_stove_cmd,    },
         /* OTA */
         { .uri = "/ota/upload",           .method = HTTP_POST, .handler = handle_ota_upload,   },
         { .uri = "/ota/rollback",         .method = HTTP_POST, .handler = handle_ota_rollback, },
@@ -839,6 +999,8 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/debug/rx-raw",         .method = HTTP_POST, .handler = handle_debug_rx_raw,      },
         { .uri = "/debug/tx-check",       .method = HTTP_POST, .handler = handle_debug_tx_check,    },
         { .uri = "/api/registers",        .method = HTTP_GET,  .handler = handle_registers_live,   },
+        { .uri = "/api/chrono",           .method = HTTP_GET,  .handler = handle_chrono,           },
+        { .uri = "/api/chrono",           .method = HTTP_POST, .handler = handle_chrono,           },
         { .uri = "/debug/poll-list",      .method = HTTP_GET,  .handler = handle_poll_list,        },
         { .uri = "/debug/poll-list",      .method = HTTP_POST, .handler = handle_poll_list,        },
         { .uri = "/debug/poll-interval",  .method = HTTP_GET,  .handler = handle_poll_interval,    },

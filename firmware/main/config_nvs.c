@@ -38,6 +38,31 @@ void config_nvs_defaults(app_config_t *cfg)
     cfg->publish_interval_ms  = 5000;
     cfg->mn_baud_rate         = 38400;   // QEMU capture, some stoves need 1200
     cfg->mn_stop_bits         = 1;       // 1 or 2 (=Micronova legacy is 8N2)
+
+    /* Pellet defaults Teodora Evo I_VENT */
+    cfg->pellet_tank_capacity_kg   = 14.0f;
+    cfg->stove_nominal_power_kw    = 8.0f;
+    cfg->stove_min_power_kw        = 2.5f;
+    cfg->stove_efficiency_pct      = 92.0f;  /* moyenne 90.8-94% Teodora Evo */
+    cfg->pellet_calorific_kwh_kg   = 4.7f;
+    cfg->pellet_sack_size_kg       = 15.0f;
+    cfg->pellet_price_per_sack_eur = 6.0f;
+    cfg->pellet_winter_days        = 180;
+    /* Consommations dérivées calc immediately */
+    float factor = 1.0f / ((cfg->stove_efficiency_pct / 100.0f) * cfg->pellet_calorific_kwh_kg);
+    cfg->pellet_consumption_p1 = cfg->stove_min_power_kw * factor;
+    cfg->pellet_consumption_p5 = cfg->stove_nominal_power_kw * factor;
+    float step = (cfg->pellet_consumption_p5 - cfg->pellet_consumption_p1) / 4.0f;
+    cfg->pellet_consumption_p2 = cfg->pellet_consumption_p1 + step;
+    cfg->pellet_consumption_p3 = cfg->pellet_consumption_p1 + step * 2;
+    cfg->pellet_consumption_p4 = cfg->pellet_consumption_p1 + step * 3;
+    cfg->pellet_refill_h_p1        = 0;
+    cfg->pellet_refill_h_p2        = 0;
+    cfg->pellet_refill_h_p3        = 0;
+    cfg->pellet_refill_h_p4        = 0;
+    cfg->pellet_refill_h_p5        = 0;
+    cfg->pellet_service_h_tot      = 0;
+    cfg->pellet_service_epoch      = 0;
 }
 
 static esp_err_t get_str_or_default(nvs_handle_t h, const char *key, char *out, size_t max_len)
@@ -94,6 +119,48 @@ esp_err_t config_nvs_load(app_config_t *cfg)
     nvs_get_u32(h, "mn_baud", &cfg->mn_baud_rate);
     nvs_get_u8 (h, "mn_stopb", &cfg->mn_stop_bits);
 
+    /* Pellet config (float via u32 bit-cast) */
+    #define GET_FLOAT(key, dst) do { \
+        uint32_t v; if (nvs_get_u32(h, key, &v) == ESP_OK) memcpy(&(dst), &v, 4); \
+    } while(0)
+    GET_FLOAT("pl_tank",   cfg->pellet_tank_capacity_kg);
+    GET_FLOAT("pl_c1",     cfg->pellet_consumption_p1);
+    GET_FLOAT("pl_c2",     cfg->pellet_consumption_p2);
+    GET_FLOAT("pl_c3",     cfg->pellet_consumption_p3);
+    GET_FLOAT("pl_c4",     cfg->pellet_consumption_p4);
+    GET_FLOAT("pl_c5",     cfg->pellet_consumption_p5);
+    GET_FLOAT("pl_ssz",    cfg->pellet_sack_size_kg);
+    GET_FLOAT("pl_prc",    cfg->pellet_price_per_sack_eur);
+    #undef GET_FLOAT
+    nvs_get_u16(h, "pl_wd", &cfg->pellet_winter_days);
+    nvs_get_u16(h, "pl_rh1", &cfg->pellet_refill_h_p1);
+    nvs_get_u16(h, "pl_rh2", &cfg->pellet_refill_h_p2);
+    nvs_get_u16(h, "pl_rh3", &cfg->pellet_refill_h_p3);
+    nvs_get_u16(h, "pl_rh4", &cfg->pellet_refill_h_p4);
+    nvs_get_u16(h, "pl_rh5", &cfg->pellet_refill_h_p5);
+    nvs_get_u16(h, "pl_sht", &cfg->pellet_service_h_tot);
+    nvs_get_u32(h, "pl_sep", &cfg->pellet_service_epoch);
+    /* Read stove specs */
+    #define GET_FLOAT(key, dst) do { \
+        uint32_t v; if (nvs_get_u32(h, key, &v) == ESP_OK) memcpy(&(dst), &v, 4); \
+    } while(0)
+    GET_FLOAT("st_nom", cfg->stove_nominal_power_kw);
+    GET_FLOAT("st_min", cfg->stove_min_power_kw);
+    GET_FLOAT("st_eff", cfg->stove_efficiency_pct);
+    GET_FLOAT("pl_cal", cfg->pellet_calorific_kwh_kg);
+    #undef GET_FLOAT
+
+    /* Recalcule consommations dérivées */
+    if (cfg->stove_efficiency_pct > 0.01f && cfg->pellet_calorific_kwh_kg > 0.01f) {
+        float factor = 1.0f / ((cfg->stove_efficiency_pct / 100.0f) * cfg->pellet_calorific_kwh_kg);
+        cfg->pellet_consumption_p1 = cfg->stove_min_power_kw * factor;
+        cfg->pellet_consumption_p5 = cfg->stove_nominal_power_kw * factor;
+        float step = (cfg->pellet_consumption_p5 - cfg->pellet_consumption_p1) / 4.0f;
+        cfg->pellet_consumption_p2 = cfg->pellet_consumption_p1 + step;
+        cfg->pellet_consumption_p3 = cfg->pellet_consumption_p1 + step * 2;
+        cfg->pellet_consumption_p4 = cfg->pellet_consumption_p1 + step * 3;
+    }
+
     nvs_close(h);
     return ESP_OK;
 }
@@ -122,6 +189,35 @@ esp_err_t config_nvs_save(const app_config_t *cfg)
     nvs_set_u16(h, KEY_PUBLISH_INTERVAL, cfg->publish_interval_ms);
     nvs_set_u32(h, "mn_baud",  cfg->mn_baud_rate);
     nvs_set_u8 (h, "mn_stopb", cfg->mn_stop_bits);
+
+    /* Pellet config */
+    #define SET_FLOAT(key, val) do { \
+        uint32_t v; memcpy(&v, &(val), 4); nvs_set_u32(h, key, v); \
+    } while(0)
+    SET_FLOAT("pl_tank", cfg->pellet_tank_capacity_kg);
+    SET_FLOAT("pl_c1",   cfg->pellet_consumption_p1);
+    SET_FLOAT("pl_c2",   cfg->pellet_consumption_p2);
+    SET_FLOAT("pl_c3",   cfg->pellet_consumption_p3);
+    SET_FLOAT("pl_c4",   cfg->pellet_consumption_p4);
+    SET_FLOAT("pl_c5",   cfg->pellet_consumption_p5);
+    SET_FLOAT("pl_ssz",  cfg->pellet_sack_size_kg);
+    SET_FLOAT("pl_prc",  cfg->pellet_price_per_sack_eur);
+    #undef SET_FLOAT
+    nvs_set_u16(h, "pl_wd", cfg->pellet_winter_days);
+    nvs_set_u16(h, "pl_rh1", cfg->pellet_refill_h_p1);
+    nvs_set_u16(h, "pl_rh2", cfg->pellet_refill_h_p2);
+    nvs_set_u16(h, "pl_rh3", cfg->pellet_refill_h_p3);
+    nvs_set_u16(h, "pl_rh4", cfg->pellet_refill_h_p4);
+    nvs_set_u16(h, "pl_rh5", cfg->pellet_refill_h_p5);
+    nvs_set_u16(h, "pl_sht", cfg->pellet_service_h_tot);
+    nvs_set_u32(h, "pl_sep", cfg->pellet_service_epoch);
+    /* Stove specs */
+    #define SETF(k, val) do { uint32_t v; memcpy(&v, &(val), 4); nvs_set_u32(h, k, v); } while(0)
+    SETF("st_nom", cfg->stove_nominal_power_kw);
+    SETF("st_min", cfg->stove_min_power_kw);
+    SETF("st_eff", cfg->stove_efficiency_pct);
+    SETF("pl_cal", cfg->pellet_calorific_kwh_kg);
+    #undef SETF
 
     err = nvs_commit(h);
     nvs_close(h);

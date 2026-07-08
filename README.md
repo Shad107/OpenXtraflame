@@ -17,9 +17,13 @@ Le poêle à granulés Extraflame Teodora Evo (et cousins Micronova : EdilKamin,
 
 - 🔥 **Bridge Micronova UART maître** : interroge le poêle par polling RWMS à **1200 bauds 8N2, ligne inversée (0x24)**
 - 📡 **Bridge MQTT local** vers Mosquitto / Home Assistant, sans passer par le cloud
-- 🏠 **HA MQTT Discovery natif** : au premier `MQTT_EVENT_CONNECTED`, le module publie 11 topics retenus qui font apparaître automatiquement un device `Extraflame - OpenXtraflame Black Label` avec sensors T°/puissance/état, switch on/off, button reset, number setpoint et select puissance
+- 🏠 **HA MQTT Discovery natif** compatible HA 2026 : ~30 entités auto-découvertes en 3 sections (=Contrôles / Configuration / Diagnostic) avec sensors, switches, timepickers, numbers, buttons
+- 🕐 **Chronothermostat complet** : lecture et écriture des 4 programmes hebdo (=start/stop/temp/jours) depuis HA et Web UI, exposés en `switch` + `time` + `number` MQTT Discovery
+- 🌰 **Suivi consommation pellets** : calcul kg brûlés depuis les compteurs EEPROM du poêle et les specs (=puissance/rendement/pouvoir calorifique), coût cumulé, projection saisonnière
+- 🎛️ **Contrôles éditables Web UI** : consigne + puissance depuis Dashboard, chrono inline, config pellets/specs, tout sync bidirectionnel avec HA
 - 🔎 **Détection auto du broker MQTT** : bouton "🔍 Détecter HA" qui tente `_mqtt._tcp`, `_home-assistant._tcp` puis `homeassistant.local` en mDNS et remplit host + port
-- 🌐 **Web UI embarquée** : Dashboard, Wi-Fi, MQTT, Poêle, OTA, Debug, Avancé
+- 🌐 **Web UI embarquée** avec onglets Dashboard | Poêle (Consommation / Chrono / Configuration) | Wi-Fi | MQTT | OTA | Avancé | Debug | À propos
+- 🏷️ **Auto-détection stove_type** depuis la partition `secret1` préservée à la fabrication (=lecture matricola + heuristique préfixe)
 - 📶 **Provisioning SoftAP + dual APSTA** : le SoftAP `openxtraflame-XXXX` reste up en permanence, never brick
 - ⬆️ **OTA** upload direct depuis le navigateur OU pull depuis une URL HTTPS (=CA bundle Mozilla, barre de progression réelle via `esp_https_ota_perform` loop)
 - 🔁 **Auto-wipe `phy_init` au changement de version firmware** : évite qu'un OTA hérite d'une calibration RF invalide
@@ -35,17 +39,20 @@ Le firmware Extraflame Black Label v1.8 supporte **12 types de poêle** (=`stove
 
 | Type (`stove_type`) | Famille | Description | Support OpenXtraflame |
 |---|---|---|---|
-| `I_VENT` | Air | **Teodora Evo**, Ilaria, Anastasia, autres ventilés 1-shot | ✅ **Validé** (=Teodora Evo I_VENT en prod) |
-| `I_VENT_2` .. `I_VENT_5` | Air | Variantes ventilé (5 sous-modèles) | 🟡 Adresses extraites, détection auto à venir |
+| `I_VENT` | Air | **Teodora Evo**, Terry Plus, Marilena Plus, Amika, Debby, Souvenir, Luisella, Ketty, Klaudia, Mariella, Annabella, Dahiana... | ✅ **Validé** (=Teodora Evo en prod) |
+| `I_VENT_2` .. `I_VENT_5` | Air | Variantes ventilé (5 sous-modèles) | 🟡 Adresses extraites |
 | `I_IDRO`, `I_IDRO_2` | Hydro | Poêles chaudière compact (=eau chaude) | 🟡 Adresses extraites |
-| `I_CANAL` .. `I_CANAL_4` | Canalisé | Poêles canalisés (4 sous-modèles) | 🟡 Adresses extraites |
+| `I_CANAL` .. `I_CANAL_4` | Canalisé | Comfort P70 Air, Comfort P85, Comfort P85 Plus | 🟡 Adresses extraites |
 | `I_CALD` | Chaudière | Caldaia pleine | 🟡 Adresses extraites |
 
-**Détection** : Actuellement hardcodée `I_VENT`. Phase 3 (=matricola parsing + auto-select Addrs_dyn) prévue.
+**Compatibilité générale** : le module Wi-Fi **Black Label** (=référence 9278451) équipe les poêles Extraflame **≥ 2018**. Les modèles antérieurs utilisent le module **White Label** (=firmware différent, non supporté par ce projet).
 
-**Adresses EEPROM I_VENT validées** :
+**Détection auto** : lecture de `matricola` depuis la partition `secret1` au boot + heuristique préfixe → sélection du `stove_type`. Fallback `I_VENT` si absent. Contribue via GitHub Issues avec ton matricola + modèle commercial pour enrichir la table communautaire.
+
+**Adresses EEPROM I_VENT validées** (=Teodora Evo) :
 - `EEPROM_SET_POWER_ADDR = 0x7F` (=P.set puissance persistante)
 - `EEPROM_SET_AMB_ADDR = 0x7D` (=consigne ambiance persistante)
+- Chrono contigüe `0x4D-0x74`, compteurs heures `0xD0-0xD9` + total `0x1EA/1EB` + starts `0x1EE/1EF`
 
 Source du reverse : `docs/PROTOCOLE-MICRONOVA.md` et `docs/STOVE-TYPES.md`.
 

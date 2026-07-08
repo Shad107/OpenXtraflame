@@ -61,6 +61,22 @@ function initTabs() {
             $('tab-' + t.dataset.tab).classList.add('active');
         });
     });
+    /* Sous-onglets (=inside Poêle) */
+    $$('.subtab').forEach(t => {
+        t.addEventListener('click', () => {
+            $$('.subtab').forEach(x => {
+                x.classList.remove('active');
+                x.style.borderBottomColor = 'transparent';
+            });
+            $$('.subtab-content').forEach(x => x.style.display = 'none');
+            t.classList.add('active');
+            t.style.borderBottomColor = '#ea580c';
+            document.getElementById('subtab-' + t.dataset.subtab).style.display = 'block';
+        });
+    });
+    /* Init : first subtab active border */
+    const firstSub = document.querySelector('.subtab.active');
+    if (firstSub) firstSub.style.borderBottomColor = '#ea580c';
 }
 
 /* Load status periodically */
@@ -76,11 +92,44 @@ async function loadStatus() {
         $('s-stove').textContent = stoveOk ? 'En ligne' : 'Hors ligne';
 
         $('m-tamb').textContent = s.stove?.t_ambient?.toFixed?.(1) ?? '-';
+        if ($('m-setpoint')) $('m-setpoint').textContent = s.stove?.setpoint ?? '-';
+        /* Pré-remplit les inputs éditables sans écraser si l'user est en train de taper */
+        if ($('m-setpoint-edit') && document.activeElement !== $('m-setpoint-edit') && s.stove?.setpoint != null)
+            $('m-setpoint-edit').value = s.stove.setpoint;
         const p = s.stove?.power ?? null;
         $('m-power').textContent = p == null ? '-' : String(p);
+        if ($('m-power-edit') && document.activeElement !== $('m-power-edit') && p != null && p >= 1 && p <= 5)
+            $('m-power-edit').value = String(p);
         const pr = s.stove?.power_real ?? null;
         if ($('m-power-real')) $('m-power-real').textContent = pr == null ? '-' : String(pr);
         $('m-fumi').textContent = s.stove?.t_smoke?.toFixed?.(0) ?? '-';
+        /* Onglet Consommation */
+        const st = s.stove;
+        if ($('m-pellets-total') && st?.pellets_total_kg != null) $('m-pellets-total').textContent = st.pellets_total_kg.toFixed(0);
+        if ($('m-hours-total')   && st?.hours_total != null) $('m-hours-total').textContent = st.hours_total;
+        if ($('c-total') && st?.pellets_total_kg != null) $('c-total').textContent = st.pellets_total_kg.toFixed(0);
+        if ($('c-cost')  && st?.pellets_cost_lifetime_eur != null) $('c-cost').textContent = st.pellets_cost_lifetime_eur.toFixed(2);
+        if ($('c-hours') && st?.hours_total != null) $('c-hours').textContent = st.hours_total;
+        if ($('c-sacs')  && st?.pellets_total_kg != null) {
+            const sackSize = parseFloat($('pl-sack')?.value) || 15;
+            $('c-sacs').textContent = Math.round(st.pellets_total_kg / sackSize);
+        }
+        if ($('c-breakdown') && st) {
+            const conso = [
+                parseFloat($('pl-c1')?.value)||0.586,
+                parseFloat($('pl-c2')?.value)||0.879,
+                parseFloat($('pl-c3')?.value)||1.172,
+                parseFloat($('pl-c4')?.value)||1.465,
+                parseFloat($('pl-c5')?.value)||1.758
+            ];
+            const hours = [st.hours_p1||0, st.hours_p2||0, st.hours_p3||0, st.hours_p4||0, st.hours_p5||0];
+            const totals = hours.map((h,i) => h * conso[i]);
+            const sum = totals.reduce((a,b)=>a+b, 0);
+            $('c-breakdown').innerHTML = ['P1','P2','P3','P4','P5'].map((n,i) => {
+                const pct = sum > 0 ? (totals[i]/sum*100).toFixed(1) : '0';
+                return `<tr style="border-top:1px solid #eee"><td style="padding:6px 8px"><strong>${n}</strong></td><td style="padding:6px 8px">${hours[i]}</td><td style="padding:6px 8px">${conso[i].toFixed(2)}</td><td style="padding:6px 8px">${totals[i].toFixed(0)}</td><td style="padding:6px 8px">${pct}%</td></tr>`;
+            }).join('');
+        }
         /* Enum Extraflame TotalControl (0x21 machineState) */
         const STATES = ['Off','Check up','Ignition','Préparation','Préchargement','Modulation','En marche','Nettoyage','Refroidissement','Veille','Nettoyage final','Recovery','Allumage final'];
         if ($('m-state')) {
@@ -116,6 +165,36 @@ async function loadConfig() {
         /* stove-type est maintenant en info readonly, alimenté par loadStatus */
         $('ha-discovery').checked = !!c.ha_discovery;
         $('publish-interval').value = c.publish_interval_ms || 5000;
+        /* Pellet config */
+        const pl = c.pellet || {};
+        if ($('pl-tank'))   $('pl-tank').value   = pl.tank_capacity_kg ?? 14;
+        if ($('pl-sack'))   $('pl-sack').value   = pl.sack_size_kg ?? 15;
+        if ($('pl-price'))  $('pl-price').value  = pl.price_per_sack ?? 6;
+        if ($('pl-winter')) $('pl-winter').value = pl.winter_days ?? 180;
+        if ($('pl-nom-kw')) $('pl-nom-kw').value = pl.stove_nominal_kw ?? 8.0;
+        if ($('pl-min-kw')) $('pl-min-kw').value = pl.stove_min_kw ?? 2.5;
+        if ($('pl-eff'))    $('pl-eff').value    = (pl.stove_efficiency ?? 90.8).toFixed(2);
+        if ($('pl-cal'))    $('pl-cal').value    = (pl.pellet_calorific ?? 4.7).toFixed(2);
+        function recalcConso() {
+            const nom = parseFloat($('pl-nom-kw').value) || 8.0;
+            const mn  = parseFloat($('pl-min-kw').value) || 2.5;
+            const eff = parseFloat($('pl-eff').value) || 90.8;
+            const cal = parseFloat($('pl-cal').value) || 4.7;
+            const factor = 1.0 / ((eff/100) * cal);
+            const p1 = mn * factor;
+            const p5 = nom * factor;
+            const step = (p5 - p1) / 4;
+            $('pl-c1').value = p1.toFixed(2);
+            $('pl-c2').value = (p1 + step).toFixed(2);
+            $('pl-c3').value = (p1 + step*2).toFixed(2);
+            $('pl-c4').value = (p1 + step*3).toFixed(2);
+            $('pl-c5').value = p5.toFixed(2);
+        }
+        recalcConso();
+        ['pl-nom-kw','pl-min-kw','pl-eff','pl-cal'].forEach(id => {
+            const el = $(id);
+            if (el && !el.dataset.bound) { el.addEventListener('input', recalcConso); el.dataset.bound = '1'; }
+        });
 
         /* Password fields: never echo the stored value. Instead, use the
          * placeholder to signal explicitly whether it's already set. If it
@@ -208,6 +287,16 @@ async function save() {
         /* stove_type est auto-détecté (Phase 3), plus envoyé depuis le UI */
         ha_discovery: $('ha-discovery').checked,
         publish_interval_ms: parseInt($('publish-interval').value, 10),
+        pellet: {
+            tank_capacity_kg: parseFloat($('pl-tank').value)  || 14,
+            sack_size_kg:     parseFloat($('pl-sack').value)  || 15,
+            price_per_sack:   parseFloat($('pl-price').value) || 6,
+            winter_days:      parseInt  ($('pl-winter').value, 10) || 180,
+            stove_nominal_kw: parseFloat($('pl-nom-kw').value) || 8.0,
+            stove_min_kw:     parseFloat($('pl-min-kw').value) || 2.5,
+            stove_efficiency: parseFloat($('pl-eff').value)   || 90.8,
+            pellet_calorific: parseFloat($('pl-cal').value)   || 4.7,
+        },
     };
     if ($('guardian-card').style.display !== 'none') {
         cfg.guardian_enabled = $('guardian-enabled').checked;
@@ -458,16 +547,14 @@ async function loadFirmwareLogs() {
         const txt = await r.text();
         const pre = $('firmware-log');
         const prevScroll = pre.scrollTop;
-        const prevMax = pre.scrollHeight;
+        const autoscroll = $('logs-autoscroll') && $('logs-autoscroll').checked;
         pre.textContent = txt || '(aucune ligne pour l\'instant)';
         $('logs-counter').textContent = `${txt.length} octets`;
-        if ($('logs-autoscroll').checked) {
-            pre.scrollTop = pre.scrollHeight;
-        } else {
-            /* Preserve user's manual scroll position when autoscroll is OFF.
-             * setting textContent resets scrollTop, so restore explicitly. */
-            pre.scrollTop = prevScroll;
-        }
+        /* Use requestAnimationFrame to force scroll after layout reflow */
+        requestAnimationFrame(() => {
+            if (autoscroll) pre.scrollTop = pre.scrollHeight;
+            else pre.scrollTop = prevScroll;
+        });
     } catch (e) { /* silent, Wi-Fi flap during reboot */ }
 }
 
@@ -488,6 +575,7 @@ async function loadDebug() {
             return;
         }
         const prevScroll = pre.scrollTop;
+        const autoscroll = $('debug-autoscroll') && $('debug-autoscroll').checked && !debug_paused_scroll;
         pre.innerHTML = j.frames.map(f => {
             const t = String(f.t_ms).padStart(9, ' ');
             const d = DIR_LABEL[f.dir] || '???';
@@ -496,12 +584,10 @@ async function loadDebug() {
             const cls = DIR_CLASS[f.dir] || '';
             return `<span class="${cls}">[${t} ms] ${d}  addr=0x${a}  data=0x${v}</span>`;
         }).join('\n');
-        if ($('debug-autoscroll').checked && !debug_paused_scroll) {
-            pre.scrollTop = pre.scrollHeight;
-        } else {
-            /* Preserve user's scroll position when autoscroll is off. */
-            pre.scrollTop = prevScroll;
-        }
+        requestAnimationFrame(() => {
+            if (autoscroll) pre.scrollTop = pre.scrollHeight;
+            else pre.scrollTop = prevScroll;
+        });
     } catch (e) { /* Wi-Fi flap during reboot */ }
 }
 
@@ -601,19 +687,122 @@ document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadStatus();
     setInterval(loadStatus, 5000);
-    /* Live register table */
-    async function loadRegs() {
+    /* Registres live retirés (=carte UI supprimée, /api/registers reste dispo debug) */
+    /* Chrono live - éditable inline */
+    let chronoState = null;
+    async function loadChrono() {
         try {
-            const d = await j('/api/registers');
-            const el = document.getElementById('regs-live');
-            if (!el) return;
-            const rows = d.registers
-                .filter(r => r.polled)
-                .map(r => `  0x${r.addr.toString(16).toUpperCase().padStart(2,'0')} ${r.name.padEnd(14)} = ${String(r.raw).padStart(4)}  <span style="color:#888">${r.hint||''}</span>`)
-                .join('<br>');
-            el.innerHTML = rows;
+            const d = await j('/api/chrono');
+            chronoState = d;
+            const masterCb = document.getElementById('chrono-master-cb');
+            if (masterCb) masterCb.checked = !!d.master_enabled;
+            const wrap = document.getElementById('chrono-programs');
+            if (wrap && d.programs) {
+                wrap.innerHTML = d.programs.map(p => {
+                    const dayCbs = p.days.map((day, di) =>
+                        `<label style="display:flex;align-items:center;gap:2px;font-size:12px">
+                            <input type="checkbox" data-prog="${p.id-1}" data-day="${di}" ${day.enabled?'checked':''}>
+                            ${day.name}
+                         </label>`).join('');
+                    return `<div style="border:1px solid #e0e0e0;border-radius:6px;padding:12px;background:#fafafa">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                            <strong style="font-size:16px">P${p.id}</strong>
+                            <label style="display:flex;align-items:center;gap:6px">
+                                <input type="checkbox" data-prog="${p.id-1}" data-field="enabled" ${p.enabled?'checked':''}>
+                                Actif
+                            </label>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+                            <label style="font-size:12px">Début
+                                <input type="time" data-prog="${p.id-1}" data-field="start" value="${p.start}" style="width:100%">
+                            </label>
+                            <label style="font-size:12px">Fin
+                                <input type="time" data-prog="${p.id-1}" data-field="stop" value="${p.stop}" style="width:100%">
+                            </label>
+                            <label style="font-size:12px">Consigne (°C)
+                                <input type="number" min="1" max="30" data-prog="${p.id-1}" data-field="temp_c" value="${p.temp_c}" style="width:100%">
+                            </label>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">${dayCbs}</div>
+                    </div>`;
+                }).join('');
+            }
         } catch (e) {}
     }
-    loadRegs();
-    setInterval(loadRegs, 2000);
+    document.getElementById('chrono-reload').addEventListener('click', loadChrono);
+    document.getElementById('chrono-save').addEventListener('click', async () => {
+        const resEl = document.getElementById('chrono-save-result');
+        const payload = {
+            master_enabled: document.getElementById('chrono-master-cb').checked,
+            programs: [0,1,2,3].map(idx => {
+                const inputs = document.querySelectorAll(`input[data-prog="${idx}"]`);
+                const prog = { id: idx + 1, days: [] };
+                for (let day = 0; day < 7; day++) prog.days.push(false);
+                inputs.forEach(el => {
+                    if (el.dataset.field === 'enabled') prog.enabled = el.checked;
+                    else if (el.dataset.field === 'start') prog.start = el.value;
+                    else if (el.dataset.field === 'stop')  prog.stop  = el.value;
+                    else if (el.dataset.field === 'temp_c') prog.temp_c = parseInt(el.value, 10);
+                    else if (el.dataset.day !== undefined) prog.days[parseInt(el.dataset.day, 10)] = el.checked;
+                });
+                return prog;
+            })
+        };
+        resEl.textContent = 'Envoi...';
+        try {
+            const r = await fetch('/api/chrono', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const j2 = await r.json();
+            resEl.textContent = j2.ok ? `✅ ${j2.writes} écritures` : '❌ erreur';
+            setTimeout(loadChrono, 2000);
+        } catch (e) {
+            resEl.textContent = '❌ ' + e.message;
+        }
+    });
+    /* Setpoint + power inline edit (=envoi direct au module) */
+    async function postCmd(url, ok, err) {
+        try {
+            const r = await fetch(url, {method:'POST'});
+            const j2 = await r.json();
+            if (j2.ok) { ok && ok(); }
+            else { err && err(j2); }
+        } catch(e) { err && err(e); }
+    }
+    if ($('m-setpoint-save')) {
+        $('m-setpoint-save').addEventListener('click', () => {
+            const v = parseInt($('m-setpoint-edit').value, 10);
+            if (v>=1 && v<=40) postCmd(`/api/stove/setpoint/${v}`, () => setTimeout(loadStatus, 500));
+        });
+    }
+    if ($('m-power-save')) {
+        $('m-power-save').addEventListener('click', () => {
+            const v = parseInt($('m-power-edit').value, 10);
+            if (v>=1 && v<=5) postCmd(`/api/stove/power/${v}`, () => setTimeout(loadStatus, 500));
+        });
+    }
+    loadChrono();
+    /* Auto-refresh chrono toutes les 10s pour voir les changements HA/EEPROM */
+    setInterval(loadChrono, 10000);
+    /* Auto-refresh config (=inclut pellet) toutes les 15s */
+    setInterval(async () => {
+        try {
+            const c = await j('/config.json');
+            const pl = c.pellet || {};
+            /* Ne recharge que si l'onglet Pellets n'est pas actif (=évite écraser modifs en cours) */
+            const subtabPellet = document.querySelector('.subtab.active');
+            if (!subtabPellet || subtabPellet.dataset.subtab !== 'config') {
+                if ($('pl-tank'))   $('pl-tank').value   = pl.tank_capacity_kg ?? 14;
+                if ($('pl-sack'))   $('pl-sack').value   = pl.sack_size_kg ?? 15;
+                if ($('pl-price'))  $('pl-price').value  = pl.price_per_sack ?? 6;
+                if ($('pl-winter')) $('pl-winter').value = pl.winter_days ?? 180;
+                ['1','2','3','4','5'].forEach(n => {
+                    const el = $('pl-c'+n);
+                    if (el) el.value = (pl['consumption_p'+n] ?? [0.5,0.825,1.15,1.475,1.8][parseInt(n)-1]).toFixed(2);
+                });
+            }
+        } catch(e) {}
+    }, 15000);
 });

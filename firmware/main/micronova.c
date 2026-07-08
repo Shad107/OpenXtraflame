@@ -55,7 +55,11 @@ static volatile bool mn_sniffer_pause = false;
  */
 static uint8_t mn_ram_shadow[MN_RAM_MAX];
 
-/* Détection modèle stove — Phase 3.
+/* Reference to app config for pellet kg calc (=set once at boot) */
+static const app_config_t *mn_cfg_ref = NULL;
+void mn_set_config_ref(const void *cfg) { mn_cfg_ref = (const app_config_t *)cfg; }
+
+/* Détection modèle stove - Phase 3.
  * Lit stove_model + matricola depuis partition secret1 (=préservée fabrication
  * Extraflame), applique heuristique préfixe → stove_type. Cached au premier appel.
  * Fallback : I_VENT (=Teodora Evo, la plus courante). */
@@ -176,9 +180,9 @@ static void update_snapshot_from_shadow(void)
     if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(200)) != pdTRUE) return;
     /* Micronova standard encoding: température × 2 pour ambient. */
     mn_snapshot.state           = (mn_stove_state_t)mn_ram_shadow[MN_RAM_STOVE_STATE];
-    /* Priorité: EEPROM_SET_POWER (=source persistante). Fallback RAM 0x4F si EEPROM=0 */
-    uint8_t eep_pset = mn_ram_shadow[MN_EEP_POWER_SET_IVENT];
-    mn_snapshot.power_level     = eep_pset ? eep_pset : mn_ram_shadow[MN_RAM_POWER_GET];
+    /* P.set = source EEPROM 0x7F uniquement (=persistant, stable, plus de fallback
+     * RAM 0x4F qui fait sauter la valeur sur le buffer d'affichage fluctuant). */
+    mn_snapshot.power_level     = mn_ram_shadow[MN_EEP_POWER_SET_IVENT];
     mn_snapshot.power_real      = mn_ram_shadow[MN_RAM_POWER_REAL];
     mn_snapshot.stove_type      = mn_detected_stove_type();
     mn_snapshot.alarm_code      = mn_ram_shadow[MN_RAM_ALLARM];
@@ -186,10 +190,46 @@ static void update_snapshot_from_shadow(void)
     mn_snapshot.t_water         = (float)mn_ram_shadow[MN_RAM_TH20] / 2.0f;
     mn_snapshot.t_smoke         = mn_ram_shadow[MN_RAM_FUMES_TEMP];
     mn_snapshot.t_chamber       = mn_ram_shadow[MN_RAM_FLAME_POWER];
-    /* Consigne ambiance: EEPROM 0x7D I_VENT (=source persistante fiable, raw °C).
-     * Fallback sur RAM 0x54 ×2 si EEPROM=0. */
-    uint8_t eep_tset = mn_ram_shadow[MN_EEP_TEMP_SET_IVENT];
-    mn_snapshot.set_temperature = eep_tset ? eep_tset : (mn_ram_shadow[MN_RAM_TEMP_SET] / 2);
+    /* Consigne = EEPROM 0x7D uniquement (=même raison que power_level, plus de
+     * fallback qui pollue avec des valeurs transitoires du buffer d'affichage). */
+    mn_snapshot.set_temperature = mn_ram_shadow[MN_EEP_TEMP_SET_IVENT];
+    /* Compteurs maintenance : 16-bit reconstruits depuis LSB+MSB EEPROM */
+    #define U16(lsb,msb) ((uint16_t)mn_ram_shadow[lsb] | ((uint16_t)mn_ram_shadow[msb] << 8))
+    mn_snapshot.hours_total  = U16(MN_EEP_CTR_H_TOT_LSB,  MN_EEP_CTR_H_TOT_MSB);
+    mn_snapshot.starts_total = U16(MN_EEP_CTR_STARTS_LSB, MN_EEP_CTR_STARTS_MSB);
+    mn_snapshot.hours_p1     = U16(MN_EEP_CTR_H_P1_LSB,   MN_EEP_CTR_H_P1_MSB);
+    mn_snapshot.hours_p2     = U16(MN_EEP_CTR_H_P2_LSB,   MN_EEP_CTR_H_P2_MSB);
+    mn_snapshot.hours_p3     = U16(MN_EEP_CTR_H_P3_LSB,   MN_EEP_CTR_H_P3_MSB);
+    mn_snapshot.hours_p4     = U16(MN_EEP_CTR_H_P4_LSB,   MN_EEP_CTR_H_P4_MSB);
+    mn_snapshot.hours_p5     = U16(MN_EEP_CTR_H_P5_LSB,   MN_EEP_CTR_H_P5_MSB);
+    #undef U16
+
+    /* Calcul kg pellets consommés = Σ heures_pn × conso_n */
+    if (mn_cfg_ref) {
+        const app_config_t *c = mn_cfg_ref;
+        float total = mn_snapshot.hours_p1 * c->pellet_consumption_p1
+                    + mn_snapshot.hours_p2 * c->pellet_consumption_p2
+                    + mn_snapshot.hours_p3 * c->pellet_consumption_p3
+                    + mn_snapshot.hours_p4 * c->pellet_consumption_p4
+                    + mn_snapshot.hours_p5 * c->pellet_consumption_p5;
+        float since_refill =
+              (mn_snapshot.hours_p1 - c->pellet_refill_h_p1) * c->pellet_consumption_p1
+            + (mn_snapshot.hours_p2 - c->pellet_refill_h_p2) * c->pellet_consumption_p2
+            + (mn_snapshot.hours_p3 - c->pellet_refill_h_p3) * c->pellet_consumption_p3
+            + (mn_snapshot.hours_p4 - c->pellet_refill_h_p4) * c->pellet_consumption_p4
+            + (mn_snapshot.hours_p5 - c->pellet_refill_h_p5) * c->pellet_consumption_p5;
+        if (since_refill < 0) since_refill = 0;
+        mn_snapshot.pellets_total_kg        = total;
+        mn_snapshot.pellets_since_refill_kg = since_refill;
+        mn_snapshot.pellets_remaining_kg    = c->pellet_tank_capacity_kg - since_refill;
+        if (mn_snapshot.pellets_remaining_kg < 0) mn_snapshot.pellets_remaining_kg = 0;
+        float price_per_kg = (c->pellet_sack_size_kg > 0.01f)
+            ? (c->pellet_price_per_sack_eur / c->pellet_sack_size_kg) : 0.0f;
+        mn_snapshot.pellets_cost_lifetime_eur = total * price_per_kg;
+        /* days_left calculé côté HA via avg 7d (=besoin recorder), on met 0 pour l'instant */
+        mn_snapshot.pellets_days_left = 0;
+    }
+
     mn_snapshot.last_updated_ms = (uint32_t)(esp_timer_get_time() / 1000);
     xSemaphoreGive(mn_mutex);
 }
@@ -227,9 +267,30 @@ static void init_poll_list(void) {
         /* EEPROM I_VENT confirmés */
         MN_EEP_POWER_SET_IVENT,   /* 0x17F = EEPROM 0x7F */
         MN_EEP_TEMP_SET_IVENT,    /* 0x17D = EEPROM 0x7D */
+        /* Compteurs maintenance (=14 addresses EEPROM) */
+        MN_EEP_CTR_H_TOT_LSB,  MN_EEP_CTR_H_TOT_MSB,
+        MN_EEP_CTR_STARTS_LSB, MN_EEP_CTR_STARTS_MSB,
+        MN_EEP_CTR_H_P1_LSB,   MN_EEP_CTR_H_P1_MSB,
+        MN_EEP_CTR_H_P2_LSB,   MN_EEP_CTR_H_P2_MSB,
+        MN_EEP_CTR_H_P3_LSB,   MN_EEP_CTR_H_P3_MSB,
+        MN_EEP_CTR_H_P4_LSB,   MN_EEP_CTR_H_P4_MSB,
+        MN_EEP_CTR_H_P5_LSB,   MN_EEP_CTR_H_P5_MSB,
+        /* Chrono complet : 5 enables + 4 × 10 addresses par programme = 45 */
+        MN_EEP_CHRONO_ENABLE,
+        MN_EEP_CHRONO_EN1, MN_EEP_CHRONO_EN2, MN_EEP_CHRONO_EN3, MN_EEP_CHRONO_EN4,
+    };
+    /* Ajoute les 40 addresses de programmes chrono (=start, stop, 7 days, temp × 4) */
+    static const uint16_t chrono_prog_base[4] = {
+        MN_EEP_CHRONO1_START, MN_EEP_CHRONO2_START,
+        MN_EEP_CHRONO3_START, MN_EEP_CHRONO4_START
     };
     int n = sizeof(list)/sizeof(list[0]);
     for (int i = 0; i < n; i++) poll_list[i] = list[i];
+    for (int p = 0; p < 4; p++) {
+        for (int off = 0; off < 10 && n < POLL_LIST_MAX; off++) {
+            poll_list[n++] = chrono_prog_base[p] + off;
+        }
+    }
     poll_list_count = n;
 }
 static int poll_interval_ms = 150;   /* delay between two polls */
@@ -357,10 +418,14 @@ static bool mn_do_transaction(uint8_t cmd, uint16_t reg_addr, uint8_t value_to_w
         /* Not fatal - still record value for debugging */
     }
 
+    /* Après un WRITE, ce qu'on lit c'est le tail de l'écho ([cks][val] du frame TX)
+     * PAS une vraie reply avec la valeur stove. Écrire dans le shadow avec ces
+     * bytes met la CHECKSUM (=0x24=36 pour A0/7F/05) au lieu de la valeur écrite.
+     * Solution : après write, mettre le shadow à la valeur qu'on VOULAIT écrire. */
     if (reg_addr < MN_RAM_MAX) {
-        mn_set_ram((mn_ram_addr_t)reg_addr, value);
+        mn_set_ram((mn_ram_addr_t)reg_addr, is_write ? value_to_write : value);
     }
-    mn_debug_push(MN_DIR_TX_REPLY, addr, value);
+    mn_debug_push(MN_DIR_TX_REPLY, addr, is_write ? value_to_write : value);
 
     if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
         mn_snapshot.rx_frames_count++;
@@ -1054,6 +1119,58 @@ char *mn_ram_dump_json(void)
 
 /* Return runtime UART stats for audit: total frames RX + TX, ms since
  * last stove read, checksum error count, uptime. */
+/* Dumper les 4 programmes chrono depuis le shadow.
+ * Chaque programme = start(8), stop(8), day1..7(1 chacun), temp(1). Adresses
+ * contiguës, on lit à partir de MN_EEP_CHRONO<N>_START. */
+char *mn_chrono_json(void)
+{
+    static const uint16_t prog_start_addr[4] = {
+        MN_EEP_CHRONO1_START, MN_EEP_CHRONO2_START,
+        MN_EEP_CHRONO3_START, MN_EEP_CHRONO4_START
+    };
+    static const char *day_names[7] = {"lun","mar","mer","jeu","ven","sam","dim"};
+    cJSON *o = cJSON_CreateObject();
+    cJSON *progs = cJSON_CreateArray();
+    if (xSemaphoreTake(mn_mutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        cJSON_AddBoolToObject(o, "master_enabled", mn_ram_shadow[MN_EEP_CHRONO_ENABLE] != 0);
+        uint16_t en[4] = {
+            mn_ram_shadow[MN_EEP_CHRONO_EN1], mn_ram_shadow[MN_EEP_CHRONO_EN2],
+            mn_ram_shadow[MN_EEP_CHRONO_EN3], mn_ram_shadow[MN_EEP_CHRONO_EN4]
+        };
+        for (int i = 0; i < 4; i++) {
+            uint16_t base = prog_start_addr[i];
+            cJSON *p = cJSON_CreateObject();
+            cJSON_AddNumberToObject(p, "id", i + 1);
+            cJSON_AddBoolToObject(p, "enabled", en[i] != 0);
+            /* Format : N × 10 minutes since midnight (=validé Teodora Evo) */
+            uint8_t sraw = mn_ram_shadow[base + 0];
+            uint8_t praw = mn_ram_shadow[base + 1];
+            char sfmt[8], pfmt[8];
+            snprintf(sfmt, sizeof(sfmt), "%02d:%02d", (sraw*10)/60, (sraw*10)%60);
+            snprintf(pfmt, sizeof(pfmt), "%02d:%02d", (praw*10)/60, (praw*10)%60);
+            cJSON_AddStringToObject(p, "start",     sfmt);
+            cJSON_AddStringToObject(p, "stop",      pfmt);
+            cJSON_AddNumberToObject(p, "start_raw", sraw);
+            cJSON_AddNumberToObject(p, "stop_raw",  praw);
+            cJSON_AddNumberToObject(p, "temp_c",    mn_ram_shadow[base + 9]);
+            cJSON *days = cJSON_CreateArray();
+            for (int d = 0; d < 7; d++) {
+                cJSON *day = cJSON_CreateObject();
+                cJSON_AddStringToObject(day, "name",    day_names[d]);
+                cJSON_AddBoolToObject  (day, "enabled", mn_ram_shadow[base + 2 + d] != 0);
+                cJSON_AddItemToArray(days, day);
+            }
+            cJSON_AddItemToObject(p, "days", days);
+            cJSON_AddItemToArray(progs, p);
+        }
+        xSemaphoreGive(mn_mutex);
+    }
+    cJSON_AddItemToObject(o, "programs", progs);
+    char *s = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    return s;
+}
+
 char *mn_stats_json(void)
 {
     cJSON *o = cJSON_CreateObject();
@@ -1117,7 +1234,7 @@ char *mn_registers_live_json(void)
             cJSON_AddBoolToObject(r, "polled", polled);
             cJSON_AddItemToArray(arr, r);
         }
-        /* Second: unlabeled polled entries — auto-name them "RAW_<hex>" */
+        /* Second: unlabeled polled entries - auto-name them "RAW_<hex>" */
         for (int j = 0; j < poll_list_count; j++) {
             uint16_t a = poll_list[j];
             if (a >= MN_RAM_MAX || emitted[a]) continue;
