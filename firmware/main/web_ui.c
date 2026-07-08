@@ -1019,6 +1019,10 @@ esp_err_t web_ui_start(app_config_t *cfg)
     g_cfg = cfg;
 
     httpd_config_t hd = HTTPD_DEFAULT_CONFIG();
+    /* Enable wildcard matching pour /api/stove/power et setpoint routes.
+     * Sans ça, l'étoile est literal et POST /api/stove/power/3 -> 404.
+     * Bug latent : HA passe par MQTT donc marche, mais l'UI web POST 404. */
+    hd.uri_match_fn        = httpd_uri_match_wildcard;
     hd.max_uri_handlers   = 40;   /* room for the current 34 routes + margin;
                                    * remember to grow this whenever a handler
                                    * is added, ESP-IDF silently drops the
