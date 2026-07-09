@@ -25,6 +25,9 @@
 #include "ota.h"
 #include "log_ring.h"
 #include "esp_log.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "esp_sleep.h"
 #include "esp_http_server.h"
 #include "esp_app_desc.h"
 #include "esp_wifi.h"
@@ -216,6 +219,7 @@ static esp_err_t handle_config_get(httpd_req_t *req)
     /* Firmware version from app descriptor */
     const esp_app_desc_t *desc = esp_app_get_description();
     cJSON_AddStringToObject(o, "version", desc ? desc->version : "unknown");
+    cJSON_AddStringToObject(o, "idf_version", desc ? desc->idf_ver : "unknown");
     /* Target : détermine ce que l'UI affiche (=cloud only sur blacklabel) */
 #ifdef TARGET_BLACKLABEL
     cJSON_AddStringToObject(o, "target", "blacklabel");
@@ -300,7 +304,7 @@ static esp_err_t handle_config_post(httpd_req_t *req)
     GET_NUM("publish_interval_ms", g_cfg->publish_interval_ms, uint16_t);
     GET_BOOL("cloud_enabled", g_cfg->cloud_enabled);
 #ifndef TARGET_BLACKLABEL
-    /* Cloud non supporté sur TARGET_EXTERNAL - force off quel que soit le POST */
+    /* Cloud non supporté sur TARGET_EXTERNAL — force off quel que soit le POST */
     g_cfg->cloud_enabled = false;
 #endif
 #ifdef TARGET_BLACKLABEL
@@ -978,16 +982,54 @@ static esp_err_t handle_cloud_status(httpd_req_t *req)
     return r;
 }
 
+extern bool safe_mode_request(void);
+
+static void safe_reboot_task(void *arg)
+{
+    /* Task séparée - httpd send OK avant qu'on commit. Pas de nvs_deinit
+     * ni deep_sleep qui panic dans notre contexte (=RST_PANIC observé). */
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    nvs_handle_t hs;
+    if (nvs_open("safeflag", NVS_READWRITE, &hs) == ESP_OK) {
+        nvs_set_u8(hs, "next", 1);
+        nvs_commit(hs);
+        nvs_close(hs);
+    }
+    vTaskDelay(pdMS_TO_TICKS(500));
+    esp_restart();
+}
+
 static esp_err_t handle_safe_mode(httpd_req_t *req)
 {
-    if (!g_cfg) return httpd_resp_send_500(req);
-    g_cfg->safe_mode_next_boot = true;
-    config_nvs_save(g_cfg);
+    /* Set RTC flag maintenant (=synchrone, mémoire RAM) */
+    safe_mode_request();
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_send(req, "{\"ok\":true,\"rebooting\":true}", 27);
-    vTaskDelay(pdMS_TO_TICKS(400));
-    esp_restart();
+    const char *resp = "{\"ok\":true,\"rebooting\":true}";
+    httpd_resp_send(req, resp, strlen(resp));
+    /* Déclenche le save + restart dans une task séparée pour éviter que
+     * httpd cleanup ne kill le nvs_commit avant qu'il soit flush. */
+    xTaskCreate(safe_reboot_task, "safe_reboot", 4096, NULL, 5, NULL);
     return ESP_OK;
+}
+
+/* Debug endpoint : lit direct le NVS bootcheck pour voir ce qui est vraiment
+ * persisté. Sans passer par le cache config. */
+static esp_err_t handle_debug_bootcheck(httpd_req_t *req)
+{
+    nvs_handle_t hb;
+    uint8_t safe_next = 255, crash_cnt = 255;
+    esp_err_t r = nvs_open("bootcheck", NVS_READONLY, &hb);
+    if (r == ESP_OK) {
+        nvs_get_u8(hb, "safe_next", &safe_next);
+        nvs_get_u8(hb, "crash_cnt", &crash_cnt);
+        nvs_close(hb);
+    }
+    char out[128];
+    int n = snprintf(out, sizeof(out),
+        "{\"nvs_open\":%d,\"safe_next\":%d,\"crash_cnt\":%d}",
+        (int)r, (int)safe_next, (int)crash_cnt);
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, out, n);
 }
 
 static esp_err_t handle_ota_pull(httpd_req_t *req)
@@ -1051,6 +1093,7 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/reboot",               .method = HTTP_POST, .handler = handle_reboot,       },
         { .uri = "/factory",              .method = HTTP_POST, .handler = handle_factory,      },
         { .uri = "/api/safe_mode",        .method = HTTP_POST, .handler = handle_safe_mode,    },
+        { .uri = "/debug/bootcheck",      .method = HTTP_GET,  .handler = handle_debug_bootcheck, },
         /* stove commands (were defined but not registered -> 404) */
         { .uri = "/api/stove/on",         .method = HTTP_POST, .handler = handle_stove_cmd,    },
         { .uri = "/api/stove/off",        .method = HTTP_POST, .handler = handle_stove_cmd,    },

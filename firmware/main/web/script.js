@@ -1,4 +1,4 @@
-/* OpenXtraflame - Web UI script */
+/* openextraflame - Web UI script */
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
 const j = (u, o = {}) => fetch(u, o).then(r => r.json());
@@ -166,6 +166,7 @@ async function loadConfig() {
             $('about-target').className = 'badge ' + (c.target === 'blacklabel' ? 'badge-success' : 'badge-info');
         }
         if ($('about-version') && c.version) $('about-version').textContent = c.version;
+        if ($('about-idf') && c.idf_version) $('about-idf').textContent = 'ESP-IDF ' + c.idf_version;
         $('wifi-ssid').value = c.wifi_ssid || '';
         $('mqtt-host').value = c.mqtt_host || '';
         $('mqtt-port').value = c.mqtt_port || 1883;
@@ -437,7 +438,7 @@ async function otaCheck() {
         const j = await r.json();
         const latest = j.tag_name || j.name || '?';
         const current = $('version').textContent;
-        const url = (j.assets || []).map(a => a.browser_download_url).find(u => /OpenXtraflame\.bin$/.test(u));
+        const url = (j.assets || []).map(a => a.browser_download_url).find(u => /openextraflame\.bin$/.test(u));
         if (url) $('ota-url').value = url;
         span.textContent = current === latest
             ? `✅ ${current} = latest`

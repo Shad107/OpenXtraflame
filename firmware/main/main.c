@@ -38,6 +38,29 @@
 
 static const char *TAG = "MAIN";
 
+/* RTC noinit variables : persistent across soft reboot (=esp_restart) mais
+ * pas au power cycle. Idéal pour un "safe mode next boot" flag qui doit
+ * survivre au reboot déclenché par le POST /api/safe_mode. */
+#define SAFE_MODE_MAGIC 0xC0FEE001UL
+RTC_NOINIT_ATTR uint32_t g_rtc_safe_magic;
+RTC_NOINIT_ATTR uint32_t g_rtc_safe_flag;
+
+bool safe_mode_request(void)
+{
+    g_rtc_safe_magic = SAFE_MODE_MAGIC;
+    g_rtc_safe_flag = 1;
+    return true;
+}
+
+static bool consume_rtc_safe_flag(void)
+{
+    if (g_rtc_safe_magic != SAFE_MODE_MAGIC) return false;
+    bool v = (g_rtc_safe_flag != 0);
+    /* Consommer */
+    g_rtc_safe_flag = 0;
+    return v;
+}
+
 /* Event group shared across modules for lifecycle signaling */
 EventGroupHandle_t app_event_group = NULL;
 
@@ -181,8 +204,39 @@ void app_main(void)
 
     /* 4e. Safe mode boot : si le flag est set OU crash_count >= 3, on saute
      * Micronova + MQTT + cloud pour donner à l'OTA endpoint toutes les
-     * ressources CPU/UART. Le flag manuel est consommé immédiatement. */
-    bool safe_boot = cfg.safe_mode_next_boot || (crash_count >= 3);
+     * ressources CPU/UART. Le flag manuel est consommé immédiatement.
+     * Lecture aussi depuis bootcheck namespace (=résilient au race). */
+    uint8_t bc_safe = 0;
+    {
+        nvs_handle_t hb;
+        if (nvs_open("bootcheck", NVS_READWRITE, &hb) == ESP_OK) {
+            nvs_get_u8(hb, "safe_next", &bc_safe);
+            if (bc_safe) {
+                nvs_set_u8(hb, "safe_next", 0);
+                nvs_commit(hb);
+            }
+            nvs_close(hb);
+        }
+    }
+    bool rtc_safe = consume_rtc_safe_flag();
+    /* Lecture namespace dédié "safeflag" (=isolé de bootcheck qui a un race) */
+    uint8_t sf_safe = 0;
+    {
+        nvs_handle_t hs;
+        if (nvs_open("safeflag", NVS_READWRITE, &hs) == ESP_OK) {
+            nvs_get_u8(hs, "next", &sf_safe);
+            if (sf_safe) {
+                nvs_set_u8(hs, "next", 0);
+                nvs_commit(hs);
+            }
+            nvs_close(hs);
+        }
+    }
+    esp_reset_reason_t rr = esp_reset_reason();
+    ESP_LOGI(TAG, "Boot reason=%d (=1=POWERON, 3=SW, 8=DEEPSLEEP, 12=USB)", (int)rr);
+    ESP_LOGI(TAG, "Boot safe check : nvs=%d bc=%d rtc=%d sf=%d crash=%d",
+             (int)cfg.safe_mode_next_boot, (int)bc_safe, (int)rtc_safe, (int)sf_safe, (int)crash_count);
+    bool safe_boot = cfg.safe_mode_next_boot || bc_safe || rtc_safe || sf_safe || (crash_count >= 3);
     if (cfg.safe_mode_next_boot) {
         ESP_LOGW(TAG, "SAFE MODE boot : flag manuel activé (consommé)");
         cfg.safe_mode_next_boot = false;
