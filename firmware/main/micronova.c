@@ -187,6 +187,18 @@ static void update_snapshot_from_shadow(void)
     mn_snapshot.power_real      = mn_ram_shadow[MN_RAM_POWER_REAL];
     mn_snapshot.stove_type      = mn_detected_stove_type();
     mn_snapshot.alarm_code      = mn_ram_shadow[MN_RAM_ALLARM];
+    /* Décomposition bits d'alarme (=ordre firmware original, cf docs/CLOUD) */
+    {
+        uint8_t a = mn_snapshot.alarm_code;
+        mn_snapshot.alarm_sonda_fumi    = !!(a & 0x01);
+        mn_snapshot.alarm_hot_fumi      = !!(a & 0x02);
+        mn_snapshot.alarm_fumi_corto    = !!(a & 0x04);
+        mn_snapshot.alarm_aspiratore    = !!(a & 0x08);
+        mn_snapshot.alarm_no_accensione = !!(a & 0x10);
+        mn_snapshot.alarm_no_fiamma     = !!(a & 0x20);
+        mn_snapshot.alarm_depression    = !!(a & 0x40);
+        mn_snapshot.alarm_coclea_cmd    = !!(a & 0x80);
+    }
     mn_snapshot.t_ambient       = (float)mn_ram_shadow[MN_RAM_TAMB] / 2.0f;
     mn_snapshot.t_water         = (float)mn_ram_shadow[MN_RAM_TH20] / 2.0f;
     mn_snapshot.t_smoke         = mn_ram_shadow[MN_RAM_FUMES_TEMP];
@@ -229,6 +241,17 @@ static void update_snapshot_from_shadow(void)
         mn_snapshot.pellets_cost_lifetime_eur = total * price_per_kg;
         /* days_left calculé côté HA via avg 7d (=besoin recorder), on met 0 pour l'instant */
         mn_snapshot.pellets_days_left = 0;
+
+        /* Maintenance : compteurs "avant service/nettoyage" */
+        int32_t h_since = (int32_t)mn_snapshot.hours_total - (int32_t)c->maint_service_h_at_reset;
+        if (h_since < 0) h_since = 0;
+        mn_snapshot.hours_since_service = (uint16_t)h_since;
+        mn_snapshot.hours_before_service = (int16_t)((int32_t)c->maint_service_h_threshold - h_since);
+
+        int32_t s_since = (int32_t)mn_snapshot.starts_total - (int32_t)c->maint_cleaning_starts_at_reset;
+        if (s_since < 0) s_since = 0;
+        mn_snapshot.starts_since_cleaning = (uint16_t)s_since;
+        mn_snapshot.starts_before_cleaning = (int16_t)((int32_t)c->maint_cleaning_starts_threshold - s_since);
     }
 
     mn_snapshot.last_updated_ms = (uint32_t)(esp_timer_get_time() / 1000);
@@ -456,12 +479,29 @@ static void mn_slave_task(void *arg)
             vTaskDelay(pdMS_TO_TICKS(50));
         }
 
-        /* Then one cyclic read */
-        if (poll_list_count > 0) {
+        /* Alternance hot/cold : chaque tick fait UNE transaction seulement.
+         * Hot list = 5 registres critiques poll à chaque cycle → latence
+         * poêle→snapshot ~1.5s au lieu de ~9.5s pour ces valeurs.
+         * Cold list = poll_list complète, cycle ~17s (=OK compteurs/chrono). */
+        static const uint16_t HOT_ADDRS[] = {
+            MN_RAM_STOVE_STATE,
+            MN_RAM_TAMB,
+            MN_EEP_POWER_SET_IVENT,   /* 0x17F = consigne persistante puissance */
+            MN_RAM_POWER_REAL,
+            MN_RAM_FUMES_TEMP,
+        };
+        static const int HOT_N = sizeof(HOT_ADDRS) / sizeof(HOT_ADDRS[0]);
+        static int hot_idx = 0;
+        static bool hot_turn = true;
+        if (hot_turn) {
+            mn_do_transaction(0x00, HOT_ADDRS[hot_idx], 0);
+            hot_idx = (hot_idx + 1) % HOT_N;
+        } else if (poll_list_count > 0) {
             uint16_t addr = poll_list[poll_idx % poll_list_count];
             mn_do_transaction(0x00, addr, 0);
             poll_idx = (poll_idx + 1) % poll_list_count;
         }
+        hot_turn = !hot_turn;
 
         vTaskDelay(pdMS_TO_TICKS(poll_interval_ms));
     }
