@@ -79,6 +79,12 @@ typedef struct {
     uint16_t pellet_service_h_tot;      // total au moment du dernier service annuel
     uint32_t pellet_service_epoch;      // timestamp Unix
 
+    /* Maintenance thresholds + snapshots au dernier reset */
+    uint16_t maint_service_h_threshold;    // seuil h_total avant service (=1500 Extraflame)
+    uint16_t maint_service_h_at_reset;     // h_total au moment du dernier reset service
+    uint16_t maint_cleaning_starts_threshold; // seuil starts avant nettoyage (=100)
+    uint16_t maint_cleaning_starts_at_reset; // starts_total au moment du dernier reset
+
     /* Cloud Extraflame (=mode compatibilité TotalControl 2). BETA, désactivé
      * par défaut. Active la connexion MQTT sortante vers mqtt.extraflame.it:8883
      * en parallèle du broker HA local, permet à l'app TotalControl 2 officielle

@@ -21,9 +21,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <time.h>
 #include "micronova.h"
 #include "config_nvs.h"
 #include "hardware_config.h"
+#include "alarm_history.h"
+#include "pellet_forecast.h"
+#include "params_diff.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
@@ -186,10 +190,23 @@ static void update_snapshot_from_shadow(void)
     mn_snapshot.power_level     = mn_ram_shadow[MN_EEP_POWER_SET_IVENT];
     mn_snapshot.power_real      = mn_ram_shadow[MN_RAM_POWER_REAL];
     mn_snapshot.stove_type      = mn_detected_stove_type();
-    mn_snapshot.alarm_code      = mn_ram_shadow[MN_RAM_ALLARM];
+    {
+        uint8_t prev_alarm = mn_snapshot.alarm_code;
+        mn_snapshot.alarm_code = mn_ram_shadow[MN_RAM_ALLARM];
+        if (mn_snapshot.alarm_code != prev_alarm) {
+            time_t now_epoch = 0;
+            time(&now_epoch);
+            if (now_epoch > 1700000000) {
+                alarm_history_on_code_change(mn_snapshot.alarm_code, (uint32_t)now_epoch);
+            }
+        }
+    }
     /* Décomposition bits d'alarme (=ordre firmware original, cf docs/CLOUD) */
     {
         uint8_t a = mn_snapshot.alarm_code;
+        mn_snapshot.tremie_vide         = (mn_ram_shadow[MN_RAM_SERBATORIO_VUOTO] != 0);
+        mn_snapshot.causa_stato7        = mn_ram_shadow[MN_RAM_CAUSA_STATO7];
+        mn_snapshot.modulation          = mn_ram_shadow[MN_RAM_MODULATION];
         mn_snapshot.alarm_sonda_fumi    = !!(a & 0x01);
         mn_snapshot.alarm_hot_fumi      = !!(a & 0x02);
         mn_snapshot.alarm_fumi_corto    = !!(a & 0x04);
@@ -239,8 +256,15 @@ static void update_snapshot_from_shadow(void)
         float price_per_kg = (c->pellet_sack_size_kg > 0.01f)
             ? (c->pellet_price_per_sack_eur / c->pellet_sack_size_kg) : 0.0f;
         mn_snapshot.pellets_cost_lifetime_eur = total * price_per_kg;
-        /* days_left calculé côté HA via avg 7d (=besoin recorder), on met 0 pour l'instant */
-        mn_snapshot.pellets_days_left = 0;
+        /* Prédiction date recharge trémie via ring buffer 7j interne */
+        pellet_forecast_tick(since_refill);
+        mn_snapshot.pellets_days_left =
+            pellet_forecast_days_left(mn_snapshot.pellets_remaining_kg);
+        mn_snapshot.pellets_empty_ts =
+            pellet_forecast_empty_ts(mn_snapshot.pellets_remaining_kg);
+        mn_snapshot.pellets_kg_per_day = pellet_forecast_kg_per_day();
+
+        /* Watcher passif désactivé après brick 2026-07-09 (=suspect saturation UART) */
 
         /* Maintenance : compteurs "avant service/nettoyage" */
         int32_t h_since = (int32_t)mn_snapshot.hours_total - (int32_t)c->maint_service_h_at_reset;
@@ -291,6 +315,10 @@ static void init_poll_list(void) {
         /* EEPROM I_VENT confirmés */
         MN_EEP_POWER_SET_IVENT,   /* 0x17F = EEPROM 0x7F */
         MN_EEP_TEMP_SET_IVENT,    /* 0x17D = EEPROM 0x7D */
+        /* Registres RAM I_VENT dérivés Addrs_dyn 2026-07-09 */
+        MN_RAM_SERBATORIO_VUOTO,  /* 0x0DF - trémie vide */
+        MN_RAM_CAUSA_STATO7,      /* 0x0E0 - raison arrêt */
+        MN_RAM_MODULATION,        /* 0x0E2 */
         /* Compteurs maintenance (=14 addresses EEPROM) */
         MN_EEP_CTR_H_TOT_LSB,  MN_EEP_CTR_H_TOT_MSB,
         MN_EEP_CTR_STARTS_LSB, MN_EEP_CTR_STARTS_MSB,
@@ -314,6 +342,13 @@ static void init_poll_list(void) {
         for (int off = 0; off < 10 && n < POLL_LIST_MAX; off++) {
             poll_list[n++] = chrono_prog_base[p] + off;
         }
+    }
+    /* Zone params tech Micronova I023 : EEPROM 0x40-0x7F (=64 registres).
+     * Poll seul = lecture live via /api/params/tech. Le watcher passif tick
+     * (=save NVS à chaque cycle) est resté désactivé, c'était le vrai coupable
+     * du brick 2026-07-09 (=NVS write flood + saturation). */
+    for (int i = 0; i < 0x40 && n < POLL_LIST_MAX; i++) {
+        poll_list[n++] = 0x140 + i;
     }
     poll_list_count = n;
 }

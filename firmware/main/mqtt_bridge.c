@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include "mqtt_bridge.h"
 #include "micronova.h"
+#include "alarm_history.h"
+#include "ota.h"
 #include "cloud_bridge.h"
 #include "config_nvs.h"
 #include "mqtt_client.h"
@@ -47,6 +49,28 @@ static void handle_command(const char *topic, size_t tlen,
     if (strstr(topic, "/cmd/on"))          { mn_write_register(MN_RAM_STOVE_STATE, 0x01); return; }
     if (strstr(topic, "/cmd/off"))         { mn_write_register(MN_RAM_STOVE_STATE, 0x06); return; }
     if (strstr(topic, "/cmd/reset_alarm")) { mn_write_register(MN_RAM_STOVE_STATE, 0x00); return; }
+    /* Reset maintenance counters : snapshot h_total / starts_total à l'instant T */
+    if (strstr(topic, "/cmd/reset_service")) {
+        mn_stove_state_snapshot_t s; mn_get_snapshot(&s);
+        local_cfg.maint_service_h_at_reset = s.hours_total;
+        config_nvs_save(&local_cfg);
+        ESP_LOGI(TAG, "reset_service : h_at_reset=%d", s.hours_total);
+        return;
+    }
+    if (strstr(topic, "/cmd/reset_cleaning")) {
+        mn_stove_state_snapshot_t s; mn_get_snapshot(&s);
+        local_cfg.maint_cleaning_starts_at_reset = s.starts_total;
+        config_nvs_save(&local_cfg);
+        ESP_LOGI(TAG, "reset_cleaning : starts_at_reset=%d", s.starts_total);
+        return;
+    }
+    if (strstr(topic, "/cmd/rollback_firmware")) {
+        ESP_LOGW(TAG, "MQTT rollback_firmware demandé → bascule ota_1");
+        ota_rollback();
+        vTaskDelay(pdMS_TO_TICKS(500));
+        esp_restart();
+        return;
+    }
 #ifdef TARGET_BLACKLABEL
     if (strstr(topic, "/cmd/cloud_toggle")) {
         char buf[8] = {0};
@@ -253,6 +277,27 @@ esp_err_t mqtt_bridge_publish_state(void)
     cJSON_AddNumberToObject(o, "pellets_since_refill_kg",  s.pellets_since_refill_kg);
     cJSON_AddNumberToObject(o, "pellets_remaining_kg",     s.pellets_remaining_kg);
     cJSON_AddNumberToObject(o, "pellets_cost_lifetime_eur", s.pellets_cost_lifetime_eur);
+    cJSON_AddNumberToObject(o, "pellets_days_left",         s.pellets_days_left);
+    cJSON_AddNumberToObject(o, "pellets_kg_per_day",        s.pellets_kg_per_day);
+    cJSON_AddNumberToObject(o, "pellets_empty_ts",          s.pellets_empty_ts);
+    /* Alarmes décomposées bit par bit (=8 bits nommés du registre RAM_ALLARM) */
+    cJSON_AddBoolToObject(o, "alarm_sonda_fumi",    s.alarm_sonda_fumi);
+    cJSON_AddBoolToObject(o, "alarm_hot_fumi",      s.alarm_hot_fumi);
+    cJSON_AddBoolToObject(o, "alarm_fumi_corto",    s.alarm_fumi_corto);
+    cJSON_AddBoolToObject(o, "alarm_aspiratore",    s.alarm_aspiratore);
+    cJSON_AddBoolToObject(o, "alarm_no_accensione", s.alarm_no_accensione);
+    cJSON_AddBoolToObject(o, "alarm_no_fiamma",     s.alarm_no_fiamma);
+    cJSON_AddBoolToObject(o, "alarm_depression",    s.alarm_depression);
+    cJSON_AddBoolToObject(o, "alarm_coclea_cmd",    s.alarm_coclea_cmd);
+    /* Maintenance : compteurs avant service/nettoyage */
+    cJSON_AddNumberToObject(o, "hours_since_service",     s.hours_since_service);
+    cJSON_AddNumberToObject(o, "hours_before_service",    s.hours_before_service);
+    cJSON_AddNumberToObject(o, "starts_since_cleaning",   s.starts_since_cleaning);
+    cJSON_AddNumberToObject(o, "starts_before_cleaning",  s.starts_before_cleaning);
+    /* Trémie + modulation + cause arrêt (=I_VENT Addrs_dyn reverse) */
+    cJSON_AddBoolToObject(o,   "tremie_vide",             s.tremie_vide);
+    cJSON_AddNumberToObject(o, "modulation",              s.modulation);
+    cJSON_AddNumberToObject(o, "causa_stato7",            s.causa_stato7);
 #ifdef TARGET_BLACKLABEL
     /* Cloud state pour HA discovery / debug (=blacklabel only) */
     {
@@ -283,6 +328,119 @@ esp_err_t mqtt_bridge_publish_state(void)
         snprintf(chrono_topic, sizeof(chrono_topic), "%s/chrono", sub_topic_prefix);
         esp_mqtt_client_publish(client, chrono_topic, cjson, 0, 0, 1);  /* retained */
         free(cjson);
+    }
+
+    /* Historique alarmes (=ring buffer 20 dernières, retained) */
+    {
+        char *ajson = alarm_history_dump_json();
+        if (ajson) {
+            char h_topic[160];
+            snprintf(h_topic, sizeof(h_topic), "%s/history_alarms", sub_topic_prefix);
+            /* HA json_attributes_topic n'aime pas les arrays racine =wrap {events:[]} */
+            char *wrap = malloc(strlen(ajson) + 32);
+            if (wrap) {
+                int wn = sprintf(wrap, "{\"events\":%s,\"count\":%u}", ajson,
+                                 (unsigned)alarm_history_count());
+                esp_mqtt_client_publish(client, h_topic, wrap, wn, 1, 1);  /* qos1 retained */
+                free(wrap);
+            }
+            free(ajson);
+        }
+    }
+
+    /* Params tech UT04 : lecture directe des 32 registres 0x40-0x5F.
+     * On expose que les non-zéro pour rester compact. */
+    {
+        struct { uint8_t pr; uint8_t addr; uint16_t factory; } TABLE[] = {
+            {1,0x40,15},{2,0x41,6},{3,0x42,60},{4,0x43,19},{5,0x44,20},
+            {6,0x45,19},{7,0x46,22},{8,0x47,29},{9,0x48,35},{10,0x49,45},
+            {11,0x4A,240},{12,0x4B,30},{13,0x4C,50},{14,0x4D,260},{15,0x4E,100},
+            {23,0x56,12},{24,0x57,15},{25,0x58,17},{26,0x59,19},{27,0x5A,21},
+        };
+        int n_items = sizeof(TABLE)/sizeof(TABLE[0]);
+        char *buf = malloc(2048);
+        if (buf) {
+            int off = 0, divergent = 0;
+            off += sprintf(buf+off, "{\"params\":[");
+            for (int i = 0; i < n_items; i++) {
+                uint8_t v = mn_get_ram(0x100 + TABLE[i].addr);
+                int diverges = (v != 0) && ((v > TABLE[i].factory * 130 / 100) ||
+                                            (v < TABLE[i].factory * 70 / 100));
+                if (diverges) divergent++;
+                off += sprintf(buf+off, "%s{\"pr\":%u,\"addr\":%u,\"val\":%u,\"factory\":%u,\"div\":%s}",
+                    i ? "," : "", TABLE[i].pr, TABLE[i].addr, v, TABLE[i].factory,
+                    diverges ? "true" : "false");
+            }
+            off += sprintf(buf+off, "],\"divergent_count\":%d}", divergent);
+            char t_topic[160];
+            snprintf(t_topic, sizeof(t_topic), "%s/params_tech", sub_topic_prefix);
+            esp_mqtt_client_publish(client, t_topic, buf, off, 1, 1);
+            free(buf);
+        }
+    }
+
+    /* Diagnostic combustion (=règles data-driven simples) */
+    {
+        char *diag = malloc(1024);
+        if (diag) {
+            int off = 0, sev_max = 0;
+            const char *sevs[] = {"ok", "info", "warning", "critical"};
+            off += sprintf(diag+off, "{\"diagnostics\":[");
+            int first = 1;
+
+            /* Nettoyage brasero fréquent */
+            uint8_t pr03 = mn_get_ram(0x100 + 0x42);
+            if (pr03 && pr03 < 40) {
+                off += sprintf(diag+off, "%s{\"code\":\"pr03_frequent\",\"sev\":2,"
+                    "\"msg\":\"Nettoyage brasero %umin (defaut 60)\","
+                    "\"reco\":\"Corriger Pr04-Pr08 coclea puis remonter Pr03\"}",
+                    first ? "" : ",", pr03);
+                first = 0;
+                if (sev_max < 2) sev_max = 2;
+            }
+            /* Coclea sous factory */
+            uint8_t pr04 = mn_get_ram(0x100 + 0x43);
+            uint8_t pr05 = mn_get_ram(0x100 + 0x44);
+            uint8_t pr08 = mn_get_ram(0x100 + 0x47);
+            if (pr04 && pr05 && pr08 &&
+                (pr04 < 19*40/100 || pr05 < 20*40/100 || pr08 < 29*40/100)) {
+                off += sprintf(diag+off, "%s{\"code\":\"coclea_low\",\"sev\":3,"
+                    "\"msg\":\"Coclea Pr04-Pr08 <40%% factory = combustion maigre\","
+                    "\"reco\":\"Remonter progressivement +30%% par etape 24h\"}",
+                    first ? "" : ",");
+                first = 0;
+                sev_max = 3;
+            }
+            /* T fumees */
+            mn_stove_state_snapshot_t sc; mn_get_snapshot(&sc);
+            if (sc.t_smoke > 280) {
+                off += sprintf(diag+off, "%s{\"code\":\"smoke_hot\",\"sev\":2,"
+                    "\"msg\":\"T fumees %.0f>280C, trop d'air excedent\","
+                    "\"reco\":\"Baisser aspiration Pr16-Pr22\"}", first ? "" : ",", (double)sc.t_smoke);
+                first = 0;
+                if (sev_max < 2) sev_max = 2;
+            } else if (sc.t_smoke > 50 && sc.t_smoke < 130 && sc.state >= 3 && sc.state <= 4) {
+                off += sprintf(diag+off, "%s{\"code\":\"smoke_cold\",\"sev\":2,"
+                    "\"msg\":\"T fumees %.0f<130C en marche, risque condensation\","
+                    "\"reco\":\"Verifier etancheite + augmenter aspiration\"}", first ? "" : ",", (double)sc.t_smoke);
+                first = 0;
+                if (sev_max < 2) sev_max = 2;
+            }
+            /* Alarme active */
+            if (sc.alarm_code != 0) {
+                off += sprintf(diag+off, "%s{\"code\":\"alarm_active\",\"sev\":3,"
+                    "\"msg\":\"Alarme 0x%02x active\","
+                    "\"reco\":\"Voir historique + resoudre cause\"}", first ? "" : ",", sc.alarm_code);
+                first = 0;
+                sev_max = 3;
+            }
+
+            off += sprintf(diag+off, "],\"severity\":\"%s\"}", sevs[sev_max]);
+            char d_topic[160];
+            snprintf(d_topic, sizeof(d_topic), "%s/combustion_diag", sub_topic_prefix);
+            esp_mqtt_client_publish(client, d_topic, diag, off, 1, 1);
+            free(diag);
+        }
     }
 
     /* Config pellet : publie sur <prefix>/pellet (=retained, changement rare) */
@@ -536,6 +694,38 @@ esp_err_t mqtt_bridge_publish_discovery(void)
             cJSON_CreateString("{{ value_json.pellets_remaining_kg | round(1) }}"));
         publish_disco("sensor", "pellets_remaining_kg", p);
     }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Pellets conso journalière");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ value_json.pellets_kg_per_day | round(2) }}");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "kg/j");
+        cJSON_AddStringToObject(p, "icon", "mdi:chart-line");
+        publish_disco("sensor", "pellets_kg_per_day", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Pellets jours restants");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ value_json.pellets_days_left | round(1) }}");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "j");
+        cJSON_AddStringToObject(p, "icon", "mdi:calendar-clock");
+        publish_disco("sensor", "pellets_days_left", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Trémie vide prévue");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "device_class", "timestamp");
+        cJSON_AddStringToObject(p, "value_template",
+            "{% if value_json.pellets_empty_ts and value_json.pellets_empty_ts > 0 %}"
+            "{{ value_json.pellets_empty_ts | as_datetime | as_local }}"
+            "{% else %}unknown{% endif %}");
+        cJSON_AddStringToObject(p, "icon", "mdi:tank-outline");
+        publish_disco("sensor", "pellets_empty_ts", p);
+    }
 
     /* --- Chrono : master switch + 4 programmes (=switch enable + temp + times) --- */
     char chrono_topic[160], cmd_topic[192];
@@ -724,6 +914,175 @@ esp_err_t mqtt_bridge_publish_discovery(void)
         cJSON_AddStringToObject(p, "payload_off", "OFF");
         cJSON_AddStringToObject(p, "device_class", "connectivity");
         publish_disco("binary_sensor", "online", p);
+    }
+
+    /* --- 8 binary_sensors alarmes décomposées bit par bit --- */
+    {
+        static const struct { const char *slug, *fr, *dev_class; } ALARMS[] = {
+            {"alarm_sonda_fumi",    "Sonde fumées défectueuse",     "problem"},
+            {"alarm_hot_fumi",      "Température fumées trop élevée","heat"},
+            {"alarm_fumi_corto",    "Sonde fumées court-circuit",   "problem"},
+            {"alarm_aspiratore",    "Aspirateur défectueux",        "problem"},
+            {"alarm_no_accensione", "Échec allumage",               "problem"},
+            {"alarm_no_fiamma",     "Perte de flamme",              "problem"},
+            {"alarm_depression",    "Dépression insuffisante",      "problem"},
+            {"alarm_coclea_cmd",    "Alarme commande vis sans fin", "problem"},
+        };
+        for (size_t i = 0; i < sizeof(ALARMS)/sizeof(ALARMS[0]); i++) {
+            cJSON *p = cJSON_CreateObject();
+            cJSON_AddStringToObject(p, "name", ALARMS[i].fr);
+            cJSON_AddStringToObject(p, "state_topic", state_topic);
+            char tmpl[128];
+            snprintf(tmpl, sizeof(tmpl), "{{ 'ON' if value_json.%s else 'OFF' }}", ALARMS[i].slug);
+            cJSON_AddStringToObject(p, "value_template", tmpl);
+            cJSON_AddStringToObject(p, "payload_on",  "ON");
+            cJSON_AddStringToObject(p, "payload_off", "OFF");
+            cJSON_AddStringToObject(p, "device_class", ALARMS[i].dev_class);
+            publish_disco("binary_sensor", ALARMS[i].slug, p);
+        }
+    }
+
+    /* --- Sensors maintenance : heures/allumages avant service/nettoyage --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Heures avant service");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.hours_before_service }}");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "h");
+        cJSON_AddStringToObject(p, "icon", "mdi:wrench-clock");
+        publish_disco("sensor", "hours_before_service", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Heures depuis service");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.hours_since_service }}");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "h");
+        cJSON_AddStringToObject(p, "state_class", "total_increasing");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("sensor", "hours_since_service", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Allumages avant nettoyage");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.starts_before_cleaning }}");
+        cJSON_AddStringToObject(p, "icon", "mdi:fire-alert");
+        publish_disco("sensor", "starts_before_cleaning", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Allumages depuis nettoyage");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.starts_since_cleaning }}");
+        cJSON_AddStringToObject(p, "state_class", "total_increasing");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("sensor", "starts_since_cleaning", p);
+    }
+
+    /* --- Sensor Historique alarmes : count en state, events en attribute --- */
+    {
+        char h_topic[160];
+        snprintf(h_topic, sizeof(h_topic), "%s/history_alarms", sub_topic_prefix);
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Historique alarmes");
+        cJSON_AddStringToObject(p, "state_topic", h_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.count }}");
+        cJSON_AddStringToObject(p, "json_attributes_topic", h_topic);
+        cJSON_AddStringToObject(p, "json_attributes_template",
+            "{{ {'events': value_json.events} | tojson }}");
+        cJSON_AddStringToObject(p, "icon", "mdi:history");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("sensor", "history_alarms", p);
+    }
+
+    /* --- Sensor Params tech UT04 : state=div count, attrs=table Pr01-Pr30 --- */
+    {
+        char t_topic[160];
+        snprintf(t_topic, sizeof(t_topic), "%s/params_tech", sub_topic_prefix);
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Params tech divergents");
+        cJSON_AddStringToObject(p, "state_topic", t_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.divergent_count }}");
+        cJSON_AddStringToObject(p, "json_attributes_topic", t_topic);
+        cJSON_AddStringToObject(p, "icon", "mdi:tune-vertical");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("sensor", "params_tech", p);
+    }
+
+    /* --- Sensor Diagnostic combustion : state=severity, attrs=liste diagnostics --- */
+    {
+        char d_topic[160];
+        snprintf(d_topic, sizeof(d_topic), "%s/combustion_diag", sub_topic_prefix);
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Diagnostic combustion");
+        cJSON_AddStringToObject(p, "state_topic", d_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.severity }}");
+        cJSON_AddStringToObject(p, "json_attributes_topic", d_topic);
+        cJSON_AddStringToObject(p, "icon", "mdi:fire-alert");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        publish_disco("sensor", "combustion_diag", p);
+    }
+
+    /* --- Binary sensor Trémie vide (=alerte pellets épuisés) --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Trémie vide");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template",
+            "{{ 'ON' if value_json.tremie_vide else 'OFF' }}");
+        cJSON_AddStringToObject(p, "payload_on",  "ON");
+        cJSON_AddStringToObject(p, "payload_off", "OFF");
+        cJSON_AddStringToObject(p, "device_class", "problem");
+        cJSON_AddStringToObject(p, "icon", "mdi:tank");
+        publish_disco("binary_sensor", "tremie_vide", p);
+    }
+
+    /* --- Sensor modulation --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Modulation");
+        cJSON_AddStringToObject(p, "state_topic", state_topic);
+        cJSON_AddStringToObject(p, "value_template", "{{ value_json.modulation }}");
+        cJSON_AddStringToObject(p, "unit_of_measurement", "%");
+        cJSON_AddStringToObject(p, "icon", "mdi:sine-wave");
+        publish_disco("sensor", "modulation", p);
+    }
+
+    /* --- 2 buttons HA : reset service + reset cleaning --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Reset compteur service");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/reset_service", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON_AddStringToObject(p, "payload_press", "1");
+        cJSON_AddStringToObject(p, "entity_category", "config");
+        cJSON_AddStringToObject(p, "icon", "mdi:restart-alert");
+        publish_disco("button", "reset_service", p);
+    }
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Reset compteur nettoyage");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/reset_cleaning", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON_AddStringToObject(p, "payload_press", "1");
+        cJSON_AddStringToObject(p, "entity_category", "config");
+        cJSON_AddStringToObject(p, "icon", "mdi:broom");
+        publish_disco("button", "reset_cleaning", p);
+    }
+    /* --- Rollback firmware (=recovery vers ota_1 précédent) --- */
+    {
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddStringToObject(p, "name", "Rollback firmware");
+        char cmd[160];
+        snprintf(cmd, sizeof(cmd), "%s/cmd/rollback_firmware", sub_topic_prefix);
+        cJSON_AddStringToObject(p, "command_topic", cmd);
+        cJSON_AddStringToObject(p, "payload_press", "1");
+        cJSON_AddStringToObject(p, "entity_category", "diagnostic");
+        cJSON_AddStringToObject(p, "icon", "mdi:undo-variant");
+        publish_disco("button", "rollback_firmware", p);
     }
 
 #ifdef TARGET_BLACKLABEL

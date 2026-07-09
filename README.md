@@ -4,12 +4,12 @@
 [![License](https://img.shields.io/github/license/Shad107/OpenXtraflame)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Shad107/OpenXtraflame?style=social)](https://github.com/Shad107/OpenXtraflame)
 [![Issues](https://img.shields.io/github/issues/Shad107/OpenXtraflame)](https://github.com/Shad107/OpenXtraflame/issues)
-[![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2.3-red?logo=espressif)](https://github.com/espressif/esp-idf)
+[![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2.7-red?logo=espressif)](https://github.com/espressif/esp-idf)
 [![HA](https://img.shields.io/badge/Home%20Assistant-integrated-blue?logo=home-assistant)](https://home-assistant.io)
 
 Custom firmware open-source pour les poêles à granulés Extraflame (et compatibles Micronova).
 
-**Statut** : v0.1.0-rc1 (=release candidate, usage perso validé sur Extraflame Teodora Evo)
+**Statut** : v0.1.0-rc2 (=release candidate, usage perso validé sur Extraflame Teodora Evo)
 
 ## Objectif
 
@@ -56,6 +56,41 @@ Firmware qui REMPLACE celui d'origine sur le module Extraflame Black Label. Néc
                                           │  cloud       │
                                           └──────────────┘
 ```
+
+## Nouveautés v0.1.0-rc2
+
+**Onglet Maintenance complet** (=UI + MQTT HA Discovery) :
+- Auto-diagnostic combustion data-driven (=règles simples sur t_fumées, ratio puissances, alarmes)
+- Compteurs service (=heures + heures avant service) et nettoyage brasero (=démarrages) avec boutons reset
+- Table **Pr01-Pr30 lecture + écriture** en direct sur EEPROM Micronova (=mapping validé Micronova I023 aria)
+- Édition Pr avec zones de safety (`SAFE` / `COMBUSTION` / `DANGER`) + double confirmation
+- Historique alarmes (=ring buffer 20 entrées NVS avec timestamps + durées + labels FR)
+- Rollback firmware 1-clic (=bouton UI + button HA + cmd MQTT `rollback_firmware`)
+
+**Registres reverse-engineered** (=Teodora Evo I_VENT via Addrs_dyn) :
+- `SERBATORIO_VUOTO` (=trémie vide) exposé binary_sensor HA
+- `MODULATION` (=% modulation actuelle) exposé sensor HA
+- `CAUSA_STATO7` (=raison arrêt) exposé attribut
+- Prédiction date recharge trémie (=EMA 7 jours, sensor timestamp HA)
+
+**MQTT Discovery étendu** :
+- `sensor.<stove>_params_tech` (=state = nb Pr divergents factory, attrs = table complète)
+- `sensor.<stove>_combustion_diag` (=severity + liste diagnostics)
+- `sensor.<stove>_history_alarms` (=count + events avec durées)
+- `sensor.<stove>_pellets_kg_per_day` / `pellets_days_left` / `pellets_empty_ts`
+- `sensor.<stove>_hours_since/before_service` / `starts_since/before_cleaning`
+- `binary_sensor.<stove>_tremie_vide` (=alerte pellets épuisés, device_class problem)
+- `button.<stove>_reset_service` / `reset_cleaning` / `rollback_firmware`
+
+**Performance** :
+- Hot polling registres critiques (=latence poêle→HA 9s → 1s validée en prod)
+
+**Fix majeur** :
+- Watcher passif zone tech désactivé après brick 2026-07-09 (=cause saturation UART + NVS write flood, refonte throttle en cours pour v0.1.0)
+
+**Companion à venir** : service Docker `openxtraflame-brain` (=roadmap v0.2) pour learning historique long-terme + propositions actionnables 1-clic. Voir [docs/BRAIN.md](docs/BRAIN.md).
+
+Voir [docs/MAINTENANCE.md](docs/MAINTENANCE.md) pour la documentation détaillée de l'onglet Maintenance.
 
 ## Fonctionnalités (v0.1.0-rc1)
 
@@ -105,11 +140,9 @@ Interface web locale servie directement par le module, sans aucun cloud.
 
 ## Latence
 
-- Poêle physique → snapshot firmware : ~9.5s (=cycle polling complet 63 registres × 150ms)
+- Poêle physique → snapshot firmware : ~1s pour registres critiques (=hot polling actif), ~15s pour cold registres (=table complète 100+ registres)
 - Snapshot → HA (=MQTT publish local) : 2s (=publish_interval_ms)
 - Snapshot → cloud Omnyvore : 30s (=cycle publish cloud)
-
-Le hot polling (=registres critiques poll rapide) est TODO, cf STATUS.md.
 
 ## Reverse engineering
 
@@ -130,12 +163,12 @@ Voir :
 ## Build
 
 ```bash
-# ESP-IDF v5.2.3 requis (via docker recommandé)
+# ESP-IDF v5.2.7 requis (via docker recommandé)
 cd firmware
-docker run --rm -v $PWD:/project -w /project espressif/idf:v5.2.3 idf.py build
+docker run --rm -v $PWD:/project -w /project espressif/idf:v5.2.7 idf.py build
 
 # Ou build cible external :
-docker run --rm -v $PWD:/project -w /project espressif/idf:v5.2.3 \
+docker run --rm -v $PWD:/project -w /project espressif/idf:v5.2.7 \
   bash -c "idf.py -DOPENXFLAME_TARGET=external build"
 ```
 
@@ -199,11 +232,15 @@ OpenXtraflame/
 - [x] Integration HA MQTT Discovery
 - [x] Cloud Extraflame Omnyvore compatible (=BETA, TotalControl 2 fonctionne)
 - [x] Safe mode + boot loop detector
+- [x] Hot polling registres critiques (=<1s latence poêle→HA)
+- [x] Recovery via rollback OTA slot précédent (=partition factory dédiée reportée v0.2)
+- [x] Documentation www.isno.fr (=article publié)
+- [x] Onglet Maintenance UI (=diag + Pr01-Pr30 R/W + historique alarmes)
+- [x] Prédiction date recharge trémie (=EMA 7j)
 - [ ] Test sur ESP32 spare (=Target A) - à valider avec un ESP32 externe
-- [ ] Hot polling registres critiques (=<1s latence poêle→HA)
-- [ ] Recovery firmware séparé en partition dédiée
-- [ ] Documentation www.isno.fr
-- [ ] Release publique GitHub
+- [ ] Companion service `openxtraflame-brain` Docker (=learning + propositions actionnables)
+- [ ] Watcher passif zone tech safe (=throttle 5-10s + bounded NVS)
+- [ ] Recovery firmware en partition factory dédiée (=v0.2)
 
 ## Licence
 

@@ -74,6 +74,10 @@ typedef enum {
      * EEPROM 0x7D=consigne (=27 quand écran affiche 27). */
     MN_EEP_POWER_SET_IVENT   = 0x17F,  // EEPROM_SET_POWER_ADDR pour I_VENT
     MN_EEP_TEMP_SET_IVENT    = 0x17D,  // EEPROM_SET_AMB_ADDR pour I_VENT
+    /* Registres RAM I_VENT dérivés via Addrs_dyn @ 0x6491c (=table complète) */
+    MN_RAM_SERBATORIO_VUOTO  = 0x0DF,  // Trémie vide (=1 quand plus de pellets)
+    MN_RAM_CAUSA_STATO7      = 0x0E0,  // Cause de l'état 7 (=raison arrêt/blocage)
+    MN_RAM_MODULATION        = 0x0E2,  // Modulation actuelle
     /* Compteurs maintenance (=firmware reverse, table I_VENT, 16-bit LSB+MSB).
      * Heures par niveau P1..P5 + total + nombre de démarrages. */
     MN_EEP_CTR_H_P1_LSB      = 0x1D0,  // COUNTERS_H_1_LSB
@@ -184,6 +188,29 @@ typedef struct {
     float            pellets_remaining_kg;
     float            pellets_cost_lifetime_eur;
     float            pellets_days_left;     /* estimation avg 7d */
+    uint32_t         pellets_empty_ts;      /* unix ts fin trémie estimée */
+    float            pellets_kg_per_day;    /* conso moyenne 7j */
+    /* Alarmes décomposées bit par bit (=depuis RAM_ALLARM byte).
+     * Ordre issu du firmware original (=strings ALLARM_*_BIT ordonnées). */
+    bool             alarm_sonda_fumi;      /* bit 0 - sonde fumées défectueuse */
+    bool             alarm_hot_fumi;        /* bit 1 - T° fumées trop élevée */
+    bool             alarm_fumi_corto;      /* bit 2 - sonde fumées court-circuit */
+    bool             alarm_aspiratore;      /* bit 3 - aspirateur défectueux */
+    bool             alarm_no_accensione;   /* bit 4 - échec allumage */
+    bool             alarm_no_fiamma;       /* bit 5 - perte de flamme */
+    bool             alarm_depression;      /* bit 6 - dépression insuffisante */
+    bool             alarm_coclea_cmd;      /* bit 7 - alarme commande vis sans fin */
+    /* Maintenance : compteurs pour prochaine intervention */
+    uint16_t         hours_since_service;   /* h_total - snapshot_at_reset */
+    uint16_t         starts_since_cleaning; /* starts - snapshot_at_reset */
+    int16_t          hours_before_service;  /* seuil - hours_since_service (peut <0) */
+    int16_t          starts_before_cleaning;/* seuil - starts_since_cleaning */
+    /* État nettoyage automatique brasero (=STATO_PUL_ORD_*, N/A pour I_VENT) */
+    uint8_t          cleaning_state;        /* 0=off, 1=apertura, 2=aperto, 3=chiusura */
+    /* Trémie et cause état 7 (=I_VENT Addrs_dyn) */
+    bool             tremie_vide;           /* SERBATORIO_VUOTO : true si plus de pellets */
+    uint8_t          causa_stato7;          /* Raison arrêt/blocage si state=7 */
+    uint8_t          modulation;            /* Modulation actuelle (=0-100) */
 } mn_stove_state_snapshot_t;
 
 /* Init UART + start slave listener task */

@@ -31,6 +31,9 @@
 #include "mqtt_bridge.h"
 #include "cloud_bridge.h"
 #include "micronova.h"
+#include "alarm_history.h"
+#include "pellet_forecast.h"
+#include "params_diff.h"
 #include "web_ui.h"
 #include "leds.h"
 #include "ota.h"
@@ -249,6 +252,9 @@ void app_main(void)
     /* 5. Start Micronova UART task (skip en safe mode) */
     if (!safe_boot) {
         mn_set_config_ref(&cfg);
+        alarm_history_init();
+        pellet_forecast_init();
+        params_diff_init();
         micronova_start();
     }
 

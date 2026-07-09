@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/param.h>   /* for MIN() macro */
 #include "web_ui.h"
 #include "wifi_bridge.h"
@@ -24,6 +25,8 @@
 #include "micronova.h"
 #include "ota.h"
 #include "log_ring.h"
+#include "alarm_history.h"
+#include "params_diff.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "nvs.h"
@@ -150,6 +153,14 @@ static esp_err_t handle_status_json(httpd_req_t *req)
     cJSON_AddStringToObject(stove, "matricola",   mn_get_stove_matricola());
     cJSON_AddNumberToObject(stove, "t_ambient", s.t_ambient);
     cJSON_AddNumberToObject(stove, "t_smoke", s.t_smoke);
+    /* Compteurs maintenance + diag data-driven */
+    cJSON_AddNumberToObject(stove, "hours_since_service",  s.hours_since_service);
+    cJSON_AddNumberToObject(stove, "hours_before_service", s.hours_before_service);
+    cJSON_AddNumberToObject(stove, "starts_since_cleaning", s.starts_since_cleaning);
+    cJSON_AddNumberToObject(stove, "starts_before_cleaning", s.starts_before_cleaning);
+    cJSON_AddNumberToObject(stove, "alarm_code",           s.alarm_code);
+    cJSON_AddNumberToObject(stove, "modulation",           s.modulation);
+    cJSON_AddBoolToObject(stove,   "tremie_vide",          s.tremie_vide);
     cJSON_AddItemToObject(o, "stove", stove);
 
     char *out = cJSON_PrintUnformatted(o);
@@ -1032,6 +1043,139 @@ static esp_err_t handle_debug_bootcheck(httpd_req_t *req)
     return httpd_resp_send(req, out, n);
 }
 
+/* GET /api/params/tech : dump EEPROM 0x40-0x5F (=zone params techniciens Pr01-Pr30) */
+static esp_err_t handle_params_tech(httpd_req_t *req)
+{
+    cJSON *o = cJSON_CreateObject();
+    cJSON *params = cJSON_CreateArray();
+    for (int i = 0; i < 0x40; i++) {
+        uint16_t addr = 0x140 + i;
+        cJSON *p = cJSON_CreateObject();
+        cJSON_AddNumberToObject(p, "eep_addr", 0x40 + i);
+        cJSON_AddNumberToObject(p, "value", mn_get_ram(addr));
+        cJSON_AddItemToArray(params, p);
+    }
+    cJSON_AddItemToObject(o, "params", params);
+    cJSON_AddNumberToObject(o, "base_addr", 0x40);
+    cJSON_AddNumberToObject(o, "count", 0x40);
+    char *out = cJSON_PrintUnformatted(o);
+    cJSON_Delete(o);
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_send(req, out, strlen(out));
+    free(out);
+    return r;
+}
+
+/* POST /api/params/tech/write : écrit un param tech Pr01-Pr30 dans EEPROM.
+ * Body: {"addr":<0x40..0x5F>, "value":<0..255>}
+ * Sécurité: refuse addresses hors zone 0x40-0x5F. */
+static esp_err_t handle_params_write(httpd_req_t *req)
+{
+    char buf[128];
+    int len = MIN(req->content_len, sizeof(buf) - 1);
+    if (httpd_req_recv(req, buf, len) <= 0) {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "no body");
+    }
+    buf[len] = 0;
+    cJSON *o = cJSON_Parse(buf);
+    if (!o) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad json");
+    cJSON *a = cJSON_GetObjectItem(o, "addr");
+    cJSON *v = cJSON_GetObjectItem(o, "value");
+    if (!cJSON_IsNumber(a) || !cJSON_IsNumber(v)) {
+        cJSON_Delete(o);
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "addr+value required");
+    }
+    int addr = a->valueint;
+    int val = v->valueint;
+    cJSON_Delete(o);
+    if (addr < 0x40 || addr > 0x5F) {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "addr must be 0x40-0x5F");
+    }
+    if (val < 0 || val > 255) {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "value must be 0-255");
+    }
+    esp_err_t r = mn_write_register(0x140 + addr, (uint8_t)val);
+    char resp[128];
+    int n = snprintf(resp, sizeof(resp),
+        "{\"ok\":%s,\"addr\":%d,\"value\":%d}",
+        (r == ESP_OK) ? "true" : "false", addr, val);
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, resp, n);
+}
+
+static esp_err_t handle_params_snapshot(httpd_req_t *req)
+{
+    params_diff_snapshot();
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, "{\"ok\":true}", 11);
+}
+
+static esp_err_t handle_params_diff(httpd_req_t *req)
+{
+    char *json = params_diff_json();
+    if (!json) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no mem");
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return r;
+}
+
+static esp_err_t handle_params_watcher(httpd_req_t *req)
+{
+    char *json = params_diff_watcher_dump_json();
+    if (!json) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no mem");
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return r;
+}
+
+static esp_err_t handle_eeprom_snapshot(httpd_req_t *req)
+{
+    char *out = malloc(0x100 * 4 + 128);
+    if (!out) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no mem");
+    time_t now = 0; time(&now);
+    int n = sprintf(out, "{\"count\":256,\"ts\":%lld,\"eeprom\":[", (long long)now);
+    for (int i = 0; i < 0x100; i++) {
+        n += sprintf(out + n, "%s%u", i ? "," : "", mn_get_ram(0x100 + i));
+    }
+    n += sprintf(out + n, "]}");
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_send(req, out, n);
+    free(out);
+    return r;
+}
+
+/* POST /api/maint/reset_service : snapshot h_total = zéro du compteur service */
+static esp_err_t handle_maint_reset_service(httpd_req_t *req)
+{
+    mn_stove_state_snapshot_t s; mn_get_snapshot(&s);
+    g_cfg->maint_service_h_at_reset = s.hours_total;
+    config_nvs_save(g_cfg);
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, "{\"ok\":true}", 11);
+}
+
+/* POST /api/maint/reset_cleaning : snapshot starts_total = zéro du compteur nettoyage */
+static esp_err_t handle_maint_reset_cleaning(httpd_req_t *req)
+{
+    mn_stove_state_snapshot_t s; mn_get_snapshot(&s);
+    g_cfg->maint_cleaning_starts_at_reset = s.starts_total;
+    config_nvs_save(g_cfg);
+    httpd_resp_set_type(req, "application/json");
+    return httpd_resp_send(req, "{\"ok\":true}", 11);
+}
+
+static esp_err_t handle_history_alarms(httpd_req_t *req)
+{
+    char *json = alarm_history_dump_json();
+    if (!json) return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no mem");
+    httpd_resp_set_type(req, "application/json");
+    esp_err_t r = httpd_resp_send(req, json, strlen(json));
+    free(json);
+    return r;
+}
+
 static esp_err_t handle_ota_pull(httpd_req_t *req)
 {
     char buf[512];
@@ -1094,6 +1238,15 @@ esp_err_t web_ui_start(app_config_t *cfg)
         { .uri = "/factory",              .method = HTTP_POST, .handler = handle_factory,      },
         { .uri = "/api/safe_mode",        .method = HTTP_POST, .handler = handle_safe_mode,    },
         { .uri = "/debug/bootcheck",      .method = HTTP_GET,  .handler = handle_debug_bootcheck, },
+        { .uri = "/api/history/alarms",   .method = HTTP_GET,  .handler = handle_history_alarms, },
+        { .uri = "/api/maint/reset_service",  .method = HTTP_POST, .handler = handle_maint_reset_service, },
+        { .uri = "/api/maint/reset_cleaning", .method = HTTP_POST, .handler = handle_maint_reset_cleaning, },
+        { .uri = "/api/eeprom/snapshot",  .method = HTTP_GET,  .handler = handle_eeprom_snapshot, },
+        { .uri = "/api/params/tech",      .method = HTTP_GET,  .handler = handle_params_tech, },
+        { .uri = "/api/params/tech/write", .method = HTTP_POST, .handler = handle_params_write, },
+        { .uri = "/api/params/tech/snapshot", .method = HTTP_POST, .handler = handle_params_snapshot, },
+        { .uri = "/api/params/tech/diff", .method = HTTP_GET,  .handler = handle_params_diff, },
+        { .uri = "/api/params/tech/watcher", .method = HTTP_GET, .handler = handle_params_watcher, },
         /* stove commands (were defined but not registered -> 404) */
         { .uri = "/api/stove/on",         .method = HTTP_POST, .handler = handle_stove_cmd,    },
         { .uri = "/api/stove/off",        .method = HTTP_POST, .handler = handle_stove_cmd,    },

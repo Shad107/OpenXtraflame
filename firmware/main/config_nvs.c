@@ -39,6 +39,10 @@ void config_nvs_defaults(app_config_t *cfg)
     cfg->mn_baud_rate         = 38400;   // QEMU capture, some stoves need 1200
     cfg->mn_stop_bits         = 1;       // 1 or 2 (=Micronova legacy is 8N2)
     cfg->cloud_enabled        = false;   // Cloud TotalControl 2 OFF par défaut
+    cfg->maint_service_h_threshold        = 1500;   // Extraflame default
+    cfg->maint_service_h_at_reset         = 0;
+    cfg->maint_cleaning_starts_threshold  = 100;
+    cfg->maint_cleaning_starts_at_reset   = 0;
     cfg->safe_mode_next_boot  = false;
 #ifdef TARGET_BLACKLABEL
     cfg->tc2_username[0] = '\0';
@@ -149,6 +153,10 @@ esp_err_t config_nvs_load(app_config_t *cfg)
     nvs_get_u16(h, "pl_sht", &cfg->pellet_service_h_tot);
     nvs_get_u32(h, "pl_sep", &cfg->pellet_service_epoch);
     if (nvs_get_u8(h, "cloud_en", &u8) == ESP_OK) cfg->cloud_enabled = (u8 != 0);
+    nvs_get_u16(h, "m_svc_th",  &cfg->maint_service_h_threshold);
+    nvs_get_u16(h, "m_svc_r",   &cfg->maint_service_h_at_reset);
+    nvs_get_u16(h, "m_cln_th",  &cfg->maint_cleaning_starts_threshold);
+    nvs_get_u16(h, "m_cln_r",   &cfg->maint_cleaning_starts_at_reset);
     if (nvs_get_u8(h, "safe_next", &u8) == ESP_OK) cfg->safe_mode_next_boot = (u8 != 0);
 #ifdef TARGET_BLACKLABEL
     {
@@ -235,6 +243,10 @@ esp_err_t config_nvs_save(const app_config_t *cfg)
     nvs_set_u16(h, "pl_sht", cfg->pellet_service_h_tot);
     nvs_set_u32(h, "pl_sep", cfg->pellet_service_epoch);
     nvs_set_u8 (h, "cloud_en", cfg->cloud_enabled ? 1 : 0);
+    nvs_set_u16(h, "m_svc_th", cfg->maint_service_h_threshold);
+    nvs_set_u16(h, "m_svc_r",  cfg->maint_service_h_at_reset);
+    nvs_set_u16(h, "m_cln_th", cfg->maint_cleaning_starts_threshold);
+    nvs_set_u16(h, "m_cln_r",  cfg->maint_cleaning_starts_at_reset);
     nvs_set_u8 (h, "safe_next", cfg->safe_mode_next_boot ? 1 : 0);
 #ifdef TARGET_BLACKLABEL
     nvs_set_str(h, "tc2_user", cfg->tc2_username);

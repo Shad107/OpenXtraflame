@@ -11,6 +11,9 @@ idf_component_register(
         "leds.c"
         "ota.c"
         "log_ring.c"
+        "alarm_history.c"
+        "pellet_forecast.c"
+        "params_diff.c"
     INCLUDE_DIRS
         "."
     EMBED_TXTFILES

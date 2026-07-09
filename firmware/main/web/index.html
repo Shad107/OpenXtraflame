@@ -217,6 +217,7 @@
         <div style="display:flex;gap:4px;border-bottom:2px solid #e0e0e0;margin-bottom:1em">
             <button class="subtab active" data-subtab="conso" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">📉 Consommation</button>
             <button class="subtab" data-subtab="chrono" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">🕐 Chrono</button>
+            <button class="subtab" data-subtab="maint" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">🔧 Maintenance</button>
             <button class="subtab" data-subtab="config" style="padding:8px 16px;border:none;background:none;font-size:14px;cursor:pointer;border-bottom:3px solid transparent">🌰 Configuration</button>
         </div>
 
@@ -260,6 +261,82 @@
                     <span id="chrono-save-result" class="hint" style="align-self:center"></span>
                 </div>
                 <p class="hint">Modifs sauvegardées écrivent dans EEPROM du poêle via <code>POST /api/chrono</code>.</p>
+            </div>
+        </div>
+
+        <!-- Sub-tab: Maintenance -->
+        <div id="subtab-maint" class="subtab-content" style="display:none">
+            <div class="card">
+                <h3>🩺 Auto-diagnostic combustion</h3>
+                <p class="hint">Analyse basée sur les métriques live du poêle. Recommandations data-driven.</p>
+                <div id="maint-diag" style="display:flex;flex-direction:column;gap:8px">
+                    <div style="color:#888">Chargement...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Compteurs maintenance</h3>
+                <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+                    <div class="card metric-card"><div class="metric-label">Heures depuis service</div><div class="metric-value" id="m-h-since">-</div><div class="metric-unit">h</div></div>
+                    <div class="card metric-card"><div class="metric-label">Heures avant service</div><div class="metric-value" id="m-h-before">-</div><div class="metric-unit">h restantes</div></div>
+                    <div class="card metric-card"><div class="metric-label">Démarrages depuis nettoyage</div><div class="metric-value" id="m-s-since">-</div><div class="metric-unit"></div></div>
+                    <div class="card metric-card"><div class="metric-label">Démarrages avant nettoyage</div><div class="metric-value" id="m-s-before">-</div><div class="metric-unit"></div></div>
+                </div>
+                <div class="button-row" style="margin-top:12px">
+                    <button class="btn btn-secondary" id="m-reset-service">🔄 Reset compteur service</button>
+                    <button class="btn btn-secondary" id="m-reset-cleaning">🧹 Reset compteur nettoyage</button>
+                    <span id="m-reset-result" class="hint" style="align-self:center"></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ Paramètres techniciens (UT04)</h3>
+                <p class="hint">
+                    Table Pr01-Pr30 lue en direct depuis le poêle (=EEPROM 0x40-0x7C via protocole Micronova).
+                    Comparaison à la valeur factory de la carte I023 aria (=carte Teodora Evo I_VENT).
+                    <br><strong>⚠️ La modification via l'écran nécessite d'entrer le menu tech : code <code>A0</code> (Extraflame) ou <code>A9</code> (Micronova natif).</strong>
+                </p>
+                <div class="button-row" style="margin-bottom:8px">
+                    <button class="btn btn-secondary" id="m-snap-eeprom">📸 Snapshot EEPROM complet</button>
+                    <button class="btn btn-secondary" id="m-refresh-params">🔄 Rafraîchir valeurs</button>
+                    <span id="m-snap-result" class="hint" style="align-self:center"></span>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace">
+                    <thead><tr style="background:#f0f0f0;text-align:left">
+                        <th style="padding:4px 6px">Pr</th>
+                        <th style="padding:4px 6px">EEPROM</th>
+                        <th style="padding:4px 6px">Label</th>
+                        <th style="padding:4px 6px;text-align:right">Actuel</th>
+                        <th style="padding:4px 6px;text-align:right">Factory</th>
+                        <th style="padding:4px 6px;text-align:right">Écart</th>
+                        <th style="padding:4px 6px">Reco</th>
+                    </tr></thead>
+                    <tbody id="m-params-tbody"><tr><td colspan="7" style="padding:8px;color:#888">Chargement...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>🚨 Historique alarmes</h3>
+                <p class="hint">20 dernières alarmes avec durée. Persisté en NVS.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace">
+                    <thead><tr style="background:#f0f0f0;text-align:left">
+                        <th style="padding:4px 6px">Début</th>
+                        <th style="padding:4px 6px">Fin</th>
+                        <th style="padding:4px 6px">Durée</th>
+                        <th style="padding:4px 6px">Code</th>
+                        <th style="padding:4px 6px">Type</th>
+                    </tr></thead>
+                    <tbody id="m-alarms-tbody"><tr><td colspan="5" style="padding:8px;color:#888">Chargement...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>🆘 Recovery</h3>
+                <p class="hint">Rollback vers version firmware précédente (=slot OTA inactif). À utiliser si le firmware actuel pose problème.</p>
+                <div class="button-row">
+                    <button class="btn btn-danger" id="m-rollback">↩️ Rollback firmware</button>
+                    <span id="m-rollback-result" class="hint" style="align-self:center"></span>
+                </div>
             </div>
         </div>
 

@@ -836,4 +836,286 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch(e) {}
     }, 15000);
+
+    initMaintTab();
 });
+
+/* ============== ONGLET MAINTENANCE ============== */
+/* Table Pr01-Pr30 factory Micronova I023 aria (=carte Teodora Evo I_VENT).
+ * Sources : PDF Sercatec MANUAL-AIRE-LED + doc communauté. Encodage confirmé :
+ * coclea ×10 (=byte 3 → 0.3s), échangeur en index 1-35, aspiration 16-bit
+ * (=LSB seul lisible byte-à-byte, MSB au +1). */
+const PR_TABLE = [
+    {pr:'Pr01', addr:0x40, label:'Tempo max ciclo accensione', unit:'min', factory:15, scale:1, range:[1,18], safety:'safe'},
+    {pr:'Pr02', addr:0x41, label:'Stabilisation flamme FIRE_ON', unit:'min', factory:6,  scale:1, range:[1,15], safety:'safe'},
+    {pr:'Pr03', addr:0x42, label:'Intervalle nettoyage brasero', unit:'min', factory:60, scale:1, range:[10,90], safety:'safe'},
+    {pr:'Pr04', addr:0x43, label:'Coclea LOAD_WOOD', unit:'s', factory:19, scale:0.1, range:[2,30], safety:'combustion'},
+    {pr:'Pr05', addr:0x44, label:'Coclea FIRE_ON', unit:'s', factory:20, scale:0.1, range:[2,30], safety:'combustion'},
+    {pr:'Pr06', addr:0x45, label:'Coclea puissance 1', unit:'s', factory:19, scale:0.1, range:[2,30], safety:'combustion'},
+    {pr:'Pr07', addr:0x46, label:'Coclea puissance 2', unit:'s', factory:22, scale:0.1, range:[3,30], safety:'combustion'},
+    {pr:'Pr08', addr:0x47, label:'Coclea puissance 3', unit:'s', factory:29, scale:0.1, range:[4,45], safety:'combustion'},
+    {pr:'Pr09', addr:0x48, label:'Coclea puissance 4', unit:'s', factory:35, scale:0.1, range:[5,50], safety:'combustion'},
+    {pr:'Pr10', addr:0x49, label:'Coclea puissance 5', unit:'s', factory:45, scale:0.1, range:[5,60], safety:'combustion'},
+    {pr:'Pr11', addr:0x4A, label:'Retard alarmes', unit:'s', factory:240, scale:1, range:[30,240], safety:'danger'},
+    {pr:'Pr12', addr:0x4B, label:'Durée nettoyage brasero', unit:'s', factory:30, scale:1, range:[0,240], safety:'safe'},
+    {pr:'Pr13', addr:0x4C, label:'T° min fumées poêle allumé', unit:'°C', factory:50, scale:1, range:[40,120], safety:'danger'},
+    {pr:'Pr14', addr:0x4D, label:'Seuil ECO-MODULA fumées', unit:'°C', factory:260, scale:1, range:[130,260], safety:'combustion'},
+    {pr:'Pr15', addr:0x4E, label:'Seuil active échangeur', unit:'°C', factory:100, scale:1, range:[40,110], safety:'safe'},
+    {pr:'Pr16', addr:0x4F, label:'Vitesse aspiration allumage (LSB)', unit:'tr/min', factory:1850, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr17', addr:0x50, label:'Vitesse aspiration démarrage (LSB)', unit:'tr/min', factory:1800, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr18', addr:0x51, label:'Vitesse aspiration P1 (LSB)', unit:'tr/min', factory:1850, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr19', addr:0x52, label:'Vitesse aspiration P2 (LSB)', unit:'tr/min', factory:1950, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr20', addr:0x53, label:'Vitesse aspiration P3 (LSB)', unit:'tr/min', factory:2100, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr21', addr:0x54, label:'Vitesse aspiration P4 (LSB)', unit:'tr/min', factory:2250, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr22', addr:0x55, label:'Vitesse aspiration P5 (LSB)', unit:'tr/min', factory:2350, scale:1, range:[600,2780], safety:'combustion'},
+    {pr:'Pr23', addr:0x56, label:'Vitesse échangeur 1 P1', unit:'idx', factory:12, scale:1, range:[1,23], safety:'safe'},
+    {pr:'Pr24', addr:0x57, label:'Vitesse échangeur 1 P2', unit:'idx', factory:15, scale:1, range:[2,26], safety:'safe'},
+    {pr:'Pr25', addr:0x58, label:'Vitesse échangeur 1 P3', unit:'idx', factory:17, scale:1, range:[3,30], safety:'safe'},
+    {pr:'Pr26', addr:0x59, label:'Vitesse échangeur 1 P4', unit:'idx', factory:19, scale:1, range:[5,35], safety:'safe'},
+    {pr:'Pr27', addr:0x5A, label:'Vitesse échangeur 1 P5', unit:'idx', factory:21, scale:1, range:[7,35], safety:'safe'},
+    {pr:'Pr28', addr:0x5B, label:'Seuil temp arrêt', unit:'°C', factory:50, scale:1, range:[40,120], safety:'danger'},
+    {pr:'Pr29', addr:0x5C, label:'Aspiration nettoyage brasero', unit:'tr/min', factory:2200, scale:1, range:[700,2800], safety:'combustion'},
+    {pr:'Pr30', addr:0x5D, label:'Coclea nettoyage', unit:'s', factory:15, scale:0.1, range:[0,40], safety:'combustion'},
+];
+
+const SAFETY_BADGE = {
+    'safe':       '<span style="background:#10b981;color:white;padding:1px 6px;border-radius:3px;font-size:10px">SAFE</span>',
+    'combustion': '<span style="background:#f59e0b;color:white;padding:1px 6px;border-radius:3px;font-size:10px">COMBUSTION</span>',
+    'danger':     '<span style="background:#ef4444;color:white;padding:1px 6px;border-radius:3px;font-size:10px">DANGER</span>',
+};
+
+function initMaintTab() {
+    /* Charger sur clic du sous-onglet */
+    document.querySelectorAll('.subtab').forEach(t => {
+        if (t.dataset.subtab === 'maint') {
+            t.addEventListener('click', () => loadMaintenance());
+        }
+    });
+    /* Boutons */
+    const bind = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', fn); };
+    bind('m-reset-service', async () => {
+        try { await fetch('/api/maint/reset_service', {method:'POST'});
+            $('m-reset-result').textContent = '✓ Reset OK'; loadMaintenance();
+        } catch(e) { $('m-reset-result').textContent = '✗ ' + e.message; }
+    });
+    bind('m-reset-cleaning', async () => {
+        try { await fetch('/api/maint/reset_cleaning', {method:'POST'});
+            $('m-reset-result').textContent = '✓ Reset OK'; loadMaintenance();
+        } catch(e) { $('m-reset-result').textContent = '✗ ' + e.message; }
+    });
+    bind('m-snap-eeprom', async () => {
+        try {
+            const r = await fetch('/api/eeprom/snapshot');
+            const data = await r.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `eeprom-snapshot-${Date.now()}.json`;
+            a.click(); URL.revokeObjectURL(url);
+            $('m-snap-result').textContent = '✓ Snapshot téléchargé (' + data.count + ' bytes)';
+        } catch(e) { $('m-snap-result').textContent = '✗ ' + e.message; }
+    });
+    bind('m-refresh-params', () => loadMaintenance());
+    bind('m-rollback', async () => {
+        if (!confirm('Rollback vers version firmware précédente ? Le module va redémarrer.')) return;
+        try { await fetch('/ota/rollback', {method:'POST'});
+            $('m-rollback-result').textContent = '✓ Rollback lancé, reboot en cours...';
+        } catch(e) { $('m-rollback-result').textContent = '✗ ' + e.message; }
+    });
+}
+
+async function loadMaintenance() {
+    try {
+        const [status, params, hist] = await Promise.all([
+            j('/status.json'),
+            j('/api/params/tech'),
+            j('/api/history/alarms'),
+        ]);
+        renderMaintCounters(status.stove || {});
+        renderMaintParams(params.params || []);
+        renderMaintAlarms(hist || []);
+        renderMaintDiag(status.stove || {}, params.params || []);
+    } catch(e) {
+        $('maint-diag').innerHTML = '<div style="color:#ef4444">Erreur chargement : ' + e.message + '</div>';
+    }
+}
+
+function renderMaintCounters(s) {
+    const set = (id, v) => { const el = $(id); if (el) el.textContent = (v ?? '-'); };
+    set('m-h-since',   s.hours_since_service);
+    set('m-h-before',  s.hours_before_service);
+    set('m-s-since',   s.starts_since_cleaning);
+    set('m-s-before',  s.starts_before_cleaning);
+}
+
+function renderMaintParams(params) {
+    const tbody = $('m-params-tbody');
+    if (!tbody) return;
+    const byAddr = {};
+    params.forEach(p => byAddr[p.eep_addr] = p.value);
+    tbody.innerHTML = PR_TABLE.map(r => {
+        const raw = byAddr[r.addr];
+        const real = raw != null ? (raw * r.scale).toFixed(r.scale < 1 ? 1 : 0) : '-';
+        const fac  = (r.factory * r.scale).toFixed(r.scale < 1 ? 1 : 0);
+        let deltaPct = '-', deltaColor = '#666';
+        if (raw != null && r.factory > 0) {
+            const pct = ((raw - r.factory) / r.factory * 100);
+            deltaPct = (pct > 0 ? '+' : '') + pct.toFixed(0) + '%';
+            if (Math.abs(pct) < 10) deltaColor = '#10b981';
+            else if (Math.abs(pct) < 30) deltaColor = '#f59e0b';
+            else deltaColor = '#ef4444';
+        }
+        const editable = raw != null && r.safety !== 'danger';
+        const editBtn = editable ? `<button data-addr="${r.addr}" data-cur="${raw}" data-fac="${r.factory}" data-label="${r.pr} ${r.label}" data-safety="${r.safety}" class="btn-edit-pr" style="padding:2px 6px;font-size:11px;background:#3b82f6;color:white;border:none;border-radius:3px;cursor:pointer">✏️</button>` : '';
+        return `<tr style="border-bottom:1px solid #eee">
+            <td style="padding:4px 6px;font-weight:bold">${r.pr}</td>
+            <td style="padding:4px 6px">0x${r.addr.toString(16).padStart(2,'0')}</td>
+            <td style="padding:4px 6px">${r.label}</td>
+            <td style="padding:4px 6px;text-align:right">${real} ${r.unit}</td>
+            <td style="padding:4px 6px;text-align:right;color:#888">${fac} ${r.unit}</td>
+            <td style="padding:4px 6px;text-align:right;color:${deltaColor};font-weight:bold">${deltaPct}</td>
+            <td style="padding:4px 6px">${SAFETY_BADGE[r.safety]} ${editBtn}</td>
+        </tr>`;
+    }).join('');
+
+    /* Wire boutons Edit */
+    tbody.querySelectorAll('.btn-edit-pr').forEach(btn => {
+        btn.addEventListener('click', () => editPrParam(btn.dataset));
+    });
+}
+
+async function editPrParam(d) {
+    const addr = parseInt(d.addr);
+    const cur = parseInt(d.cur);
+    const fac = parseInt(d.fac);
+    const raw = prompt(
+        `Modifier ${d.label}\n\n` +
+        `Actuel : ${cur}\n` +
+        `Factory Micronova I023 aria : ${fac}\n` +
+        `Zone : ${d.safety.toUpperCase()}\n\n` +
+        `Nouvelle valeur (0-255) :`,
+        String(fac));
+    if (raw === null) return;
+    const val = parseInt(raw, 10);
+    if (isNaN(val) || val < 0 || val > 255) {
+        alert('Valeur invalide (0-255 requis)');
+        return;
+    }
+    const warn = d.safety === 'combustion'
+        ? `⚠️ COMBUSTION : cette modif change le comportement combustion.\n`
+        + `Vérifie la vitre + flamme pendant 30 min après application.\n\n`
+        : `Zone SAFE : ajustement modéré recommandé.\n\n`;
+    if (!confirm(warn + `Confirmer écriture Pr addr=0x${addr.toString(16)} valeur=${val} ?`)) return;
+    try {
+        const r = await fetch('/api/params/tech/write', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({addr, value: val}),
+        });
+        const j = await r.json();
+        if (j.ok) {
+            alert(`✓ Écriture queue. Valeur sera confirmée au prochain poll cycle.`);
+            setTimeout(loadMaintenance, 3000);
+        } else {
+            alert(`✗ Écriture refusée : ${JSON.stringify(j)}`);
+        }
+    } catch(e) {
+        alert(`✗ Erreur : ${e.message}`);
+    }
+}
+
+const ALARM_LABELS = {
+    1:  'Sonde fumées défectueuse',
+    2:  'Fumées trop chaudes',
+    4:  'Fumées court-circuit',
+    8:  'Aspirateur défectueux',
+    16: 'Échec allumage',
+    32: 'Perte de flamme',
+    64: 'Dépression insuffisante',
+    128:'Commande vis sans fin',
+};
+
+function renderMaintAlarms(events) {
+    const tbody = $('m-alarms-tbody');
+    if (!tbody) return;
+    if (!events.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:8px;color:#10b981">✓ Aucune alarme historisée</td></tr>';
+        return;
+    }
+    const fmt = ts => ts ? new Date(ts*1000).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+    const dur = (a,b) => (a && b && b > a) ? Math.round((b-a)/60) + ' min' : '-';
+    tbody.innerHTML = events.slice().reverse().map(e => {
+        const label = Object.entries(ALARM_LABELS).find(([bit]) => e.code & parseInt(bit))?.[1] || `code ${e.code}`;
+        return `<tr style="border-bottom:1px solid #eee">
+            <td style="padding:4px 6px">${fmt(e.ts_start)}</td>
+            <td style="padding:4px 6px">${fmt(e.ts_end)}</td>
+            <td style="padding:4px 6px">${dur(e.ts_start, e.ts_end)}</td>
+            <td style="padding:4px 6px"><code>0x${e.code.toString(16).padStart(2,'0')}</code></td>
+            <td style="padding:4px 6px">${label}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* Auto-diagnostic data-driven. Règles basées sur observations combustion. */
+function renderMaintDiag(stove, params) {
+    const byAddr = {};
+    params.forEach(p => byAddr[p.eep_addr] = p.value);
+    const diagnostics = [];
+
+    /* Combustion : coclea vs factory */
+    const cocleaAvg = ([0x43,0x44,0x47].map(a => byAddr[a] || 0).reduce((a,b)=>a+b,0) / 3);
+    const cocleaFacAvg = ([19,20,29].reduce((a,b)=>a+b,0) / 3);
+    if (cocleaAvg > 0 && cocleaAvg < cocleaFacAvg * 0.5) {
+        diagnostics.push({sev:'critical', icon:'🔥', title:'Coclea (vis pellet) fortement sous factory',
+            detail:`Moyenne coclea = ${(cocleaAvg/10).toFixed(1)}s vs factory ${(cocleaFacAvg/10).toFixed(1)}s. Combustion probablement maigre (=trop d'air, pas assez pellets). Symptômes typiques : vitre noire rapidement, brasero se salit vite, rendement dégradé.`,
+            reco:'Remonter progressivement Pr04-Pr08 vers valeurs factory (+30% par étape, tester 24h).'});
+    }
+
+    /* Nettoyage brasero fréquent */
+    if (byAddr[0x42] && byAddr[0x42] < 40) {
+        diagnostics.push({sev:'warning', icon:'🧹', title:'Nettoyage brasero très fréquent',
+            detail:`Pr03 = ${byAddr[0x42]} min (défaut 60 min). Signal combustion salissante.`,
+            reco:'Corriger Pr04-Pr08 (=coclea) d\'abord, puis remonter Pr03 vers 60 min.'});
+    }
+
+    /* Ventilo échangeur */
+    const echAvg = ([0x56,0x57,0x58].map(a => byAddr[a] || 0).reduce((a,b)=>a+b,0) / 3);
+    const echFacAvg = (12 + 15 + 17) / 3;
+    if (echAvg > echFacAvg * 1.8) {
+        diagnostics.push({sev:'info', icon:'💨', title:'Vitesse échangeur (ventilo) élevée',
+            detail:`Moyenne Pr23-Pr25 = ${echAvg.toFixed(1)} vs factory ${echFacAvg.toFixed(1)}. Ventilo poussé pour diffuser plus, souvent en compensation combustion pauvre.`,
+            reco:'Si combustion corrigée, tu pourras baisser vers factory pour moins de bruit.'});
+    }
+
+    /* Fumées température */
+    if (stove.t_smoke > 280) {
+        diagnostics.push({sev:'warning', icon:'🌡️', title:'Températures fumées élevées',
+            detail:`T fumées ${stove.t_smoke}°C > 280°C. Trop d'air excédent = gaspillage énergie.`,
+            reco:'Baisser Pr16-Pr22 (=vitesse aspiration) ou augmenter Pr04-Pr08 (=coclea).'});
+    } else if (stove.t_smoke > 0 && stove.t_smoke < 130) {
+        diagnostics.push({sev:'warning', icon:'🌡️', title:'Températures fumées basses',
+            detail:`T fumées ${stove.t_smoke}°C < 130°C. Risque condensation + encrassement conduit.`,
+            reco:'Vérifier étanchéité + augmenter Pr16-Pr22 (=aspiration).'});
+    }
+
+    /* Alarmes récurrentes vérifiables ailleurs */
+    if (stove.alarm_code && stove.alarm_code !== 0) {
+        diagnostics.push({sev:'critical', icon:'🚨', title:'Alarme active',
+            detail:`Code alarme actuel: 0x${stove.alarm_code.toString(16)}.`,
+            reco:'Voir historique + résoudre cause avant modifications.'});
+    }
+
+    if (!diagnostics.length) {
+        $('maint-diag').innerHTML = '<div style="color:#10b981;padding:8px;background:#ecfdf5;border-radius:4px">✓ Aucun problème détecté par le diagnostic auto. Consulte la table Pr01-Pr30 pour ajustements fins.</div>';
+        return;
+    }
+
+    const sevColors = {'critical':'#ef4444','warning':'#f59e0b','info':'#3b82f6'};
+    $('maint-diag').innerHTML = diagnostics.map(d => `
+        <div style="border-left:4px solid ${sevColors[d.sev]};background:#fafafa;padding:10px 12px;border-radius:4px">
+            <div style="font-weight:bold;margin-bottom:4px">${d.icon} ${d.title}</div>
+            <div style="font-size:13px;color:#555;margin-bottom:4px">${d.detail}</div>
+            <div style="font-size:13px;color:#0369a1"><strong>Reco:</strong> ${d.reco}</div>
+        </div>
+    `).join('');
+}
