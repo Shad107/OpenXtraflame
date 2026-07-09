@@ -113,7 +113,7 @@ CREATE TABLE config (
 
 ## UI wizard onboarding
 
-**Étape 1 — Bienvenue**
+**Étape 1 : Bienvenue**
 ```
 OpenXtraflame-Brain
 Companion service d'analyse et recommandations pour ton poêle.
@@ -126,7 +126,7 @@ Ce wizard va configurer:
 [ Commencer → ]
 ```
 
-**Étape 2 — MQTT broker**
+**Étape 2 : MQTT broker**
 ```
 Auto-détection... trouvé:
   ✓ Broker MQTT sur homeassistant.local:1883
@@ -143,7 +143,7 @@ Confirmer ou modifier:
 [ Suivant → ]
 ```
 
-**Étape 3 — Home Assistant (=optionnel)**
+**Étape 3 : Home Assistant (=optionnel)**
 ```
 Home Assistant permet de:
 - Récupérer météo pour corrélations
@@ -158,7 +158,7 @@ Token     [                                ]  ← long-lived access token
 [ Auto-import package HA ] [ Skip ] [ Suivant → ]
 ```
 
-**Étape 4 — Ready**
+**Étape 4 : Ready**
 ```
 ✓ Tout est configuré !
 
@@ -173,7 +173,7 @@ en attendant.
 
 **Ingestion** : subscribe MQTT `openxtraflame/<stove>/state`, `params_tech`, `history_alarms`. Insert dans `metrics` toutes les 30s (=throttle vs le publish firmware toutes les 2s).
 
-**Compute** — job APScheduler toutes les 5 min :
+**Compute** : job APScheduler toutes les 5 min :
 
 ```python
 # EMA multi-échelle
@@ -198,7 +198,22 @@ if starts_per_day > 5:
     trigger_proposal(...)
 ```
 
-**Baseline stove-specific** — après 7 jours de learning, on considère les moyennes normales pour CE poêle dans CE contexte (=isolation, taille pièce, pellets utilisés). Les alertes se déclenchent sur écart à cette baseline, pas sur valeurs absolues génériques.
+**Baseline stove-specific** : après 7 jours de learning, on considère les moyennes normales pour CE poêle dans CE contexte (=isolation, taille pièce, pellets utilisés). Les alertes se déclenchent sur écart à cette baseline, pas sur valeurs absolues génériques.
+
+### Confondants : distinguer un vrai drift d'un artefact
+
+Un ecart 7j vs 30j n'est pas forcement un encrassement. Avant de proposer une modif, le Brain
+ecarte les causes externes qui imitent un drift :
+
+- **Lot de pellets** : marque / qualite / humidite differentes decalent fortement la combustion.
+  Le Brain expose un bouton "J'ai change de sac" qui pose un marqueur en DB ; les drifts qui suivent
+  ce marqueur sont attribues au pellet, pas au poele, jusqu'a re-stabilisation.
+- **Temperature exterieure** : normaliser conso et cycles via la meteo HA (un hiver froid = plus de
+  P4/P5, ce n'est pas une saturation).
+- **Changement de consigne** : un setpoint modifie change l'usage ; le drift est recalcule sur la
+  baseline post-changement.
+- **Fenetre minimale** : pas de proposition avant N jours de donnees stables (defaut 7), ni si le
+  poele a tourne moins de X heures sur la fenetre (sinon on conclut sur du bruit).
 
 ## Phase propositions
 
@@ -284,15 +299,26 @@ automation:
 
 ## Sécurité writes Pr
 
-Le service N'ÉCRIT JAMAIS directement dans le firmware :
-- Chaque proposition passe par un clic user explicite
-- Zone `DANGER` : jamais proposée en auto (=uniquement lecture)
-- Zone `COMBUSTION` : proposition + double confirmation UI + watch 24h
-- Auto-rollback si drift empire (=fail-safe)
+Un poele a granules est un appareil a combustion : toute modif Pr passe par une **enveloppe stricte**,
+et le Brain N'ECRIT JAMAIS en pleine autonomie.
 
-Le firmware garde son endpoint `/api/params/tech/write` avec validation :
-- Refuse `addr < 0x40 || addr > 0x5F` (=hors zone tech)
-- Refuse `value < 0 || value > 255`
+- **Clic user explicite** obligatoire pour chaque write.
+- **Zone `DANGER` (retard alarmes Pr11, T min fumees Pr13, seuil arret Pr28, ...) : jamais proposee,
+  lecture seule.** Ces registres touchent la securite de l'appareil, on n'y touche pas automatiquement.
+- **Zone `COMBUSTION` : au plus +/-1 cran (ou +/-10%) par proposition**, jamais hors d'une plage safe
+  bornee par registre (derivee des valeurs factory du modele). Puis double confirmation UI + watch 24h.
+- **Auto-rollback** si la metrique cible empire, avec une definition explicite de "empire" par diagnostic
+  (fail-safe). L'enveloppe dure protege mieux qu'un rollback seul, qui peut etre trop lent.
+
+Garde-fous cote firmware (`/api/params/tech/write`), en plus de la validation existante :
+- Refuse `addr < 0x40 || addr > 0x5F` (hors zone tech).
+- Refuse `value < 0 || value > 255`.
+- **Whitelist d'adresses modifiables + bornes min/max par registre**, pour que meme un Brain buggue ne
+  puisse pas ecrire hors enveloppe.
+- **Endpoint local-only / authentifie** (pas expose hors LAN) : il ecrit de la combustion.
+
+Cote Brain, le **token HA et la config** (`/app/data`) contiennent des secrets : volume a proteger
+(permissions restreintes, jamais commite).
 
 ## Roadmap
 
