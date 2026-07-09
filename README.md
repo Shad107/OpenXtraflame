@@ -138,6 +138,23 @@ Interface web locale servie directement par le module, sans aucun cloud.
   </tr>
 </table>
 
+### Onglet Poele : consommation, chrono, maintenance
+
+Auto-diagnostic combustion (recommandations data-driven) + table des parametres techniciens
+Pr01-Pr30 lue en direct depuis l'EEPROM et comparee aux valeurs factory de la carte.
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/poele-maintenance.webp" alt="Auto-diagnostic combustion + compteurs" width="340"></td>
+    <td><img src="docs/screenshots/poele-ut04.webp" alt="Parametres techniciens Pr01-Pr30 vs factory" width="340"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/poele-consommation.webp" alt="Consommation pellets par niveau" width="340"></td>
+    <td><img src="docs/screenshots/poele-config.webp" alt="Configuration calcul consommation" width="340"></td>
+  </tr>
+</table>
+
+
 ## Latence
 
 - Poêle physique → snapshot firmware : ~1s pour registres critiques (=hot polling actif), ~15s pour cold registres (=table complète 100+ registres)
