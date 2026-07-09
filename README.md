@@ -80,6 +80,29 @@ Firmware qui REMPLACE celui d'origine sur le module Extraflame Black Label. Néc
 - ✅ Reply MQTT avec correlationid pour ack
 - ✅ Switch HA cloud on/off (=conditionnel si login TC2 configuré)
 
+## Aperçu de l'interface
+
+Interface web locale servie directement par le module, sans aucun cloud.
+
+<p align="center">
+  <img src="docs/screenshots/01-dashboard.webp" alt="Dashboard OpenXtraflame" width="620">
+</p>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/mqtt.webp" alt="MQTT / Home Assistant" width="340"></td>
+    <td><img src="docs/screenshots/debug.webp" alt="Bus Micronova en direct" width="340"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/ota.webp" alt="OTA GitHub + rollback" width="340"></td>
+    <td><img src="docs/screenshots/advanced.webp" alt="Options avancees + safe mode" width="340"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/wifi.webp" alt="Configuration Wi-Fi" width="340"></td>
+    <td><img src="docs/screenshots/about.webp" alt="A propos" width="340"></td>
+  </tr>
+</table>
+
 ## Latence
 
 - Poêle physique → snapshot firmware : ~9.5s (=cycle polling complet 63 registres × 150ms)
