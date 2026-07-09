@@ -553,7 +553,7 @@ static esp_err_t handle_mqtt_test(httpd_req_t *req)
 }
 
 /* GET /mqtt/discover : do a live mDNS lookup for _mqtt._tcp and return
- * {"host":"192.168.50.7","port":1883} or {"host":""} on timeout. */
+ * {"host":"192.168.1.10","port":1883} or {"host":""} on timeout. */
 static esp_err_t handle_mqtt_discover(httpd_req_t *req)
 {
     char found[48] = "";

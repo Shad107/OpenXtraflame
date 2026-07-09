@@ -293,7 +293,7 @@ Tout le reste (=archive, contrôle, notif, diff) = infra maison.
 ## Options stockage archive
 
 **Option A - Syno WebDAV** (=simple)
-- Path : \\192.168.50.3\firmwares\ ou HTTP WebDAV
+- Path : \\<nas>\firmwares\ ou HTTP WebDAV
 - Existant, pas de setup supplémentaire
 
 **Option B - LXC Gitea** (=recommandé)
