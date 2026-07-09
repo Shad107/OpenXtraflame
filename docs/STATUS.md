@@ -1,5 +1,29 @@
 # État du projet OpenXtraflame
 
+## Bugs connus / TODO
+
+### Safe mode manuel non fonctionnel (=v0.1.0-rc1)
+
+Le POST `/api/safe_mode` répond bien 200 avec `verify=1` (=NVS re-read juste après commit confirme la valeur), mais après `esp_restart()`, le flag revient à 0 au boot suivant. 4 méthodes testées :
+
+1. `cfg->safe_mode_next_boot=true` + `config_nvs_save()` (=namespace `openxflame_cfg`)
+2. `nvs_set_u8("bootcheck","safe_next",1)` + `nvs_commit`
+3. `RTC_NOINIT_ATTR` uint32 en RTC RAM (=survit au reboot doux normalement)
+4. `nvs_set_u8("safeflag","next",1)` (=namespace dédié isolé)
+
+Toutes retournent ESP_OK mais aucune ne persiste au boot suivant. Le compteur `crash_cnt` dans le même namespace `bootcheck` persiste correctement (=on voit crash=1,2,3 s'incrémenter à chaque reboot), donc NVS fonctionne fondamentalement.
+
+Hypothèse : timing spécifique au flow POST → `esp_restart()` qui preempt le flash-write. Pistes non testées :
+- `esp_flash_wait_for_idle()` avant `esp_restart`
+- Partition NVS dédiée
+- CONFIG_LOG_DEFAULT_LEVEL_VERBOSE sur NVS pour tracer le flash-write
+
+**Filet de sécurité qui marche** : boot loop detector auto (=3 crashes < 60s uptime consécutifs) bascule en safe mode automatiquement. Suffit pour récupérer un firmware bugué, mais impose 2-3 min d'attente.
+
+Cf memory `openxtraflame-safe-mode-bug.md` pour détails.
+
+
+
 ## Ce qui est fait (=session 2026-07-03)
 
 ### Reverse engineering ✅
@@ -115,7 +139,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 
 ## Décisions à confirmer avec Olivier
 
-- [ ] Nom projet : `OpenXtraflame` (=proposé) vs alternatives
+- [ ] Nom projet : `openextraflame` (=proposé) vs alternatives
 - [ ] License : MIT (=proposé) vs GPL v3
 - [ ] Timing publication : après validation firmware (=proposé)
 - [ ] Repo GitHub : sous quel compte ? Shad107 ?
@@ -124,11 +148,11 @@ Total : ~24h de travail réparti sur 4 weekends.
 
 ## Fichiers artefacts
 
-- Repo : `/home/user/projects/OpenXtraflame/`
+- Repo : `/home/user/projects/openextraflame/`
 - Dump : `/home/user/Downloads/extraflame_dump.bin`
 - Backup : `/home/user/Downloads/extraflame_dump_BACKUP.bin`
 - Partitions extraites : `/home/user/Downloads/partition_*.bin`
-- Session logs : `/home/user/projects/OpenXtraflame/analysis/session_2026-07-03_logs.md`
+- Session logs : `/home/user/projects/openextraflame/analysis/session_2026-07-03_logs.md`
 
 ## ⭐ MAJ 2026-07-03 SOIR - Architecture SLAVE + tests QEMU + build validé
 
@@ -152,7 +176,7 @@ Total : ~24h de travail réparti sur 4 weekends.
 ```
 docker compose run esp-idf idf.py -DOPENXFLAME_TARGET=external build
 → Successfully created esp32 image
-→ Generated /project/build/OpenXtraflame.bin
+→ Generated /project/build/openextraflame.bin
 ```
 
 ### Tools ajoutés
